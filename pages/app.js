@@ -54,6 +54,34 @@ export default function DuelApp() {
 
   useEffect(() => {
     setGameState('disconnected');
+    
+    // Clear old localStorage data from previous contract
+    try {
+      const currentWaiting = localStorage.getItem('cd_currentWaiting');
+      if (currentWaiting) {
+        const data = JSON.parse(currentWaiting);
+        // Remove if from old contract (not our new contract)
+        const isOldContract = !data.contractAddress || data.contractAddress !== CONTRACT_ADDRESS;
+        if (isOldContract) {
+          console.log('🧹 Clearing old contract data from localStorage');
+          localStorage.removeItem('cd_currentWaiting');
+        }
+      }
+      
+      // Also clear other potential cached data
+      const lastContractVersion = localStorage.getItem('cd_contract_version');
+      if (lastContractVersion !== CONTRACT_ADDRESS) {
+        console.log('🧹 New contract detected, clearing all cached data');
+        // Clear all crypto-duel related localStorage
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('cd_')) {
+            localStorage.removeItem(key);
+          }
+        });
+        // Set new contract version
+        localStorage.setItem('cd_contract_version', CONTRACT_ADDRESS);
+      }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -199,9 +227,21 @@ export default function DuelApp() {
     try {
       const owner = await contract.owner();
       const isOwner = owner.toLowerCase() === userAddress.toLowerCase();
+      
+      console.log('👑 Admin check:', {
+        contractOwner: owner,
+        currentUser: userAddress,
+        isOwner,
+        contractAddress: CONTRACT_ADDRESS
+      });
+      
       setIsAdmin(isOwner);
-      if (isOwner) await loadAdminAnalytics();
-    } catch {
+      if (isOwner) {
+        console.log('🔥 Loading admin analytics...');
+        await loadAdminAnalytics();
+      }
+    } catch (error) {
+      console.error('❌ Admin check failed:', error);
       setIsAdmin(false);
     }
   }
@@ -307,7 +347,8 @@ export default function DuelApp() {
           betEth: ethValue,
           txHash: tx.hash,
           startedAt: Date.now(),
-          address: await freshSigner.getAddress()
+          address: await freshSigner.getAddress(),
+          contractAddress: CONTRACT_ADDRESS // Track which contract this is for
         }));
       } catch {}
 
@@ -385,6 +426,9 @@ export default function DuelApp() {
               <img src="/icon.png" alt="Crypto Duel" className="w-16 h-16 mx-auto" />
             </div>
             <h1 className="text-2xl font-bold mb-1">Duel Arena</h1>
+            <div className="text-xs text-gray-400 font-mono">
+              Contract: {CONTRACT_ADDRESS.slice(0, 6)}...{CONTRACT_ADDRESS.slice(-4)}
+            </div>
 
             <div className="flex items-center justify-center gap-3 mt-1">
               <Link href="/leaderboard" className="text-sm text-purple-200 hover:text-purple-100">🏆 Leaderboard</Link>

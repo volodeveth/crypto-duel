@@ -29,8 +29,14 @@ export default function UserPage() {
       const raw = localStorage.getItem('cd_currentWaiting');
       if (raw) {
         const obj = JSON.parse(raw);
-        setPendingLocal(obj);
-        if (!address && obj.address) setAddress(obj.address);
+        // Only show if it's for the current contract
+        if (obj.contractAddress === CONTRACT_ADDRESS) {
+          setPendingLocal(obj);
+          if (!address && obj.address) setAddress(obj.address);
+        } else {
+          // Remove old contract data
+          localStorage.removeItem('cd_currentWaiting');
+        }
       }
     } catch {}
   }, []);
