@@ -224,12 +224,19 @@ export default function DuelApp() {
   }
 
   async function checkAdminStatus() {
-    if (!contract || !userAddress) return;
+    console.log('🔍 Checking admin status...', { contract: !!contract, userAddress });
+    
+    if (!contract || !userAddress) {
+      console.log('❌ Missing contract or userAddress for admin check');
+      return;
+    }
+    
     try {
+      console.log('📡 Calling contract.owner()...');
       const owner = await contract.owner();
       const isOwner = owner.toLowerCase() === userAddress.toLowerCase();
       
-      console.log('👑 Admin check:', {
+      console.log('👑 Admin check result:', {
         contractOwner: owner,
         currentUser: userAddress,
         isOwner,
@@ -237,9 +244,12 @@ export default function DuelApp() {
       });
       
       setIsAdmin(isOwner);
+      
       if (isOwner) {
-        console.log('🔥 Loading admin analytics...');
+        console.log('🔥 User is admin! Loading admin analytics...');
         await loadAdminAnalytics();
+      } else {
+        console.log('👤 User is not admin');
       }
     } catch (error) {
       console.error('❌ Admin check failed:', error);
@@ -249,14 +259,19 @@ export default function DuelApp() {
 
   async function loadAdminAnalytics() {
     if (!contract) return;
-    const totalDuels = await contract.totalDuels();
-    const analytics = {
-      totalDuels: Number(totalDuels),
-      totalVolume: 0,
-      totalCommissions: 0,
-      duelsByBet: {},
-      duelsCount: 0
-    };
+    
+    try {
+      console.log('📊 Starting admin analytics load...');
+      const totalDuels = await contract.totalDuels();
+      console.log('📊 Total duels in contract:', Number(totalDuels));
+      
+      const analytics = {
+        totalDuels: Number(totalDuels),
+        totalVolume: 0,
+        totalCommissions: 0,
+        duelsByBet: {},
+        duelsCount: 0
+      };
 
     betAmounts.forEach(bet => {
       analytics.duelsByBet[bet.value] = { count: 0, volume: 0, label: bet.label };
@@ -285,16 +300,38 @@ export default function DuelApp() {
       }
     }
 
-    setAdminAnalytics({
-      totalDuels: analytics.totalDuels,
-      totalVolume: ethers.formatEther(analytics.totalVolume.toString()),
-      totalCommissions: ethers.formatEther(analytics.totalCommissions.toString()),
-      duelsByBet: analytics.duelsByBet,
-      averageBet: analytics.duelsCount > 0
-        ? ethers.formatEther((analytics.totalVolume / analytics.duelsCount / 2).toString())
-        : '0',
-      mostPopularBet: Object.values(analytics.duelsByBet).reduce((acc, v) => v.count > (acc.count || 0) ? v : acc, {}).label || 'None'
-    });
+      setAdminAnalytics({
+        totalDuels: analytics.totalDuels,
+        totalVolume: ethers.formatEther(analytics.totalVolume.toString()),
+        totalCommissions: ethers.formatEther(analytics.totalCommissions.toString()),
+        duelsByBet: analytics.duelsByBet,
+        averageBet: analytics.duelsCount > 0
+          ? ethers.formatEther((analytics.totalVolume / analytics.duelsCount / 2).toString())
+          : '0',
+        mostPopularBet: Object.values(analytics.duelsByBet).reduce((acc, v) => v.count > (acc.count || 0) ? v : acc, {}).label || 'None'
+      });
+      
+      console.log('✅ Admin analytics loaded successfully');
+    } catch (error) {
+      console.error('❌ Failed to load admin analytics:', error);
+      
+      // Set default analytics even if loading fails
+      const defaultAnalytics = {
+        totalDuels: 0,
+        totalVolume: '0',
+        totalCommissions: '0',
+        duelsByBet: {},
+        averageBet: '0',
+        mostPopularBet: 'None'
+      };
+      
+      betAmounts.forEach(bet => {
+        defaultAnalytics.duelsByBet[bet.value] = { count: 0, volume: 0, label: bet.label };
+      });
+      
+      setAdminAnalytics(defaultAnalytics);
+      console.log('📊 Set default admin analytics due to error');
+    }
   }
 
   function setupEventListeners() {
