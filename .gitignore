@@ -51,3 +51,5 @@ logs
 pk.txt
 *.key
 .env*
+*token*.txt
+vercel*.txt
