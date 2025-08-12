@@ -15,7 +15,7 @@ export default function Leaderboard() {
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('wins'); // wins, games, winnings, winRate
 
-  const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x238300D6570Deee3765d72Fa8e2af447612FaE06';
+  const CONTRACT_ADDRESS = '0x238300D6570Deee3765d72Fa8e2af447612FaE06';
 
   useEffect(() => {
     loadLeaderboard();
