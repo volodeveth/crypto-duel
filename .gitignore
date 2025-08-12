@@ -47,3 +47,7 @@ logs
 
 # Cache
 .cache/
+# Приватні ключі
+pk.txt
+*.key
+.env*
