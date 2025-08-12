@@ -49,7 +49,7 @@ export default function DuelApp() {
     { value: '10000000000000000', label: '0.01 ETH', eth: 0.01 }
   ];
 
-  const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x2b844d2b55a64dC7d9a195DF2C2Ee9cEB9b53035';
+  const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x238300D6570Deee3765d72Fa8e2af447612FaE06';
   const BASESCAN = 'https://basescan.org';
 
   useEffect(() => {

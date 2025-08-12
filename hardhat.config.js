@@ -1,5 +1,16 @@
 require("@nomicfoundation/hardhat-toolbox");
 require("dotenv").config({ path: ".env.local" });
+const fs = require('fs');
+
+// Read private key from file first, then fallback to env
+let privateKey;
+if (fs.existsSync('./new-private-key.txt')) {
+  privateKey = fs.readFileSync('./new-private-key.txt', 'utf8').trim();
+  console.log('Using private key from file');
+} else {
+  privateKey = process.env.PRIVATE_KEY;
+  console.log('Using private key from environment');
+}
 
 module.exports = {
   solidity: {
@@ -14,13 +25,17 @@ module.exports = {
   networks: {
     base: {
       url: "https://mainnet.base.org",
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      chainId: 8453
+      accounts: privateKey ? [privateKey] : [],
+      chainId: 8453,
+      gasPrice: 20000000, // 0.02 gwei 
+      gas: 1040000
     },
     baseSepolia: {
       url: "https://sepolia.base.org", 
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      chainId: 84532
+      accounts: privateKey ? [privateKey] : [],
+      chainId: 84532,
+      gasPrice: 1000000000, // 1 gwei
+      gas: 3000000
     }
   },
   etherscan: {

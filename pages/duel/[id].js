@@ -11,7 +11,7 @@ const CONTRACT_ABI = [
 
 const RPC = 'https://mainnet.base.org';
 const BASESCAN = 'https://basescan.org';
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x2b844d2b55a64dC7d9a195DF2C2Ee9cEB9b53035';
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x238300D6570Deee3765d72Fa8e2af447612FaE06';
 
 export default function DuelDetails() {
   const router = useRouter();
