@@ -1,0 +1,365 @@
+import { useEffect, useMemo, useState } from 'react';
+import Head from 'next/head';
+import Link from 'next/link';
+import { ethers } from 'ethers';
+
+const CONTRACT_ABI = [
+  "event DuelCompleted(uint256 indexed duelId, address winner, uint256 prize, uint256 randomSeed)",
+  "event PlayerWaiting(uint256 indexed waitingId, address player, uint256 betAmount)",
+  "event DuelStarted(uint256 indexed duelId, address player1, address player2, uint256 betAmount)",
+  "function getDuel(uint256 duelId) external view returns (tuple(uint256 id, address player1, address player2, uint256 betAmount, uint256 timestamp, address winner, bool completed, uint256 randomSeed))",
+  "function totalDuels() external view returns (uint256)",
+  "function waitingPlayers(uint256 waitingId) external view returns (tuple(address player, uint256 betAmount, uint256 joinTime, bool active))"
+];
+
+const RPC = 'https://mainnet.base.org';
+const BASESCAN = 'https://basescan.org';
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x2b844d2b55a64dC7d9a195DF2C2Ee9cEB9b53035';
+
+const short = (a='') => a ? `${a.slice(0,6)}...${a.slice(-4)}` : '';
+
+export default function UserPage() {
+  const [address, setAddress] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [duels, setDuels] = useState([]);
+  const [pendingLocal, setPendingLocal] = useState(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('cd_currentWaiting');
+      if (raw) {
+        const obj = JSON.parse(raw);
+        setPendingLocal(obj);
+        if (!address && obj.address) setAddress(obj.address);
+      }
+    } catch {}
+  }, []);
+
+  async function connectAddress() {
+    try {
+      if (!window.ethereum) return alert('Install MetaMask or connect your wallet.');
+      const prov = new ethers.BrowserProvider(window.ethereum);
+      await prov.send('eth_requestAccounts', []);
+      const signer = await prov.getSigner();
+      setAddress(await signer.getAddress());
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
+  async function loadMyDuels() {
+    if (!address) return alert('Enter your wallet address or connect.');
+    setLoading(true);
+    try {
+      const provider = new ethers.JsonRpcProvider(RPC);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+
+      const totalDuels = Number(await contract.totalDuels());
+      const max = Math.min(totalDuels, 2000);
+
+      const iface = new ethers.Interface(CONTRACT_ABI);
+      const duelCompletedTopic = iface.getEvent('DuelCompleted').topicHash;
+      const playerWaitingTopic = iface.getEvent('PlayerWaiting').topicHash;
+      const duelStartedTopic = iface.getEvent('DuelStarted').topicHash;
+      
+      const completedDuels = [];
+      const pendingDuels = [];
+
+      // Load completed duels
+      for (let i = 1; i <= max; i++) {
+        try {
+          const d = await contract.getDuel(i);
+          
+          const meInDuel =
+            d.player1?.toLowerCase() === address.toLowerCase() ||
+            d.player2?.toLowerCase() === address.toLowerCase();
+
+          if (!meInDuel) continue;
+
+          if (d.completed) {
+            const logs = await provider.getLogs({
+              fromBlock: 0,
+              toBlock: 'latest',
+              address: CONTRACT_ADDRESS,
+              topics: [
+                duelCompletedTopic,
+                ethers.zeroPadValue(ethers.toBeHex(i), 32)
+              ]
+            });
+
+            const txHash = logs?.[0]?.transactionHash || null;
+            const isWinner = d.winner?.toLowerCase() === address.toLowerCase();
+
+            completedDuels.push({
+              id: d.id?.toString() || String(i),
+              player1: d.player1,
+              player2: d.player2,
+              betEth: Number(ethers.formatEther(d.betAmount || 0)),
+              timestamp: Number(d.timestamp || 0) * 1000,
+              winner: d.winner,
+              isWinner,
+              randomSeed: d.randomSeed?.toString() || '',
+              txHash,
+              completed: true
+            });
+          } else if (d.player1 && d.player1 !== '0x0000000000000000000000000000000000000000') {
+            // Started but not completed duel
+            pendingDuels.push({
+              id: d.id?.toString() || String(i),
+              player1: d.player1,
+              player2: d.player2,
+              betEth: Number(ethers.formatEther(d.betAmount || 0)),
+              timestamp: Number(d.timestamp || 0) * 1000,
+              completed: false
+            });
+          }
+        } catch {
+          break;
+        }
+      }
+
+      // Load waiting players (not yet matched)
+      try {
+        const waitingLogs = await provider.getLogs({
+          fromBlock: 0,
+          toBlock: 'latest',
+          address: CONTRACT_ADDRESS,
+          topics: [playerWaitingTopic, null, ethers.zeroPadValue(address, 32)]
+        });
+
+        const startedLogs = await provider.getLogs({
+          fromBlock: 0,
+          toBlock: 'latest',
+          address: CONTRACT_ADDRESS,
+          topics: [duelStartedTopic]
+        });
+
+        // Get started duel players to exclude from waiting
+        const startedPlayers = new Set();
+        for (const log of startedLogs) {
+          const decoded = iface.parseLog(log);
+          startedPlayers.add(decoded.args.player1.toLowerCase());
+          startedPlayers.add(decoded.args.player2.toLowerCase());
+        }
+
+        for (const log of waitingLogs) {
+          try {
+            const decoded = iface.parseLog(log);
+            const waitingId = Number(decoded.args.waitingId);
+            
+            // Check if this player is still waiting (not started a duel after this wait)
+            const laterStarted = startedLogs.some(startLog => {
+              const startDecoded = iface.parseLog(startLog);
+              return (startDecoded.args.player1.toLowerCase() === address.toLowerCase() || 
+                      startDecoded.args.player2.toLowerCase() === address.toLowerCase()) &&
+                     startLog.blockNumber > log.blockNumber;
+            });
+
+            if (!laterStarted) {
+              // Check if still active in contract
+              const waitingPlayer = await contract.waitingPlayers(waitingId);
+              if (waitingPlayer.active) {
+                pendingDuels.push({
+                  id: `wait-${waitingId}`,
+                  player1: decoded.args.player,
+                  player2: '0x0000000000000000000000000000000000000000',
+                  betEth: Number(ethers.formatEther(decoded.args.betAmount)),
+                  timestamp: log.blockNumber * 12000, // Approximate timestamp
+                  completed: false,
+                  isWaiting: true
+                });
+              }
+            }
+          } catch (e) {
+            console.warn('Error processing waiting log:', e);
+          }
+        }
+      } catch (e) {
+        console.warn('Error loading waiting players:', e);
+      }
+
+      completedDuels.sort((a, b) => Number(b.id) - Number(a.id));
+      pendingDuels.sort((a, b) => Number(b.id) - Number(a.id));
+      setDuels([...pendingDuels, ...completedDuels]);
+    } catch (e) {
+      console.error(e);
+      alert('Failed to load duels: ' + e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const hasAny = useMemo(() => duels.length > 0, [duels]);
+  const pendingDuels = useMemo(() => duels.filter(d => !d.completed), [duels]);
+  const completedDuels = useMemo(() => duels.filter(d => d.completed), [duels]);
+
+  return (
+    <>
+      <Head>
+        <title>My Duels — Crypto Duel</title>
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/icon.png" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
+
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white">
+        <div className="max-w-3xl mx-auto p-4">
+          {/* Header */}
+          <div className="text-center mb-6">
+            <div className="mb-2">
+              <img src="/icon.png" alt="Crypto Duel" className="w-14 h-14 mx-auto" />
+            </div>
+            <h1 className="text-2xl font-bold">My Duels</h1>
+            <div className="mt-2">
+              <Link href="/app" className="text-sm text-purple-200 hover:text-purple-100">🎮 Back to Game</Link>
+            </div>
+          </div>
+
+          {/* Address input / connect */}
+          <div className="bg-gray-800/50 rounded-lg p-4 mb-6 border border-gray-700">
+            <label className="block text-sm text-gray-300 mb-2">Wallet address</label>
+            <div className="flex gap-2">
+              <input
+                value={address}
+                onChange={(e) => setAddress(e.target.value.trim())}
+                placeholder="0x..."
+                className="flex-1 px-3 py-2 rounded bg-gray-900 border border-gray-700 text-white text-sm outline-none"
+              />
+              <button onClick={connectAddress} className="px-4 py-2 rounded bg-orange-600 hover:bg-orange-700 text-sm font-semibold">
+                Connect
+              </button>
+              <button onClick={loadMyDuels} className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-sm font-semibold" disabled={!address || loading}>
+                {loading ? 'Loading…' : 'Load history'}
+              </button>
+            </div>
+          </div>
+
+          {/* Pending (local) */}
+          {pendingLocal && (
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-6">
+              <div className="text-yellow-300 font-semibold mb-1">Waiting for opponent</div>
+              <div className="text-sm text-gray-200">
+                Bet: <span className="font-semibold">{pendingLocal.betEth} ETH</span>
+              </div>
+              {pendingLocal.txHash && (
+                <div className="mt-2 text-xs">
+                  TX: <span className="font-mono break-all">{pendingLocal.txHash}</span>
+                </div>
+              )}
+              <div className="mt-3 flex gap-3">
+                {pendingLocal.txHash && (
+                  <a className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-sm"
+                     href={`${BASESCAN}/tx/${pendingLocal.txHash}`}
+                     target="_blank" rel="noopener noreferrer">
+                    🔎 View transaction
+                  </a>
+                )}
+                <Link href="/app" className="px-3 py-2 rounded bg-gray-700 hover:bg-gray-600 text-sm">
+                  Back to game
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* Pending duels */}
+          <div className="bg-gray-800/50 rounded-lg border border-gray-700 overflow-hidden mb-6">
+            <div className="px-4 py-3 bg-gray-900/40 border-b border-gray-700 font-semibold">
+              Pending duels {pendingDuels.length > 0 ? `(${pendingDuels.length})` : ''}
+            </div>
+
+            {pendingDuels.length === 0 && !loading && (
+              <div className="p-6 text-center text-gray-400">
+                No pending duels found.
+              </div>
+            )}
+
+            {pendingDuels.length > 0 && (
+              <div className="divide-y divide-gray-700">
+                {pendingDuels.map((d) => (
+                  <div key={d.id} className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-gray-300">
+                        <Link href={`/duel/${d.id}`} className="underline decoration-dotted hover:text-white">
+                          Duel #{d.id}
+                        </Link>{' '}
+                        <span className="text-yellow-400">Waiting for opponent</span>
+                      </div>
+                      <div className="text-sm text-yellow-400 font-semibold">{d.betEth.toFixed(5)} ETH</div>
+                    </div>
+                    <div className="mt-1 text-xs text-gray-400">
+                      {short(d.player1)} vs {d.player2 === '0x0000000000000000000000000000000000000000' ? 'waiting...' : short(d.player2)} • {d.timestamp ? new Date(d.timestamp).toLocaleString() : ''} {d.isWaiting ? '(waiting for opponent)' : ''}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Completed duels */}
+          <div className="bg-gray-800/50 rounded-lg border border-gray-700 overflow-hidden">
+            <div className="px-4 py-3 bg-gray-900/40 border-b border-gray-700 font-semibold">
+              Completed duels {completedDuels.length > 0 ? `(${completedDuels.length})` : ''}
+            </div>
+
+            {completedDuels.length === 0 && !loading && (
+              <div className="p-6 text-center text-gray-400">
+                {hasAny ? 'No completed duels found.' : 'No data yet. Click "Load history" to fetch your results.'}
+              </div>
+            )}
+
+            {completedDuels.length > 0 && (
+              <div className="divide-y divide-gray-700">
+                {completedDuels.map((d) => (
+                  <div key={d.id} className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-gray-300">
+                        <Link href={`/duel/${d.id}`} className="underline decoration-dotted hover:text-white">
+                          Duel #{d.id}
+                        </Link>{' '}
+                        <span className={d.isWinner ? 'text-green-400' : 'text-red-400'}>
+                          {d.isWinner ? 'Win' : 'Loss'}
+                        </span>
+                      </div>
+                      <div className="text-sm text-yellow-400 font-semibold">{d.betEth.toFixed(5)} ETH</div>
+                    </div>
+                    <div className="mt-1 text-xs text-gray-400">
+                      {short(d.player1)} vs {short(d.player2)} • {d.timestamp ? new Date(d.timestamp).toLocaleString() : ''}
+                    </div>
+                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                      {d.txHash && (
+                        <a
+                          href={`${BASESCAN}/tx/${d.txHash}#eventlog`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-xs"
+                        >
+                          🔍 DuelCompleted on BaseScan
+                        </a>
+                      )}
+                      <a
+                        href={`${BASESCAN}/address/${CONTRACT_ADDRESS}#events`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded bg-gray-700 hover:bg-gray-600 text-xs"
+                      >
+                        📜 All contract events
+                      </a>
+                    </div>
+                    <details className="mt-3 text-xs text-gray-300">
+                      <summary className="cursor-pointer text-gray-400">Details (randomSeed)</summary>
+                      <div className="mt-2 font-mono break-all">{d.randomSeed}</div>
+                    </details>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="text-center mt-6">
+            <Link href="/app" className="inline-block px-4 py-2 rounded bg-purple-600 hover:bg-purple-700">
+              🎮 Back to Game
+            </Link>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}

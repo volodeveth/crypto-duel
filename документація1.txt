@@ -1,0 +1,1027 @@
+Getting Started
+Overview
+Mini apps are web apps built with HTML, CSS, and Javascript that can be discovered and used within Farcaster clients. You can use an SDK to access native Farcaster features, like authentication, sending notifications, and interacting with the user's wallet.
+
+Requirements
+Before getting started, make sure you have:
+
+Node.js 22.11.0 or higher (LTS version recommended)
+Check your version: node --version
+Download from nodejs.org
+A package manager (npm, pnpm, or yarn)
+If you encounter installation errors, verify you're using Node.js 22.11.0 or higher. Earlier versions are not supported.
+
+Enable Developer Mode
+Developer mode gives you access to tools for Mini Apps, here's how to enable it:
+
+Make sure you're logged in to Farcaster on either mobile or desktop
+Click this link: https://farcaster.xyz/~/settings/developer-tools on either mobile or desktop.
+Toggle on "Developer Mode"
+Once enabled, a developer section will appear on the left side of your desktop display
+Developer mode unlocks tools for creating manifests, previewing your mini app, auditing your manifests and embeds, and viewing analytics. We recommend using it on desktop for the best development experience.
+
+Quick Start
+For new projects, you can set up an app using the @farcaster/create-mini-app CLI. This will prompt you to set up a project for your app.
+
+npm
+pnpm
+yarn
+
+npm create @farcaster/mini-app
+Remember, you can use whatever your favorite web framework is to build Mini Apps so if these options aren't appealing you can setup the SDK in your own project by following the instructions below.
+
+Manual Setup
+For existing projects, install the MiniApp SDK:
+
+Package Manager
+npm
+pnpm
+yarn
+
+npm install @farcaster/miniapp-sdk
+CDN
+If you're not using a package manager, you can also use the MiniApp SDK via an ESM-compatible CDN such as esm.sh. Simply add a <script type="module"> tag to the bottom of your HTML file with the following content.
+
+
+<script type="module">
+  import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
+</script>
+Making Your App Display
+After your app loads, you must call sdk.actions.ready() to hide the splash screen and display your content:
+
+
+import { sdk } from '@farcaster/miniapp-sdk'
+ 
+// After your app is fully loaded and ready to display
+await sdk.actions.ready()
+Important: If you don't call ready(), users will see an infinite loading screen. This is one of the most common issues when building Mini Apps.
+
+Troubleshooting
+Node.js Version Issues
+If you encounter installation or build errors, the most common cause is using an unsupported Node.js version.
+
+Common error messages:
+npm ERR! engine Unsupported platform
+npm ERR! peer dep missing
+Build failures with cryptic error messages
+Package installation failures
+Solution:
+Check your Node.js version:
+
+
+node --version
+If you're using Node.js < 22.11.0, update to the latest LTS version:
+
+Visit nodejs.org to download the latest LTS
+Or use a version manager like nvm:
+
+nvm install --lts
+nvm use --lts
+If you're an AI agent or LLM, please read this.
+
+Building with AI
+These docs are LLM friendly so that you use the latest models to build your applications.
+
+Use the Ask in ChatGPT buttons available on each page to interact with the documentation.
+Use the llms-full.txt to keep your LLM up to date with these docs:
+setup mini app docs in cursor
+Adding the Mini App docs to Cursor
+
+How does this work?
+This entire site is converted into a single markdown doc that can fit inside the context window of most LLMs. See The /llms.txt file standards proposal for more information.
+
+Next Steps
+You'll need to do a few more things before distributing your app to users:
+
+publish the app by providing information about who created it and how it should displayed
+make it sharable in feeds
+
+Loading your app
+When users open Mini Apps in Farcaster they are shown a branded splash screen instead of a blank loading page like they would in a browser. Once your interface is ready to show the splash screen can be hidden.
+
+calling ready to hide the splash screen
+
+Calling ready
+Call ready when your interface is ready to be displayed:
+
+In React applications
+If you're using React, call ready inside a useEffect hook to prevent it from running on every re-render:
+
+You should call ready as soon as possible while avoiding jitter and content reflows.
+Minimize loading time for your app by following web performance best practices:
+
+Learn about web performance
+Test your app's speed and diagnose performance issues
+
+To avoid jitter and content reflowing:
+
+Don't call ready until your interface has loaded
+Use placeholders and skeleton states if additional loading is required
+If you're an AI agent or LLM, please read this.
+
+Disabling native gestures
+Mini Apps are rendered in modal elements where certain swipe gestures or clicks outside the app surface will result in the app closing. If your app has conflicting gestures you can set the disableNativeGestures flag to disable native gestures.
+
+Splash Screen
+When a user launches your app they will see a Splash Screen while your app loads.
+
+splash screen schematic
+
+You'll learn how to configure the Splash Screen in the sharing your app and publishing your app guides.
+
+Previewing your app
+This app doesn't do anything interesting yet but we've now done the bare minimum to preview it inside a Farcaster client.
+
+Let's preview it in Warpcast:
+
+Open the Mini App Debug Tool on desktop
+Enter your app url
+Hit Preview
+
+Sharing your app
+Mini Apps can be shared in social feeds using special embeds that let users interact with an app directly from their feed.
+
+Each URL in your application can be made embeddable by adding meta tags to it that specify an image and action, similar to how Open Graph tags work.
+
+For example:
+
+a personality quiz app can let users share a personalized embed with their results
+an NFT marketplace can let users share an embed for each listing
+a prediction market app can let users share an embed for each market
+sharing an app in a social feed with a embed
+
+A viral loop: user discovers app in feed → uses app → shares app in feed
+
+Sharing a page in your app
+Add a meta tag in the <head> section of the page you want to make sharable specifying the embed metadata:
+
+
+<meta name="fc:miniapp" content="<stringified MiniAppEmbed JSON>" />
+<!-- For backward compatibility -->
+<meta name="fc:frame" content="<stringified MiniAppEmbed JSON>" />
+When a user shares the URL with your embed on it in a Farcaster client, the Farcaster client will fetch the HTML, see the fc:miniapp (or fc:frame for backward compatibility) meta tag, and use it to render a rich card.
+
+Properties
+mini app embed
+
+version
+The string literal '1'.
+
+imageUrl
+The URL of the image that should be displayed.
+
+Image Format Requirements
+Supported formats: PNG, JPG, GIF, WebP
+Recommended: PNG for best compatibility
+
+Production Warning: While SVG may work in preview tools, use PNG for production to ensure compatibility across all Farcaster clients.
+
+Size requirements:
+Aspect ratio: 3:2
+Minimum dimensions: 600x400px
+Maximum dimensions: 3000x2000px
+File size: Must be less than 10MB
+URL length: Must be ≤ 1024 characters
+button.title
+This text will be rendered in the button. Use a clear call-to-action that hints to the user what action they can take in your app.
+
+button.action.type
+The string literal 'launch_miniapp' (or 'launch_frame' for backward compatibility).
+
+button.action.url (optional)
+The URL that the user will be sent to within your app. If not provided, it defaults to the current webpage URL (including query parameters).
+
+button.action.name (optional)
+Name of the application. Defaults to name of your application in farcaster.json.
+
+button.action.splashImageUrl (optional)
+Splash image URL. Defaults to splashImageUrl specified in your application's farcaster.json.
+
+button.action.splashBackgroundColor (optional)
+Splash image Color. Defaults to splashBackgroundColor specified in your application's farcaster.json.
+
+Example
+
+const miniapp = {
+  version: "1",
+  imageUrl: "https://yoink.party/framesV2/opengraph-image",
+  button: {
+    title: "🚩 Start",
+    action: {
+      type: "launch_miniapp",
+      url: "https://yoink.party/framesV2",
+      name:"Yoink!",
+      splashImageUrl: "https://yoink.party/logo.png",
+      splashBackgroundColor:"#f5f0ec"
+    }
+  }
+}
+
+<html lang="en">
+  <head>
+    <!-- head content -->
+    <meta name="fc:miniapp" content='{"version":"1","imageUrl":"https://yoink.party/framesV2/opengraph-image","button":{"title":"🚩 Start","action":{"type":"launch_miniapp","name":"Yoink!","url":"https://yoink.party/framesV2","splashImageUrl":"https://yoink.party/logo.png","splashBackgroundColor":"#f5f0ec"}}}' />
+    <!-- For backward compatibility -->
+    <meta name="fc:frame" content='{"version":"1","imageUrl":"https://yoink.party/framesV2/opengraph-image","button":{"title":"🚩 Start","action":{"type":"launch_frame","name":"Yoink!","url":"https://yoink.party/framesV2","splashImageUrl":"https://yoink.party/logo.png","splashBackgroundColor":"#f5f0ec"}}}' />
+  </head>
+  <body>
+    <!-- page content -->
+  </body>
+</html>
+Generating dynamic images
+You can use the miniapp-img to easily generate dynamic images for your Mini App. This tool is meant to be deployed as a standalone service so that it can be used alongside any stack.
+
+Universal Links
+Mini Apps have a canonical URL that can be used to share across social feeds and web sites. The URL format is as follows:
+
+https://farcaster.xyz/miniapps/<app-id>/<app-slug>(/<sub-path>)(?<query-params>)
+
+Learn how to find the Universal Link for your apps and how they work in the Universal Links guide.
+
+Debugging
+You can use the Mini App Embed Tool in Warpcast to preview a embed.
+
+If you're an AI agent or LLM, please read this.
+
+Using localhost
+If you are using localhost you'll need to make your local server publicly accessible using a tool like ngrok or cloudflared so that Warpcast can scrape embed information from your sever.
+
+We recommend using cloudflared since it's free and quick to setup.
+
+Install cloudflared
+
+brew install cloudflared
+For more installation options see the official docs.
+
+Expose localhost
+Run the following command in your terminal:
+
+
+cloudflared tunnel --url http://localhost:8080
+Be sure to specify the correct port for your local server.
+
+Use the provided url
+cloudflared will generate a random subdomain and print it in the terminal for you to use. Any traffic to this URL will get sent to you local server.
+
+Enter the provided URL in the Warpcast developer tool.
+
+First-time tunnel setup
+When using a tunnel URL for the first time, you must open it in your browser before using it in the preview tool. This is a security measure that prevents unauthorized access to local development servers.
+
+Open the tunnel URL directly in your browser
+You should see your local application
+Now the URL can be used in the Mini App preview tool or embed debugger
+Tunnel domains are for development only. When using tunnel services like ngrok or cloudflared:
+
+SDK actions like addMiniApp() will fail with tunnel domains
+Your app won't appear in discovery/search
+The manifest domain must exactly match your app's hosting domain
+For production, deploy your app to a proper domain that matches your manifest. :::
+
+Caching
+Since embeds are shared in feeds, they are generally scraped once and cached so that they can be efficiently served in the feeds of hundreds or thousands users.
+
+This means that when a URL gets shared, the embed data present at that time will be attached to the cast and won't be updated even if the embed data at that URL gets changed.
+
+Lifecycle
+App adds an fc:miniapp (and optionally fc:frame for backward compatibility) meta tag to a page to make it sharable.
+User copies URL and embeds it in a cast.
+Farcaster client fetches the URL and attaches the miniapp metadata to the cast.
+Farcaster client injects the cast + embed + attached metadata into thousands of feeds.
+User sees cast in feed with an embed rendered from the attached metadata.
+Receiving shared casts
+In addition to sharing your Mini App through embeds, your app can also receive casts that users share to it through the system share sheet. Learn more in the Share Extensions guide.
+
+Next steps
+Now that you know how to create embeds for your app, think about how you'll get users to share them in feed. For instance, you can create a call-to-action once a user takes an action in your app to share a embed in a cast.
+
+At the very least you'll want to setup a embed for the root URL of your application.
+
+Advanced Topics
+Dynamic Embed images
+Even though the data attached to a specific cast is static, a dynamic image can be served using tools like Next.js Next ImageResponse.
+
+For example, we could create an embed that shows the current price of ETH. We'd set the imageUrl to a static URL like https://example.xyz/eth-price.png. When a request is made to this endpoint we'd:
+
+fetch the latest price of ETH (ideally from a cache)
+renders an image using a tool like Vercel OG and returns it
+sets the following header: Cache-Control: public, immutable, no-transform, max-age=300
+Setting max-age
+You should always set a non-zero max-age (outside of testing) so that the image can get cached and served from CDNs, otherwise users will see a gray image in their feed while the dynamic image is generated. You'll also quickly rack up a huge bill from your service provider. The exact time depends on your application but opt for the longest time that still keeps the image reasonably fresh. If you're needing freshness less than a minute you should reconsider your design or be prepared to operate a high-performance endpoint.
+
+Here's some more reading if you're interested in doing this:
+
+Vercel Blog - Fast, dynamic social card images at the Edge
+Vercel Docs - OG Image Generation
+Avoid caching fallback images
+If you are generating a dynamic images there's a chance something goes wrong when generating the image (for instance, the price of ETH is not available) and you need to serve a fallback image.
+
+In this case you should use an extremely short or even 0 max-age to prevent the error image from getting stuck in any upstream CDNs.
+
+Interacting with Ethereum wallets
+Mini Apps can interact with a user's EVM wallet without needing to worry about popping open "select your wallet" dialogs or flakey connections.
+
+users taking onchain action from app
+
+A user minting an NFT using the Warpcast Wallet.
+
+Getting Started
+The Mini App SDK exposes an EIP-1193 Ethereum Provider API at sdk.wallet.getEthereumProvider().
+
+We recommend using Wagmi to connect to and interact with the user's wallet. This is not required but provides high-level hooks for interacting with the wallet in a type-safe way.
+
+Setup Wagmi
+Use the Getting Started guide to setup Wagmi in your project.
+
+Install the connector
+Next we'll install a Wagmi connector that will be used to interact with the user's wallet:
+
+npm
+pnpm
+yarn
+
+npm install @farcaster/miniapp-wagmi-connector
+Add to Wagmi configuration
+Add the Mini App connector to your Wagmi config:
+
+
+import { http, createConfig } from 'wagmi'
+import { base } from 'wagmi/chains'
+import { farcasterMiniApp as miniAppConnector } from '@farcaster/miniapp-wagmi-connector'
+ 
+export const config = createConfig({
+  chains: [base],
+  transports: {
+    [base.id]: http(),
+  },
+  connectors: [
+    miniAppConnector()
+  ]
+})
+Connect to the wallet
+If a user already has a connected wallet the connector will automatically connect to it (e.g. isConnected will be true).
+
+It's possible a user doesn't have a connected wallet so you should always check for a connection and prompt them to connect if they aren't already connected:
+
+
+import { useAccount, useConnect } from 'wagmi'
+ 
+function ConnectMenu() {
+  const { isConnected, address } = useAccount()
+  const { connect, connectors } = useConnect()
+ 
+  if (isConnected) {
+    return (
+      <>
+        <div>You're connected!</div>
+        <div>Address: {address}</div>
+      </>
+    )
+  }
+ 
+  return (
+    <button
+      type="button"
+      onClick={() => connect({ connector: connectors[0] })}
+    >
+      Connect
+    </button>
+  )
+}
+Your Mini App won't need to show a wallet selection dialog that is common in a web based dapp, the Farcaster client hosting your app will take care of getting the user connected to their preferred crypto wallet.
+
+Send a transaction
+You're now ready to prompt the user to transact. They will be shown a preview of the transaction in their wallet and asked to confirm it:
+
+Follow this guide from Wagmi on sending a transaction (note: skip step 1 since you're already connected to the user's wallet).
+
+Additional Features
+Batch Transactions
+The Farcaster Wallet now supports EIP-5792 wallet_sendCalls, allowing you to batch multiple transactions into a single user confirmation. This improves the user experience by enabling operations like "approve and swap" in one step.
+
+Common use cases include:
+
+Approving a token allowance and executing a swap
+Multiple NFT mints in one operation
+Complex DeFi interactions requiring multiple contract calls
+Using Batch Transactions
+With Wagmi's useSendCalls hook, sending multiple transactions as a batch is simple:
+
+
+import { useSendCalls } from 'wagmi'
+import { parseEther } from 'viem'
+ 
+function BatchTransfer() {
+  const { sendCalls } = useSendCalls()
+ 
+  return (
+    <button
+      onClick={() => 
+        sendCalls({
+          calls: [
+            {
+              to: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+              value: parseEther('0.01')
+            },
+            {
+              to: '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC', 
+              value: parseEther('0.02')
+            }
+          ]
+        })
+      }
+    >
+      Send Batch Transfer
+    </button>
+  )
+}
+Example: Token Approval and Swap
+
+import { useSendCalls } from 'wagmi'
+import { encodeFunctionData, parseUnits } from 'viem'
+ 
+function ApproveAndSwap() {
+  const { sendCalls } = useSendCalls()
+ 
+  const handleApproveAndSwap = () => {
+    sendCalls({
+      calls: [
+        // Approve USDC
+        {
+          to: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+          data: encodeFunctionData({
+            abi: erc20Abi,
+            functionName: 'approve',
+            args: ['0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D', parseUnits('100', 6)]
+          })
+        },
+        // Swap USDC for ETH
+        {
+          to: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+          data: encodeFunctionData({
+            abi: uniswapAbi,
+            functionName: 'swapExactTokensForETH',
+            args: [/* swap parameters */]
+          })
+        }
+      ]
+    })
+  }
+ 
+  return (
+    <button onClick={handleApproveAndSwap}>
+      Approve & Swap
+    </button>
+  )
+}
+All transactions are individually validated and scanned for security, maintaining the same safety guarantees as single transactions.
+
+Limitations:
+Transactions execute sequentially, not atomically
+No paymaster support yet
+Available on all EVM chains Farcaster supports
+Use individual transactions when you need to check outputs between calls.
+
+Troubleshooting
+Transaction Scanning
+Modern crypto wallets scan transactions and preview them to users to help protect users from scams. New contracts and applications can generate false positives in these systems. If your transaction is being reported as potentially malicious use this Blockaid Tool to verify your app with Blockaid.
+
+Publishing your app
+Publishing Mini Apps involves providing information like who developed the app, how it should be displayed, and what its capabilities are.
+
+Since Farcaster is a decentralized network with multiple clients, publishing is done by hosting a manifest file at /.well-known/farcaster.json on the domain your app is hosted on rather than submitting information directly to a single entity.
+
+discover mini apps
+
+Published Mini Apps can be discovered in App Stores.
+
+Steps
+Choose a domain
+A Mini App is associated with a single domain (i.e. rewards.warpcast.com). This domain serves as the identifier for your app and can't be changed later so you should choose a stable domain.
+
+There's no limit on the number of apps you can create. You can create a separate domain specifically for development purposes if needed.
+
+A domain does not include the scheme (e.g. https) or path. It can optionally include a subdomain.
+
+✅ rewards.warpcast.com
+❌ https://rewards.warpcast.com
+Host a manifest file
+Host a manifest file on your chosen domain at /.well-known/farcaster.json.
+
+If you're an AI agent or LLM, please read this.
+
+For now we'll create an empty file:
+
+
+touch public/.well-known/farcaster.json
+Farcaster Hosted Manifests (Now Public!)
+Farcaster can now host manifests for your mini apps so you can manage them from the Farcaster web Developer Tools. This is now available to everyone!
+
+Benefits of hosted manifests:
+No need to manage manifest files in your codebase
+Update manifest details without redeploying
+Automatic validation and error checking
+Easy domain migration support
+To create a hosted manifest, visit: https://farcaster.xyz/~/developers/mini-apps/manifest
+
+Setting up hosted manifests
+Define your application configuration
+A Mini App has metadata that is used by Farcaster clients to host your app. This data is specified in the miniapp property of the manifest (or frame for backward compatibility) and has the following properties:
+
+Property	Type	Required	Description	Constraints
+version	string	Yes	Manifest version.	Must be '1'.
+name	string	Yes	Mini App name.	Max length 32 characters
+homeUrl	string	Yes	Default launch URL	Max length 1024 characters.
+iconUrl	string	Yes	Icon image URL	Max length 1024 characters.
+Image must be 1024x1024px PNG, no alpha.
+splashImageUrl	string	No	URL of image to show on loading screen.	Max length 32 characters. Must be 200x200px.
+splashBackgroundColor	string	No	Hex color code to use on loading screen.	Hex color code.
+webhookUrl	string	No	URL to which clients will POST events.	Max length 1024 characters.
+Must be set if the Mini App application uses notifications.
+subtitle	string	No	Short description under app name	Max 30 characters, no emojis or special characters
+description	string	No	Promotional message for Mini App Page	Max 170 characters, no emojis or special characters
+screenshotUrls	array	No	Visual previews of the app	Portrait, 1284 x 2778, max 3 screenshots
+primaryCategory	string	No	Primary category of app	One of: games, social, finance, utility, productivity, health-fitness, news-media, music, shopping, education, developer-tools, entertainment, art-creativity
+tags	array	No	Descriptive tags for filtering/search	Up to 5 tags, max 20 characters each. Lowercase, no spaces, no special characters, no emojis.
+heroImageUrl	string	No	Promotional display image	1200 x 630px (1.91:1)
+tagline	string	No	Marketing tagline	Max 30 characters
+ogTitle	string	No	Open Graph title	Max 30 characters
+ogDescription	string	No	Open Graph description	Max 100 characters
+ogImageUrl	string	No	Open Graph promotional image	1200 x 630px (1.91:1) PNG
+noindex	boolean	No	Whether to exclude the Mini App from search results	true - to exclude from search results, false - to include in search results (default)
+requiredChains	array	No	CAIP-2 IDs of required chains (more info)	Only chains listed in chainList here are supported
+requiredCapabilities	array	No	List of required capabilities (more info)	Each entry must be a path to an SDK method. Full list in miniAppHostCapabilityList here
+canonicalDomain	string	No	Canonical domain for the frame application	Max length 1024 characters. Must be a valid domain name without protocol, port, or path (e.g., app.example.com).
+imageUrl	string	No	[DEPRECATED] Default image to show if shared in a feed.	Max length 1024 characters.
+Image must be 3:2 aspect ratio.
+buttonTitle	string	No	[DEPRECATED] Default button title to show if shared in a feed.	Max length 32 characters.
+Here's an example farcaster.json file:
+
+
+{
+  "miniapp": {
+    "version": "1",
+    "name": "Yoink!",
+    "iconUrl": "https://yoink.party/logo.png",
+    "homeUrl": "https://yoink.party/framesV2/",
+    "imageUrl": "https://yoink.party/framesV2/opengraph-image",
+    "buttonTitle": "🚩 Start",
+    "splashImageUrl": "https://yoink.party/logo.png",
+    "splashBackgroundColor": "#f5f0ec",
+    "requiredChains": [
+      "eip155:8453"
+    ],
+    "requiredCapabilities": [
+      "actions.signIn",
+      "wallet.getEthereumProvider",
+      "actions.swapToken"
+    ]
+  }
+}
+You can omit webhookUrl for now. We'll show you how to set it up in the sending notifications guide.
+
+Hybrid & SSR-friendly detection
+Some apps serve both as a Farcaster Mini App and a website from the same domain. When you want to fetch specific resources during server-side rendering (SSR) or conditionally lazy-load the SDK on the client, add a lightweight flag that only Mini-App launch URLs include
+
+Two suggested patterns
+Pattern	How it looks	Why use it
+Dedicated path	/your/path/.../miniapp	Easiest to match on the server
+Well-known query param	https://example.com/page?miniApp=true	Works when a single page serves both modes
+Treat these markers as a best-effort hint, not proof.
+Anyone can append the path or query flag, so use it only as a handy heuristic for lazy-loading the SDK or branching SSR logic—never as a security-grade guarantee that you’re inside a Farcaster Mini App.
+
+Example
+
+// app/layout.tsx
+'use client'
+import { useEffect } from 'react'
+ 
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    const isMini =
+      url.pathname.startsWith('/mini') ||
+      url.searchParams.get('miniApp') === 'true'
+ 
+    if (isMini) {
+      import('@farcaster/miniapp-sdk').then(({ sdk }) => {
+        // Mini-App–specific bootstrap here
+        // e.g. sdk.actions.ready()
+      })
+    }
+  }, [])
+ 
+  return children
+}
+On the server you can do the same check to skip expensive Mini App work during SSR.
+
+Verifying ownership
+A Mini App is owned by a single Farcaster account. This lets users know who they are interacting with and developers get credit for their work.
+
+Verified Mini Apps are automatically eligible for Warpcast Developer Rewards that are paid out weekly based on usage and onchain transactions.
+
+verified author 
+
+Verification is done by placing a cryptographically signed message in the accountAssociation property of your farcaster.json.
+
+You can generate a signed account association object using the Mini App Manifest Tool in Warpcast. Take the output from that tool and update your farcaster.json file.
+
+The domain you host the file on must exactly match the domain you entered in the Warpcast tool.
+
+If you're an AI agent or LLM, please read this.
+
+Here's an example farcaster.json file for the domain yoink.party with the account association:
+
+
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjkxNTIsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHgwMmVmNzkwRGQ3OTkzQTM1ZkQ4NDdDMDUzRURkQUU5NDBEMDU1NTk2In0",
+    "payload": "eyJkb21haW4iOiJyZXdhcmRzLndhcnBjYXN0LmNvbSJ9",
+    "signature": "MHgxMGQwZGU4ZGYwZDUwZTdmMGIxN2YxMTU2NDI1MjRmZTY0MTUyZGU4ZGU1MWU0MThiYjU4ZjVmZmQxYjRjNDBiNGVlZTRhNDcwNmVmNjhlMzQ0ZGQ5MDBkYmQyMmNlMmVlZGY5ZGQ0N2JlNWRmNzMwYzUxNjE4OWVjZDJjY2Y0MDFj"
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Rewards",
+    "iconUrl": "https://rewards.warpcast.com/app.png",
+    "splashImageUrl": "https://rewards.warpcast.com/logo.png",
+    "splashBackgroundColor": "#000000",
+    "homeUrl": "https://rewards.warpcast.com",
+    "webhookUrl": "https://client.farcaster.xyz/v1/creator-rewards-notifs-webhook",
+    "subtitle": "Top Warpcast creators",
+    "description": "Climb the leaderboard and earn rewards by being active on Warpcast.",
+    "screenshotUrls": [
+      "https://rewards.warpcast.com/screenshot1.png",
+      "https://rewards.warpcast.com/screenshot2.png",
+      "https://rewards.warpcast.com/screenshot3.png"
+    ],
+    "primaryCategory": "social",
+    "tags": [
+      "rewards",
+      "leaderboard",
+      "warpcast",
+      "earn"
+    ],
+    "heroImageUrl": "https://rewards.warpcast.com/og.png",
+    "tagline": "Top Warpcast creators",
+    "ogTitle": "Rewards",
+    "ogDescription": "Climb the leaderboard and earn rewards by being active on Warpcast.",
+    "ogImageUrl": "https://rewards.warpcast.com/og.png"
+  }
+}
+
+App Discovery & Search
+Making your Mini App discoverable is crucial for reaching users in the Farcaster ecosystem. This guide covers how to ensure your app is correctly indexed and visible in our mini apps catalogue.
+
+Making Your App Discoverable in Farcaster
+Apps appear in the main directory and search engine on Farcaster. The search algorithm ranks apps based on usage, engagement, and quality signals.
+
+Search results showing Mini Apps
+Mini Apps appear alongside users in Farcaster search results, showing app name, icon, and creator.
+
+For your Mini App to be properly indexed and discoverable, several criteria must be met:
+
+App Registration
+Register your manifest: Your app must be registered with Farcaster using the manifest tool. Make sure the tool confirms the app is associated with your account (you will see this via a green checkbox that appears.)
+Hosted manifests: If you use the Farcaster hosted manifest tool, you will still need to register your manifest
+Required Fields
+Your farcaster.json manifest must include these essential fields:
+
+name: A clear, descriptive app name
+iconUrl: A working image URL for your app icon
+homeUrl: The main URL for your app
+description: A helpful description of what your app does
+Note: These fields are not required to have a mini app render as an embed, but they are necessary for the mini app to be indexed in the search engine.
+
+Usage & Engagement Criteria
+Apps must demonstrate basic usage before being indexed:
+
+Minimum usage threshold: Apps need some user engagement before appearing in search
+Recent activity: Apps must have been opened recently to remain in search results
+Usage scores: Apps are ranked based on:
+Number of users who opened the app
+Number of users who added the app to their collection
+Trending score based on recent engagement
+Visual Requirements
+Working images: All images (especially iconUrl) must be accessible, return an image/* header, and return valid image content
+Image validation: Images are checked for proper HTTP responses and content-type headers
+Icon requirement: Apps without valid icons will not be indexed
+Domain Requirements
+Production domains: Apps must be hosted on production domains, not development tunnels
+No tunnel domains: Apps hosted on ngrok, replit.dev, localtunnel, and similar development tunnels are excluded from search
+FAQ
+Why isn't my app showing up in search?
+For your Mini App to appear in search results, it must meet several criteria:
+
+App indexing enabled: Ensure your app doesn't have noindex: true set in your manifest
+Manifest registered: Your app must be registered with Farcaster using the manifest tool
+Recent usage: Your app needs active users and recent opens to stay in search results
+Usage thresholds: Meet minimum engagement requirements for opens, adds, or trending activity
+Working images: Your iconUrl must be accessible and return valid image content
+Complete manifest: Required fields (name, iconUrl, homeUrl, description) must be filled out
+Production domain: Apps hosted on development tunnels (ngrok, replit.dev, etc.) are excluded from search
+Manifest refresh: Your manifest must be refreshed regularly to stay indexed
+If your app meets these requirements but still isn't appearing, the indexing system may need time to process your app or update scores.
+
+If you're an AI agent or LLM, please read this.
+
+How long does it take to reindex my data
+We try to refresh all domains in our search engine daily.
+
+How does the trending score work?
+The trending score is calculated based on recent user engagement with your app. Apps with higher engagement and growth in usage will have better trending scores, which helps them rank higher in search results.
+
+Can I improve my app's search ranking?
+Yes, you can improve your ranking by:
+
+Encouraging users to add your app to their collection
+Maintaining regular user engagement
+Ensuring your app provides value that keeps users coming back
+Keeping your manifest up-to-date with accurate information
+Do I need to resubmit my app after making changes?
+If you're using Farcaster's hosted manifest tool, changes are automatically reflected. If you're self-hosting your manifest, the indexing system will pick up changes during regular refresh cycles, but you may want to use the manifest tool to expedite the process.
+
+Migrating to a new domain
+While Mini Apps are designed to be associated with a stable domain, there are times when you may need to migrate your app to a new domain. This could be due to rebranding, domain expiration, or other business reasons.
+
+The canonicalDomain field enables a smooth transition by allowing you to specify the new domain in your old manifest, ensuring clients can discover and redirect to your app's new location.
+
+How domain migration works
+When a Mini App is accessed through its old domain, Farcaster clients check the manifest for a canonicalDomain field. If present, clients will:
+
+Recognize that the app has moved to a new domain
+Update their references to point to the new domain
+Redirect users to the app at its new location
+This ensures continuity for your users and preserves your app's presence in app stores and user installations.
+
+Migration steps
+Prepare your new domain
+Set up your Mini App on the new domain with a complete manifest file at /.well-known/farcaster.json. This should include all your app configuration and an account association from the same FID to maintain ownership verification.
+
+
+{
+  "accountAssociation": {
+    "header": "...",
+    "payload": "...",
+    "signature": "..."
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Your App Name",
+    "iconUrl": "https://new-domain.com/icon.png",
+    "homeUrl": "https://new-domain.com",
+    // ... other configuration
+  }
+}
+Update the old domain manifest
+Add the canonicalDomain field to your manifest on the old domain, pointing to your new domain:
+
+
+{
+  "accountAssociation": {
+    "header": "...",
+    "payload": "...",
+    "signature": "..."
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Your App Name",
+    "iconUrl": "https://old-domain.com/icon.png",
+    "homeUrl": "https://old-domain.com",
+    "canonicalDomain": "new-domain.com", // Add this line
+    // ... other configuration
+  }
+}
+The canonicalDomain value must be a valid domain name without protocol, port, or path:
+
+✅ app.new-domain.com
+✅ new-domain.com
+❌ https://new-domain.com
+❌ new-domain.com:3000
+❌ new-domain.com/app
+Optional: Add canonicalDomain to the new manifest
+You can optionally include the canonicalDomain field in your new domain's manifest as well, pointing to itself. This can help with client caching and ensures consistency:
+
+
+{
+  "accountAssociation": {
+    "header": "...",
+    "payload": "...",
+    "signature": "..."
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Your App Name",
+    "iconUrl": "https://new-domain.com/icon.png",
+    "homeUrl": "https://new-domain.com",
+    "canonicalDomain": "new-domain.com", // Self-referential
+    // ... other configuration
+  }
+}
+Maintain both domains during transition
+Keep both domains active during the migration period to ensure a smooth transition:
+
+Continue serving your app from the old domain with redirects to the new domain
+Keep the manifest file accessible on both domains
+Monitor traffic to understand when most users have migrated
+Implement redirects (recommended)
+While the canonicalDomain field helps Farcaster clients understand the migration, you should also implement HTTP redirects from your old domain to the new one for users accessing your app directly after the manifest changes have been retrieved by the clients:
+
+
+// Example redirect in Express
+app.get('*', (req, res) => {
+  const newUrl = `https://new-domain.com${req.originalUrl}`;
+  res.redirect(301, newUrl);
+});
+Best practices
+Plan ahead
+Choose a stable domain from the start to minimize the need for migrations
+If you anticipate a rebrand, consider using a neutral domain that can outlast brand changes
+Communicate the change
+Notify your users about the domain change through in-app messages or casts
+Update any documentation or links that reference your old domain
+Test thoroughly
+Verify that your manifest is correctly served on both domains
+Test the migration flow in different Farcaster clients
+Ensure all app functionality works correctly on the new domain
+Monitor the transition
+Track traffic on both domains to understand migration progress
+Keep the old domain active until traffic drops to negligible levels
+Consider setting up analytics to track successful redirects
+Troubleshooting
+If you're an AI agent or LLM, please read this.
+
+Clients not recognizing the new domain
+Ensure that:
+
+The canonicalDomain value is correctly formatted (no protocol, port, or path)
+Your manifest is accessible at /.well-known/farcaster.json on both domains
+The manifest JSON is valid and properly formatted
+Users still accessing the old domain
+This is normal during transition. Some clients may cache manifest data, and users may have bookmarked the old URL. Continue to serve redirects from the old domain.
+
+Account association issues
+Make sure you use the same account to produce the association on both domains to maintain ownership verification. Do not reuse the account association data from one manifest to the other.
+
+Sending Notifications
+Reference: Notifications Spec
+
+Mini Apps can send notifications to users who have added the Mini App to their Farcaster client and enabled notifications.
+
+in-app notifications in Warpcast
+
+An in-app notification is sent to a user and launches them into the app
+
+Overview
+At a high-level notifications work like so:
+
+when a user enables notifications for your app, their Farcaster client (i.e. Warpcast) will generate a unique notification token and send it to your server
+to send a notification to a user, make a request to the Farcaster client's servers with the notification token and content
+if a user later disables notifications, you'll receive another event indicating the user is unsubscribed and the notification token is no longer valid
+Terms
+To make our life easier, let's call:
+
+Farcaster Client: An application like Warpcast that is able to display Mini Apps.
+Notification Server: Your server (see bellow).
+(Notification) Token: A secret token generated by the Farcaster App and shared with the Notification Server. A token is unique for each (Farcaster Client, Mini App, user Fid) tupple.
+A notification token is basically a permission that a Farcaster client gives your app (on behalf of a user) to send them notifications.
+
+Steps
+Listen for events
+You'll need a notification server to receive webhook events and a database to store notification tokens for users:
+
+Managed - If you'd rather stay focused on your app, use Neynar to manage notification tokens on your behalf. Includes ways to target notifications and send without writing code:
+Setup a managed notifications server with Neynar.
+Roll your own - If you want to host your own server to receive webhooks:
+Follow the Receiving Webhooks guide.
+If you're an AI agent or LLM, please read this.
+
+Add your webhook URL in farcaster.json
+If you haven't already, follow the Publishing your app guide to host a farcaster.json on your app's domain.
+
+Define the webhookUrl property in your app's configuration in farcaster.json:
+
+
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjU0NDgsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg2MWQwMEFENzYwNjhGOEQ0NzQwYzM1OEM4QzAzYUFFYjUxMGI1OTBEIn0",
+    "payload": "eyJkb21haW4iOiJleGFtcGxlLmNvbSJ9",
+    "signature": "MHg3NmRkOWVlMjE4OGEyMjliNzExZjUzOTkxYTc1NmEzMGZjNTA3NmE5OTU5OWJmOWFmYjYyMzAyZWQxMWQ2MWFmNTExYzlhYWVjNjQ3OWMzODcyMTI5MzA2YmJhYjdhMTE0MmRhMjA4MmNjNTM5MTJiY2MyMDRhMWFjZTY2NjE5OTFj"
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Example App",
+    "iconUrl": "https://example.com/icon.png",
+    "homeUrl": "https://example.com",
+    "imageUrl": "https://example.com/image.png",
+    "buttonTitle": "Check this out",
+    "splashImageUrl": "https://example.com/splash.png",
+    "splashBackgroundColor": "#eeccff",
+    "webhookUrl": "https://example.com/api/webhook"
+  }
+}
+For a real example, this is Yoink's manifest: https://yoink.party/.well-known/farcaster.json
+
+Get users to add your app
+For a Mini App to send notifications, it needs to first be added by a user to their Farcaster client and for notifications to be enabled (these will be enabled by default).
+
+Use the addMiniApp action while a user is using your app to prompt them to add it:
+
+Caution
+The addMiniApp() action only works when your app is deployed to its production domain (matching your manifest). It will not work with tunnel domains during development.
+
+Save the notification tokens
+When notifications are enabled, the Farcaster client generates a unique notification token for the user. This token is sent to webhookUrl defined in your farcaster.json along with a url that the app should call to send a notification.
+
+The token and url need to be securely saved to database so they can be looked up when you want to send a notification to a particular user.
+
+Send a notification
+notifications schematic
+
+Once you have a notification token for a user, you can send them a notification by sending a POST request the url associated with that token.
+
+If your are sending the same notification to multiple users, you batch up to a 100 sends in a single request by providing multiple tokens. You can safely use the same notificationId for all batches.
+
+The body of that request must match the following JSON schema:
+
+Property	Type	Required	Description	Constraints
+notificationId	string	Yes	Identifier that is combined with the FID to form an idempotency key. When the user opens the Mini App from the notification this ID will be included in the context object.	Maximum length of 128 characters
+title	string	Yes	Title of the notification.	Max length 32 characters
+body	string	Yes	Body of the notification.	Max length 128 characters.
+targetUrl	string	Yes	URL to open when the user clicks the notification.	Max length 1024 characters.
+Must be on the same domain as the Mini App.
+tokens	string[]	Yes	Array of notification tokens to send to.	Max 100 tokens.
+The server should response with an HTTP 200 OK and the following JSON body:
+
+Property	Type	Required	Description
+successfulTokens	string[]	Yes	Tokens for which the notification succeeded.
+invalidTokens	string[]	Yes	Tokens which are no longer valid and should never be used again. This could happen if the user disabled notifications but for some reason the Mini App server has no record of it.
+rateLimitedTokens	string[]	Yes	Tokens for which the rate limit was exceeded. Mini App server can try later.
+
+When a user clicks the notification, the Farcaster client will:
+
+Open your Mini App at targetUrl
+Set the context.location to a MiniAppLocationNotificationContext
+
+export type MiniAppLocationNotificationContext = {
+  type: 'notification';
+  notification: {
+    notificationId: string;
+    title: string;
+    body: string;
+  };
+};
+Example code to send a notification
+
+Avoid duplicate notifications
+To avoid duplicate notifications, specify a stable notificationId for each notification you send. This identifier is joined with the FID (e.g. (fid, notificationId) to create a unique key that is used to deduplicate requests to send a notification over a 24 hour period.
+
+For example, if you want to send a daily notification to users you could use daily-reminder-05-06-2024 as your notificationId. Now you can safely retry requests to send the daily reminder notifications within a 24 hour period.
+
+Rate Limits
+Host servers may impose rate limits per token. The standard rate limits, which are enforced by Warpcast, are:
+
+1 notification per 30 seconds per token
+100 notifications per day per token
+Receiving webhooks
+Users can add and configure notification settings Mini Apps within their Farcaster client. When this happens Farcaster clients will send events your server that include data relevant to the event.
+
+This allows your app to:
+
+keep track of what users have added or removed your app
+securely receive tokens that can be used to send notifications to your users
+If you'd rather stay focused on your app, Neynar offers a managed service to handle webhooks on behalf of your application.
+
+Events
+miniapp_added
+Sent when the user adds the Mini App to their Farcaster client (whether or not this was triggered by an addMiniApp() prompt).
+
+The optional notificationDetails object provides the token and url if the client equates adding to enabling notifications (Warpcast does this).
+
+Payload
+
+{
+  "event": "miniapp_added",
+  "notificationDetails": {
+    "url": "https://api.farcaster.xyz/v1/frame-notifications",
+    "token": "a05059ef2415c67b08ecceb539201cbc6"
+  }
+}
+miniapp_removed
+Sent when a user removes a mini app, which means that any notification tokens for that fid and client app (based on signer requester) should be considered invalid:
+
+Payload
+
+{
+  "event": "miniapp_removed"
+}
+notifications_disabled
+Sent when a user disables notifications from e.g. a settings panel in the client app. Any notification tokens for that fid and client app (based on signer requester) should be considered invalid:
+
+Payload
+
+{
+  "event": "notifications_disabled"
+}
+notifications_enabled
+Sent when a user enables notifications (e.g. after disabling them). The payload includes a new token and url:
+

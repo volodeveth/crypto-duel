@@ -1,0 +1,36 @@
+{
+  "name": "crypto-duel",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "compile": "hardhat compile",
+    "deploy:testnet": "hardhat run scripts/deploy.js --network baseSepolia",
+    "deploy:mainnet": "hardhat run scripts/deploy.js --network base"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=22.11.0"
+  },
+  "dependencies": {
+    "@farcaster/miniapp-sdk": "^0.1.8",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.4",
+    "next": "14.2.18",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "autoprefixer": "^10.4.20",
+    "hardhat": "^2.22.17",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.16"
+  }
+}

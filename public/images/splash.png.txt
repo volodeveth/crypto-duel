@@ -1,0 +1,3 @@
+# Placeholder for splash.png
+# Create a splash screen image that shows while the app loads
+# Should match the app's branding and color scheme

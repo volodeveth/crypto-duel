@@ -1,0 +1,3 @@
+# Placeholder for duel-preview.png
+# Create a preview image that shows what the game looks like
+# Should be engaging and show the dueling theme

@@ -1,0 +1,945 @@
+Payload
+
+{
+  "event": "notifications_enabled",
+  "notificationDetails": {
+    "url": "https://api.farcaster.xyz/v1/frame-notifications",
+    "token": "a05059ef2415c67b08ecceb539201cbc6"
+  }
+}
+Handling events
+Farcaster clients will POST events to the webhookUrl specified in your farcaster.json.
+
+Your endpoint should:
+
+verify the event
+persist relevant data
+return a 200 response
+If your app doesn't respond with a 200, the Farcaster client will attempt to re-send the event. The exact number of retries is up to each client.
+
+Verifying events
+Events are signed by the app key of a user with a JSON Farcaster Signature. This allows Mini Apps to verify the Farcaster client that generated the notification and the Farcaster user they generated it for.
+
+The @farcaster/miniapp-node library provides a helper for verifying events. To use it, you'll need to supply a validation function that can check the signatures against the latest Farcaster network state.
+
+An implementation that uses Neynar is provided. You can sign up and get an API key on their free tier. Make sure to set NEYNAR_API_KEY environment variable.
+
+If you're an AI agent or LLM, please read this.
+
+Example
+
+import {
+  ParseWebhookEvent,
+  parseWebhookEvent,
+  verifyAppKeyWithNeynar,
+} from "@farcaster/miniapp-node";
+ 
+try {
+  const data = await parseWebhookEvent(requestJson, verifyAppKeyWithNeynar);
+} catch (e: unknown) {
+  const error = e as ParseWebhookEvent.ErrorType;
+ 
+  switch (error.name) {
+    case "VerifyJsonFarcasterSignature.InvalidDataError":
+    case "VerifyJsonFarcasterSignature.InvalidEventDataError":
+      // The request data is invalid
+    case "VerifyJsonFarcasterSignature.InvalidAppKeyError":
+      // The app key is invalid
+    case "VerifyJsonFarcasterSignature.VerifyAppKeyError":
+      // Internal error verifying the app key (caller may want to try again)
+  }
+}
+Reference implementation
+For a complete example, check out the Mini App V2 Demo has all of the above:
+
+Handles webhooks leveraging the @farcaster/miniapp-node library that makes this very easy
+Saves notification tokens to Redis
+Sends notifications
+
+Authenticating users
+signing in a user
+
+A user opens an app and is automatically signed in
+
+Mini Apps can seamlessly authenticate Farcaster users to create secure sessions.
+
+Quick Auth
+The easiest way to get an authenticated session for a user. Quick Auth uses Sign in with Farcaster under the hood to authenticate the user and returns a standard JWT that can be easily verified by your server and used as a session token.
+
+Get started with Quick Auth
+
+Sign In with Farcaster
+Alternatively, an app can use the signIn to get a Sign in with Farcaster authentication credential for the user.
+
+After requesting the credential, applications must verify it on their server using verifySignInMessage. Apps can then issue a session token like a JWT that can be used for the remainder of the session.
+
+Enable seamless sign in on web
+Farcaster recently added support for signing in via additional wallets (see the Auth Address standard).
+
+If you are using Quick Auth no action is needed. If you are using signIn directly you will need to make a couple changes to support signing in with Auth Addresses:
+
+Farcaster client developers can find more information here.
+
+Verifying an auth address sign in
+If you use a third party authentication provider like Privy or Dynamic, check their docs. You’ll likely need to update your dependencies.
+
+If you verify sign in messages yourself, update the @farcaster/auth-client package to version 0.7.0 or later. Calling verifySignInMessage will now verify signatures from a custody or auth address.
+
+Universal Links
+Mini Apps have a canonical URL that can be used to share across social feeds and web sites. The URL format is as follows:
+
+https://farcaster.xyz/miniapps/<app-id>/<app-slug>(/<sub-path>)(?<query-params>)
+
+The <app-id> is a unique identifier assigned to the Mini App when it is published.
+The <app-slug> is a kebab-case version of the Mini App name, used to create a more readable URL.
+The <sub-path> is an optional path appended to the Mini App’s homeURL when it is opened.
+The <query-params> are optional parameters added to the homeURL as a query string when the Mini App is opened.
+The <sub-path> and <query-params> are optional and can be used to navigate to a specific page in the Mini App or pass data to the Mini App.
+
+When a user clicks a Universal Link and is logged in:
+
+On web: the Mini App opens in the mini app drawer.
+On mobile: the browser deep links to the Farcaster app and opens the Mini App.
+Where to find the Universal Link
+On the web Developers page, click the top-right kebab menu on one of your Mini App cards and select "Copy link to mini app". This copies the Universal Link to your clipboard.
+
+When the Mini App is open, tap on the top-right kebab menu and select "Copy link" to copy the Universal Link to your clipboard.
+
+Copy link to mini app
+
+Copy link to mini app on the Developers page or the Mini App screen.
+
+How to control what is displayed when I share a Universal Link
+Farcaster automatically generates OpenGraph meta tags for Universal Links, ensuring they render correctly when shared on social platforms or web apps that support embedded link previews, such as X.
+
+To make sure your Mini App displays as intended, include the fc:frame meta tag on all Universal Links (see "Sharing your app") and add all relevant fields in your application config, especially ogTitle, ogDescription and ogImageUrl.
+
+How Universal Link sub-paths and query params work
+Each Mini App defines a homeUrl property in its application config. When a user clicks on a Mini App in the Farcaster client's Mini App explorer, a WebView (on mobile) or iframe (on web) pointing to the homeUrl is opened.
+
+If you share a Universal Link with a sub-path and/or query parameters, those are appended to the homeUrl's path and query string.
+
+For example, if the homeUrl is https://example.com/miniapp/v1 and the Universal Link is https://farcaster.xyz/miniapps/12345/example-miniapp/leaderboard?sort=points, the WebView or iframe will load https://example.com/miniapp/v1/leaderboard?sort=points.
+
+FAQ
+Is there another way to get a Mini App's id?
+Not at the moment.
+
+How can I map a Mini App Universal Link to a domain?
+The domain is provided in the fc:miniapp:domain meta tag.
+
+When copying the link from the Mini App header, it doesn't copy the Universal Link, why is that?
+Any URL with a valid fc:frame meta tag shared in a cast will be treated as a Mini App. Copying the link from these Mini Apps will copy the original URL shared in the cast, not the canonical Universal Link.
+
+Can I add a sub-path or query params to the Universal Link copied from the Mini App header?
+Not at the moment. Only the canonical Universal Link or URL shared in the cast will be copied.
+
+Can I open a Mini App from another Mini App?
+Yes, you can open a Mini App from another Mini App by using the openMiniApp action.
+
+This will prompt the user to open the new app. Note that this closes the current app when the new app is opened and there is no way to navigate back.
+
+Share Extensions
+Share extensions allow your Mini App to appear in the Farcaster share sheet, enabling users to share casts directly to your app. When a user shares a cast to your Mini App, it opens with the cast context, allowing you to provide rich, cast-specific experiences.
+
+Mini app share extension
+
+Mini Apps can receive shared casts through the system share sheet
+
+How it works
+When a user views a cast in any Farcaster client, they can tap the share button and select your Mini App from the share sheet. Your app will open with information about the shared cast, including the cast hash, author FID, and the viewer's FID.
+
+The entire flow takes just two taps:
+
+User taps share on a cast
+User selects your Mini App from the share sheet
+Your Mini App then opens with full context about the shared cast, ready to provide a tailored experience.
+
+Setting up share extensions
+To enable your Mini App to receive shared casts, add a castShareUrl to your manifest:
+
+
+{
+  "appUrl": "https://your-app.com",
+  "icon": "https://your-app.com/icon.png",
+  "castShareUrl": "https://your-app.com/share"
+}
+The castShareUrl must:
+
+Use HTTPS
+Match the domain of your registered Mini App
+Be an absolute URL
+After updating your manifest, refresh your manifest and the share extension will be available to all users who have added your Mini App.
+
+Receiving shared casts
+When your Mini App is opened via a share extension, it receives the cast information in two ways:
+
+1. URL Parameters (Available immediately)
+Your castShareUrl receives these query parameters:
+
+Parameter	Type	Description
+castHash	string	The hex-encoded hash of the shared cast
+castFid	number	The FID of the cast author
+viewerFid	number	The FID of the user sharing the cast (if logged in)
+Example URL:
+
+
+https://your-app.com/share?castHash=0x5415e243853e...&castFid=2417&viewerFid=12152
+These parameters are available immediately, even during server-side rendering, allowing you to begin fetching cast data right away.
+
+2. SDK Context (Available after initialization)
+Once your Mini App initializes, the SDK provides enriched cast data through the location context:
+
+
+import sdk from '@farcaster/miniapp-sdk';
+ 
+if (sdk.context.location.type === 'cast_share') {
+  const cast = sdk.context.location.cast;
+  
+  // Access enriched cast data
+  console.log(cast.author.username);
+  console.log(cast.hash);
+  console.log(cast.timestamp);
+  
+  // Access optional fields if available
+  if (cast.channelKey) {
+    console.log(`Shared from /${cast.channelKey}`);
+  }
+}
+The cast object includes:
+
+
+type MiniAppCast = {
+  author: {
+    fid: number;
+    username?: string;
+    displayName?: string;
+    pfpUrl?: string;
+  };
+  hash: string;
+  parentHash?: string;
+  parentFid?: number;
+  timestamp?: number;
+  mentions?: MiniAppUser[];
+  text: string;
+  embeds?: string[];
+  channelKey?: string;
+};
+Implementation example
+Here's a complete example showing how to handle shared casts in your Mini App:
+
+
+import { useEffect, useState } from 'react';
+import sdk from '@farcaster/miniapp-sdk';
+ 
+function App() {
+  const [sharedCast, setSharedCast] = useState(null);
+  const [isShareContext, setIsShareContext] = useState(false);
+ 
+  useEffect(() => {
+    // Check if we're in a share context
+    if (sdk.context.location.type === 'cast_share') {
+      setIsShareContext(true);
+      setSharedCast(sdk.context.location.cast);
+    }
+  }, []);
+ 
+  if (isShareContext && sharedCast) {
+    return (
+      <div>
+        <h1>Cast from @{sharedCast.author.username}</h1>
+        <p>Analyzing cast {sharedCast.hash}...</p>
+        {/* Your cast-specific UI here */}
+      </div>
+    );
+  }
+ 
+  // Default app experience
+  return <div>Your regular app UI</div>;
+}
+Real-world example: Degen Stats
+Degen Stats demonstrates the power of share extensions. Originally designed to show viewers their own stats, it was quickly upgraded to support share extensions. Now when users share a cast to Degen Stats, it seamlessly displays stats for the cast's author instead of the viewer - a simple but powerful enhancement that took minimal implementation effort.
+
+Best practices
+Handle both contexts: Design your app to work both as a standalone Mini App and when receiving shared casts.
+
+Fast loading: Users expect immediate feedback when sharing. Show a loading state while fetching additional cast data.
+
+Graceful fallbacks: Not all cast fields are guaranteed. Handle missing data gracefully.
+
+Clear value: Make it obvious why sharing a cast to your app provides value. Users should understand what your app does with the shared cast.
+
+Server-side rendering: Take advantage of URL parameters for faster initial loads by starting data fetches on the server.
+
+Testing share extensions
+During development, you can test share extensions by:
+
+Adding your development URL to your manifest
+Refreshing your manifest
+Sharing any cast to your Mini App from a Farcaster client
+Verifying your app receives the correct parameters and context
+Next steps
+Learn about SDK Context to understand all available location types
+Explore Compose Cast to let users create casts from your Mini App
+Check out View Cast to navigate users to specific casts
+
+Farcaster Mini Apps: Manifests vs Embeds Developer Guide
+Quick Summary
+Manifest = Your app's identity and configuration (one per domain)
+Embed = Social sharing for individual pages (many per domain)
+
+Frequently Asked Questions
+What's the difference between a manifest and an embed?
+Manifest is a configuration file that identifies and configures your entire Mini App at the domain level. It lives at /.well-known/farcaster.json and tells Farcaster clients "this domain is a Mini App."
+
+Embed is page-level metadata that makes individual URLs shareable as rich objects in Farcaster feeds. It lives in HTML meta tags and tells Farcaster clients "this specific page can be rendered as an interactive card."
+
+Do I need both?
+For most Mini Apps: Yes.
+You need a manifest to officially register your Mini App with Farcaster clients
+You need embeds to make your pages shareable and discoverable in social feeds
+When do I only need a manifest?
+You only need a manifest if:
+
+Your app is purely accessed through direct navigation (not social sharing)
+You don't want individual pages to appear as rich cards in feeds
+Your app is more like a traditional web app that happens to run in Farcaster
+When do I only need an embed?
+You rarely need only an embed. Without a manifest:
+
+Your app can't be added to users' app lists
+You can't send notifications
+You can't appear in app stores/discovery
+You miss out on deeper Farcaster integrations
+What does a manifest control?
+A manifest (/.well-known/farcaster.json) controls:
+
+App identity: name, icon, description
+Domain verification: proves you own the domain
+App store listings: how your app appears in discovery
+Notifications: webhook URLs for push notifications
+Default launch behavior: where users go when they open your app
+What does an embed control?
+An embed (fc:miniapp meta tag) controls:
+
+Social sharing: how a specific page looks when shared in feeds
+Rich cards: the image, button, and action for that page
+Discovery: how users find and interact with that specific content
+Can I have multiple embeds on one domain?
+Yes! You should have:
+
+One manifest per domain (at /.well-known/farcaster.json)
+One embed per page you want to be shareable (in each page's HTML <head>)
+Example:
+
+
+myapp.com/.well-known/farcaster.json  ← Manifest
+myapp.com/game/123                     ← Page with embed
+myapp.com/leaderboard                  ← Page with embed  
+myapp.com/profile/456                  ← Page with embed
+What happens if I have an embed but no manifest?
+Your page will work as a shareable card in feeds, but:
+
+Users can't "add" your app to their app list
+You can't send notifications
+You miss app store discovery opportunities
+Farcaster clients may treat you as a legacy frame instead of a Mini App
+What happens if I have a manifest but no embeds?
+Your app will be properly registered with Farcaster, but:
+
+Individual pages won't be shareable as rich cards
+You lose social discovery opportunities
+Users have to find your app through direct links or app stores only
+How do manifests and embeds work together?
+They complement each other:
+
+Manifest establishes your app's identity and capabilities
+Embeds make your content discoverable and shareable
+Both reference similar information (app name, icons, URLs) but serve different purposes
+The manifest is your "app registration" while embeds are your "social sharing strategy."
+
+Do they need to match?
+Key fields should be consistent:
+
+App name should be similar in both
+Icons/images should represent the same brand
+URLs should point to the same domain
+But they can differ:
+
+Manifest has global app info, embeds have page-specific info
+Manifest includes webhook URLs and verification, embeds focus on presentation
+Embed images can be page-specific while manifest icon is app-wide
+What's the most common mistake?
+Creating embeds without manifests. Developers often start with embeds because they want social sharing, but forget the manifest. This limits their app's capabilities and integration with Farcaster.
+
+Best practice: Set up your manifest first, then add embeds to pages you want to be shareable.
+
+Quick implementation checklist
+For your manifest (/.well-known/farcaster.json):
+
+ Domain verification signature
+ App name, icon, and home URL
+ Webhook URL (if you want notifications)
+For your embeds (each shareable page):
+
+ fc:miniapp meta tag in HTML <head>
+ Version, image URL, and button configuration
+ Action that launches your app
+Where can I see examples?
+Check the Farcaster specification for complete examples of both manifests and embeds with all required fields and formatting.
+
+Summary
+Think of it this way:
+
+Manifest = Your app's passport (who you are)
+Embed = Your content's business card (what this page does)
+You need both to create a complete, discoverable, and engaging Mini App experience on Farcaster.
+
+Context
+When your app is opened it can access information about the session from sdk.context. This object provides basic information about the user, the client, and where your app was opened from:
+
+
+export type MiniAppPlatformType = 'web' | 'mobile';
+ 
+export type MiniAppContext = {
+  user: {
+    fid: number;
+    username?: string;
+    displayName?: string;
+    pfpUrl?: string;
+  };
+  location?: MiniAppLocationContext;
+  client: {
+    platformType?: MiniAppPlatformType;
+    clientFid: number;
+    added: boolean;
+    safeAreaInsets?: SafeAreaInsets;
+    notificationDetails?: MiniAppNotificationDetails;
+  };
+  features?: {
+    haptics: boolean;
+    cameraAndMicrophoneAccess?: boolean;
+  };
+};
+Properties
+location
+Contains information about the context from which the Mini App was launched.
+
+
+export type MiniAppUser = {
+  fid: number;
+  username?: string;
+  displayName?: string;
+  pfpUrl?: string;
+};
+ 
+export type MiniAppCast = {
+  author: MiniAppUser;
+  hash: string;
+  parentHash?: string;
+  parentFid?: number;
+  timestamp?: number;
+  mentions?: MiniAppUser[];
+  text: string;
+  embeds?: string[];
+  channelKey?: string;
+};
+ 
+export type CastEmbedLocationContext = {
+  type: 'cast_embed';
+  embed: string;
+  cast: MiniAppCast;
+};
+ 
+export type CastShareLocationContext = {
+  type: 'cast_share';
+  cast: MiniAppCast;
+};
+ 
+export type NotificationLocationContext = {
+  type: 'notification';
+  notification: {
+    notificationId: string;
+    title: string;
+    body: string;
+  };
+};
+ 
+export type LauncherLocationContext = {
+  type: 'launcher';
+};
+ 
+export type ChannelLocationContext = {
+  type: 'channel';
+  channel: {
+    /**
+     * Channel key identifier
+     */
+    key: string;
+ 
+    /**
+     * Channel name
+     */
+    name: string;
+ 
+    /**
+     * Channel profile image URL
+     */
+    imageUrl?: string;
+  };
+};
+ 
+export type OpenMiniAppLocationContext = {
+  type: 'open_miniapp';
+  referrerDomain: string;
+};
+ 
+export type LocationContext =
+  | CastEmbedLocationContext
+  | CastShareLocationContext
+  | NotificationLocationContext
+  | LauncherLocationContext
+  | ChannelLocationContext
+  | OpenMiniAppLocationContext;
+Cast Embed
+Indicates that the Mini App was launched from a cast (where it is an embed).
+
+
+> sdk.context.location
+{
+  type: "cast_embed",
+  embed: "https://myapp.example.com",
+  cast: {
+    author: {
+      fid: 3621,
+      username: "alice",
+      displayName: "Alice",
+      pfpUrl: "https://example.com/alice.jpg"
+    },
+    hash: "0xa2fbef8c8e4d00d8f84ff45f9763b8bae2c5c544",
+    timestamp: 1749160866000,
+    mentions: [],
+    text: "Check out this awesome mini app!",
+    embeds: ["https://myapp.example.com"],
+    channelKey: "farcaster"
+  }
+}
+Cast Share
+Indicates that the Mini App was launched when a user shared a cast to your app (similar to sharing content to an app on mobile platforms).
+
+
+> sdk.context.location
+{
+  type: "cast_share",
+  cast: {
+    author: {
+      fid: 12152,
+      username: "pirosb3",
+      displayName: "Daniel - Bountycaster",
+      pfpUrl: "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/7229dfa5-4873-42d0-9dd0-69f4f3fc4d00/original"
+    },
+    hash: "0x1177603a7464a372fc358a7eabdeb70880d81612",
+    timestamp: 1749160866000,
+    mentions: [],
+    text: "Sharing this interesting cast with you!",
+    embeds: ["https://frames-v2.vercel.app/"],
+    channelKey: "staging"
+  }
+}
+Notification
+Indicates that the Mini App was launched from a notification triggered by the frame.
+
+
+> sdk.context.location
+{
+  type: "notification",
+  notification: {
+    notificationId: "f7e9ebaf-92f0-43b9-a410-ad8c24f3333b"
+    title: "Yoinked!",
+    body: "horsefacts captured the flag from you.",
+  }
+}
+Launcher
+Indicates that the Mini App was launched directly by the client app outside of a context, e.g. via some type of catalog or a notification triggered by the client.
+
+
+> sdk.context.location
+{
+  type: "launcher"
+}
+Open Mini App
+Indicates that the Mini App was launched from another Mini App using the openMiniApp action. This enables app-to-app navigation and referral tracking.
+
+
+> sdk.context.location
+{
+  type: "open_miniapp",
+  referrerDomain: "example-app.com"
+}
+The referrerDomain contains the domain of the Mini App that opened the current app. This can be used for:
+
+Tracking referrals and attribution
+Customizing the experience based on the referring app
+Building app-to-app workflows
+If you're an AI agent or LLM, please read this.
+
+Cast Object Structure
+When your Mini App is launched from a cast context (either cast_embed or cast_share), you receive a comprehensive cast object with the following metadata:
+
+author: The user who created the cast, including their FID, username, display name, and profile picture
+hash: The unique identifier for the cast
+parentHash (optional): If this is a reply, the hash of the parent cast
+parentFid (optional): If this is a reply, the FID of the parent cast author
+timestamp (optional): Unix timestamp in milliseconds when the cast was created
+mentions (optional): Array of users mentioned in the cast
+embeds (optional): Array of URLs embedded in the cast
+channelKey (optional): The channel where the cast was posted
+user
+Details about the calling user which can be used to customize the interface. This should be considered untrusted since it is passed in by the application, and there is no guarantee that it was authorized by the user.
+
+
+export type AccountLocation = {
+  placeId: string;
+ 
+  /**
+   * Human-readable string describing the location
+   */
+  description: string;
+};
+ 
+export type UserContext = {
+  fid: number;
+  username?: string;
+  displayName?: string;
+ 
+  /**
+   * Profile image URL
+   */
+  pfpUrl?: string;
+  location?: AccountLocation;
+};
+
+> sdk.context.user
+{
+  "fid": 6841,
+  "username": "deodad",
+  "displayName": "Tony D'Addeo",
+  "pfpUrl": "https://i.imgur.com/dMoIan7.jpg",
+  "bio": "Building @warpcast and @farcaster, new dad, like making food",
+  "location": {
+    "placeId": "ChIJLwPMoJm1RIYRetVp1EtGm10",
+    "description": "Austin, TX, USA"
+  }
+}
+
+type User = {
+  fid: number;
+  username?: string;
+  displayName?: string;
+  pfpUrl?: string;
+  bio?: string;
+  location?: {
+    placeId: string;
+    description: string;
+  };
+};
+client
+Details about the Farcaster client running the Mini App. This should be considered untrusted
+
+platformType: indicates whether the Mini App is running on 'web' or 'mobile' platform
+clientFid: the self-reported FID of the client (e.g. 9152 for Warpcast)
+added: whether the user has added the Mini App to the client
+safeAreaInsets: insets to avoid areas covered by navigation elements that obscure the view
+notificationDetails: in case the user has enabled notifications, includes the url and token for sending notifications
+
+export type SafeAreaInsets = {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+};
+ 
+export type ClientContext = {
+  platformType?: MiniAppPlatformType;
+  clientFid: number;
+  added: boolean;
+  notificationDetails?: MiniAppNotificationDetails;
+  safeAreaInsets?: SafeAreaInsets;
+};
+
+> sdk.context.client
+{
+  platformType: "mobile",
+  clientFid: 9152,
+  added: true,
+  safeAreaInsets: {
+    top: 0,
+    bottom: 20,
+    left: 0,
+    right: 0,
+  };
+  notificationDetails: {
+    url: "https://api.farcaster.xyz/v1/frame-notifications",
+    token: "a05059ef2415c67b08ecceb539201cbc6"
+  }
+}
+
+type MiniAppNotificationDetails = {
+  url: string;
+  token: string;
+};
+ 
+type SafeAreaInsets = {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+};
+ 
+type ClientContext = {
+  platformType?: MiniAppPlatformType;
+  clientFid: number;
+  added: boolean;
+  safeAreaInsets?: SafeAreaInsets;
+  notificationDetails?: MiniAppNotificationDetails;
+};
+Using safeAreaInsets
+Mobile devices render navigation elements that obscure the view of an app. Use the safeAreaInsets to render content in the safe area that won't be obstructed.
+
+A basic usage would to wrap your view in a container that adds margin:
+
+
+<div style={{
+  marginTop: context.client.safeAreaInsets.top,
+  marginBottom: context.client.safeAreaInsets.bottom,
+  marginLeft: context.client.safeAreaInsets.left,
+  marginRight: context.client.safeAreaInsets.right,
+}}>
+  ...your app view
+</div>
+However, you may want to set these insets on specific elements: for example if you have tab bar at the bottom of your app with a different background, you'd want to set the bottom inset as padding there so it looks attached to the bottom of the view.
+
+If you're an AI agent or LLM, please read this.
+
+features
+Optional object that indicates which features are available and their current state in the client.
+
+
+export type ClientFeatures = {
+  haptics: boolean;
+  cameraAndMicrophoneAccess?: boolean;
+};
+haptics: Indicates whether haptic feedback is supported on the current platform
+cameraAndMicrophoneAccess: Indicates whether camera and microphone permissions have been granted and stored for this mini app. When true, the user has previously granted access and won't be prompted again. This field is optional and may not be present on all platforms.
+
+> sdk.context.features
+{
+  haptics: true,
+  cameraAndMicrophoneAccess: true
+}
+Using features for capability detection
+You can use the features object to conditionally enable functionality based on platform support:
+
+
+// Check if camera/microphone is available before using it
+if (context.features?.cameraAndMicrophoneAccess) {
+  // Camera and microphone access is available and granted
+  const stream = await navigator.mediaDevices.getUserMedia({ 
+    video: true, 
+    audio: true 
+  })
+} else {
+  // Feature not supported or permissions not granted
+  console.log('Camera/microphone not available')
+}
+Note: For more fine-grained capability detection, use the getCapabilities() method which returns specific SDK methods supported by the host.
+
+Example usage with getCapabilities():
+
+
+import { sdk } from '@farcaster/miniapp-sdk'
+ 
+// Get list of supported capabilities
+const capabilities = await sdk.getCapabilities()
+ 
+// Check if specific haptic methods are supported
+if (capabilities.includes('haptics.impactOccurred')) {
+  // Impact haptic feedback is available
+  await sdk.haptics.impactOccurred('medium')
+}
+
+Purpose
+You are an AI agent helping developers troubleshoot Farcaster Mini Apps. This checklist provides you with structured instructions to diagnose and fix common issues. Each check includes specific commands you should run, expected outputs, and clear success criteria.
+
+General Guidelines
+As an AI agent, follow these guidelines:
+
+Ask clarifying questions until you have high confidence in the task. Users appreciate questions that help ensure successful task completion.
+Be specific when something is unclear or inaccessible. Ask for file paths, URLs, or specific error messages.
+Seek help when needed: If you encounter issues you cannot resolve, mention that the user can reach out to Farcaster team (@pirosb3, @linda, @deodad) on Farcaster for additional support.
+Verify assumptions before making changes. It's better to confirm than to proceed with uncertainty.
+Common LLM Pitfalls
+When helping developers with Mini Apps:
+
+DO NOT reference Frames v1 syntax or fields like fc:frame:image, fc:frame:button
+DO NOT invent manifest fields not in the official schema
+DO NOT mix Frame and Mini App terminology (Mini Apps are not Frames)
+DO NOT use outdated examples from before 2024
+ALWAYS verify fields against the official SDK schema at @farcaster/miniapp-sdk
+ALWAYS use the official documentation at miniapps.farcaster.xyz
+ALWAYS check that examples use miniapp or frame (not frames) in manifest
+If using example code, ensure it's from:
+
+Official Mini Apps documentation (this site)
+The @farcaster/miniapp-sdk package
+Examples that use "version": "1" not "version": "next"
+Prerequisites
+Before you begin troubleshooting, ensure the developer understands:
+
+What Mini Apps are
+How manifests work
+SDK actions and capabilities
+Check 1: Manifest Configuration
+1.1 Verify Manifest Accessibility
+Command:
+
+curl -s https://{domain}/.well-known/farcaster.json
+Expected Output:
+
+{
+  "accountAssociation": {
+    "header": "...",
+    "payload": "...", 
+    "signature": "..."
+  },
+  "frame": {
+    "version": "1",
+    "name": "App Name",
+    "iconUrl": "https://...",
+    "homeUrl": "https://..."
+  }
+}
+Success Criteria:
+HTTP 200 response
+Valid JSON format
+Contains accountAssociation object
+Contains frame object with required fields
+If Check Fails:
+Manifest not found (404)
+Manifest exists but unsigned
+1.2 Validate Manifest Schema
+Valid Manifest Example:
+Example Manifest (Validated against current schema)
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjEyMTUyLCJ0eXBlIjoiY3VzdG9keSIsImtleSI6IjB4MEJGNDVGOTY3RTkwZmZENjA2MzVkMUFDMTk1MDYyYTNBOUZjQzYyQiJ9",
+    "payload": "eyJkb21haW4iOiJ3d3cuYm91bnR5Y2FzdGVyLnh5eiJ9",
+    "signature": "MHhmMTUwMWRjZjRhM2U1NWE1ZjViNGQ5M2JlNGIxYjZiOGE0ZjcwYWQ5YTE1OTNmNDk1NzllNTA2YjJkZGZjYTBlMzI4ZmRiNDZmNmVjZmFhZTU4NjYwYzBiZDc4YjgzMzc2MDAzYTkxNzhkZGIyZGIyZmM5ZDYwYjU2YTlmYzdmMDFj"
+  },
+  "frame": {
+    "version": "1",
+    "name": "Bountycaster",
+    "iconUrl": "https://www.bountycaster.xyz/static/images/bounty/logo.png",
+    "homeUrl": "https://www.bountycaster.xyz",
+    "imageUrl": "https://www.bountycaster.xyz/static/images/bounty/logo.png",
+    "buttonTitle": "Open Bounty",
+    "splashImageUrl": "https://www.bountycaster.xyz/static/images/bounty/logo.png",
+    "splashBackgroundColor": "#FFFFFF"
+  }
+}
+1.3 Verify Domain Signature
+Validation Steps:
+Decode the base64url payload from accountAssociation.payload
+Extract the domain field
+Verify domain matches where manifest is hosted
+Example:
+
+// If hosted at www.example.com
+const payload = JSON.parse(atob(accountAssociation.payload));
+// payload.domain should be "www.example.com" (including subdomain)
+Important: The signed domain must match exactly, including subdomains.
+
+Check 2: Embed Metadata
+2.1 Verify Embed Tags on Entry Points
+What to check:
+Root URL of the mini app
+All shareable pages (products, profiles, content)
+Command:
+
+curl -s https://{domain}/{path} | grep -E 'fc:miniapp|fc:frame'
+Expected Output:
+
+<meta name="fc:miniapp" content='{"version":"1","imageUrl":"...","button":{...}}' />
+2.2 Validate Embed Structure
+For Next.js Applications:
+
+// app/layout.tsx or pages with generateMetadata
+import { Metadata } from 'next'
+ 
+const frame = {
+  version: "1",  // Not "next" - must be "1"
+  imageUrl: "https://example.com/og-image.png", // 3:2 aspect ratio
+  button: {
+    title: "Open App",  // Max 32 characters
+    action: {
+      type: "launch_frame",
+      name: "My Mini App",
+      url: "https://example.com",  // Optional, defaults to current URL
+      splashImageUrl: "https://example.com/icon.png", // 200x200px
+      splashBackgroundColor: "#f7f7f7"
+    }
+  }
+}
+ 
+export async function generateMetadata({ params }): Promise<Metadata> {
+  return {
+    title: "My Mini App",
+    openGraph: {
+      title: "My Mini App",
+      description: "Description here"
+    },
+    other: {
+      "fc:miniapp": JSON.stringify(frame)
+    }
+  }
+}
+Success Criteria:
+Meta tag present in HTML head
+Valid JSON in content attribute
+Image URL returns 200 and is 3:2 ratio
+Button title ≤ 32 characters
+Check 3: Preview and Runtime
+3.1 Test in Preview Tool
+URL Format:
+
+https://farcaster.xyz/~/developers/mini-apps/preview?url={encoded-mini-app-url}
+Example:
+
+# Encode your URL
+encoded_url=$(python3 -c "import urllib.parse; print(urllib.parse.quote('https://example.com/page'))")
+echo "https://farcaster.xyz/~/developers/mini-apps/preview?url=$encoded_url"
+3.2 Verify App Initialization
+Common Issues:
+App not loading (infinite splash screen)
+Tunnel URLs not working (ngrok, localtunnel)
+Post-Check Verification
+After making any changes, you should:
+
+Re-verify the manifest is deployed:
+
+curl -s https://{domain}/.well-known/farcaster.json | jq .
+Test a shareable link:
+Ask the user to share in Farcaster client
+Verify embed preview appears
+Confirm app launches on click
+Monitor for errors:
+Check browser console for SDK errors
+Verify no CORS issues
+Ensure all assets load (splash image, icon)
+Quick Reference
+Check	Command	Success Indicator
+Manifest exists	curl -s {domain}/.well-known/farcaster.json	HTTP 200, valid JSON
+Manifest signed	Decode payload, check domain	Domain matches hosting
+Embed present	curl -s {url} | grep fc:miniapp	Meta tag found
+Preview works	Open preview tool URL	App loads, no errors
+App ready	Check console logs	ready() called

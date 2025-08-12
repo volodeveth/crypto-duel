@@ -1,0 +1,104 @@
+Crypto Duel - Структура Проекту
+=================================
+
+📁 Crypto Duel/
+├── 📄 README.md
+├── 📄 package.json                    # Залежності та скрипти проекту
+├── 📄 package-lock.json               # Файл блокування залежностей
+├── 📄 hardhat.config.js               # Конфігурація Hardhat для розробки блокчейну
+├── 📄 next.config.js                  # Конфігурація Next.js
+├── 📄 tailwind.config.js              # Конфігурація Tailwind CSS
+├── 📄 postcss.config.js               # Конфігурація PostCSS
+├── 📄 vercel.json                     # Конфігурація розгортання Vercel
+├── 📄 icon.png                        # Іконка додатку
+│
+├── 📁 contracts/                      # Розумні контракти
+│   └── 📄 DuelGame.sol                # Основний розумний контракт гри дуелі
+│
+├── 📁 scripts/                        # Скрипти розгортання та утиліти
+│   └── 📄 deploy.js                   # Скрипт розгортання контракту
+│
+├── 📁 pages/                          # Сторінки Next.js (App Router)
+│   ├── 📄 _app.js                     # Обгортка додатку Next.js
+│   ├── 📄 index.js                    # Головна сторінка
+│   ├── 📄 app.js                      # Основна сторінка додатку
+│   ├── 📄 leaderboard.js              # Сторінка таблиці лідерів
+│   ├── 📄 preview.js                  # Сторінка попереднього перегляду гри
+│   └── 📁 api/                        # API маршрути
+│       ├── 📄 manifest.js             # API маніфесту PWA
+│       └── 📄 stats.js                # API статистики гри
+│
+├── 📁 components/                     # React компоненти
+│   ├── 📄 FarcasterInit.js            # Компонент ініціалізації Farcaster
+│   └── 📁 ui/                         # Директорія UI компонентів
+│
+├── 📁 styles/                         # CSS стилі
+│   └── 📄 globals.css                 # Глобальні CSS стилі
+│
+├── 📁 public/                         # Статичні ресурси
+│   ├── 📄 favicon.ico                 # Фавікон браузера
+│   ├── 📄 favicon.svg                 # SVG фавікон
+│   ├── 📄 icon.png                    # Іконка додатку
+│   └── 📁 images/                     # Графічні ресурси
+│       ├── 📄 duel-preview.png.txt    # Посилання на зображення попереднього перегляду дуелі
+│       ├── 📄 icon.png.txt            # Посилання на зображення іконки
+│       ├── 📄 og-image.png.txt        # Посилання на зображення Open Graph
+│       └── 📄 splash.png.txt          # Посилання на зображення заставки
+│
+├── 📁 database/                       # Файли пов'язані з базою даних
+│
+├── 📁 artifacts/                      # Артефакти компіляції Hardhat
+│   ├── 📁 build-info/                 # Інформація збірки
+│   └── 📁 contracts/                  # Артефакти скомпільованих контрактів
+│       └── 📁 DuelGame.sol/
+│           ├── 📄 DuelGame.json       # ABI та байт-код контракту
+│           └── 📄 DuelGame.dbg.json   # Інформація для відлагодження
+│
+├── 📁 cache/                          # Кеш збірки
+│   └── 📄 solidity-files-cache.json   # Кеш компіляції Solidity
+│
+├── 📁 node_modules/                   # Залежності (автоматично створені)
+│   └── [безліч залежностей...]
+│
+├── 📁 пропозиції чат джіпіті/         # Пропозиції ChatGPT
+│   └── 📄 app.js                      # Альтернативна реалізація додатку
+│
+└── 📁 Документація та логи/           # Документація та логи
+    ├── 📄 Crypto Duel логи.txt        # Логи додатку
+    ├── 📄 Crypto Duel.txt             # Опис проекту
+    ├── 📄 crypto duel vercel token.txt # Токен розгортання Vercel
+    ├── 📄 pk.txt                      # Приватні ключі (конфіденційно)
+    ├── 📄 документація1.txt            # Файл документації 1
+    ├── 📄 документація2.txt            # Файл документації 2
+    ├── 📄 логи1.txt                    # Файл логів 1
+    ├── 📄 логи2.txt                    # Файл логів 2
+    ├── 📄 логи3.txt                    # Файл логів 3
+    ├── 📄 логи4.txt                    # Файл логів 4
+    ├── 📄 логи5.txt                    # Файл логів 5
+    ├── 📄 логи6.txt                    # Файл логів 6
+    └── 📄 логи7.txt                    # Файл логів 7
+
+ОСНОВНІ КОМПОНЕНТИ ДОДАТКУ:
+==========================
+
+Frontend (Next.js):
+- pages/index.js - Головна сторінка
+- pages/app.js - Основний додаток гри
+- pages/leaderboard.js - Таблиця лідерів
+- components/FarcasterInit.js - Інтеграція з Farcaster
+
+Backend/API:
+- pages/api/manifest.js - PWA маніфест
+- pages/api/stats.js - Статистика гри
+
+Розумні контракти:
+- contracts/DuelGame.sol - Основний контракт гри
+- scripts/deploy.js - Скрипт розгортання
+
+Конфігурація:
+- hardhat.config.js - Налаштування блокчейн розробки
+- next.config.js - Налаштування Next.js
+- tailwind.config.js - Налаштування CSS фреймворку
+
+Стилі:
+- styles/globals.css - Глобальні стилі додатку
