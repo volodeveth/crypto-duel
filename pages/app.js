@@ -3,6 +3,7 @@ import { ethers } from 'ethers';
 import Head from 'next/head';
 import Link from 'next/link';
 import FarcasterInit from '../components/FarcasterInit';
+import ShareButtons from '../components/ShareButtons';
 
 const CONTRACT_ABI = [
   "function joinDuel() external payable",
@@ -278,16 +279,27 @@ export default function DuelApp() {
     });
 
     const maxDuels = Math.min(Number(totalDuels), 1000);
+    console.log('📊 Will check duels from 1 to', maxDuels);
+    
     for (let i = 1; i <= maxDuels; i++) {
       try {
         const duel = await contract.getDuel(i);
+        console.log(`📊 Duel ${i}:`, {
+          player1: duel.player1,
+          player2: duel.player2, 
+          betAmount: duel.betAmount?.toString(),
+          completed: duel.completed,
+          winner: duel.winner
+        });
         
         // Skip if duel doesn't exist (empty data)
         if (!duel.player1 || duel.player1 === '0x0000000000000000000000000000000000000000') {
+          console.log(`📊 Skipping empty duel ${i}`);
           continue;
         }
         
         if (duel.completed) {
+          console.log(`📊 Processing completed duel ${i}`);
           const betAmount = duel.betAmount.toString();
           const totalPool = Number(duel.betAmount) * 2;
           const commission = totalPool * 0.10;
@@ -300,9 +312,18 @@ export default function DuelApp() {
             analytics.duelsByBet[betAmount].count++;
             analytics.duelsByBet[betAmount].volume += totalPool;
           }
+          
+          console.log(`📊 Updated analytics:`, {
+            totalVolume: analytics.totalVolume,
+            totalCommissions: analytics.totalCommissions,
+            duelsCount: analytics.duelsCount,
+            betAmount: betAmount
+          });
+        } else {
+          console.log(`📊 Duel ${i} not completed yet`);
         }
       } catch (error) {
-        console.warn(`Error loading duel ${i} for analytics:`, error.message);
+        console.warn(`📊 Error loading duel ${i} for analytics:`, error.message);
         continue;
       }
     }
@@ -615,6 +636,14 @@ export default function DuelApp() {
               <div className="mt-6 p-4 bg-blue-600/20 rounded-lg border border-blue-600/30 text-center text-sm text-blue-200">
                 <strong>Fair Play:</strong> Winner determined by on-chain randomness
               </div>
+              
+              <div className="mt-6 text-center">
+                <div className="text-sm text-gray-300 mb-3">Share the game with friends:</div>
+                <ShareButtons 
+                  message="Try yourself in crypto duel! 🎮⚡️ Bet ETH, fair blockchain results. Ready for the challenge?"
+                  className="justify-center"
+                />
+              </div>
             </div>
           )}
 
@@ -630,6 +659,14 @@ export default function DuelApp() {
                 You can stay here and wait, or come back later and check the result in{' '}
                 <Link href="/user" className="underline text-purple-200 hover:text-purple-100">"My Duels"</Link>.
               </p>
+              
+              <div className="mb-6 text-center">
+                <div className="text-sm text-gray-300 mb-3">Share with friends to find an opponent faster:</div>
+                <ShareButtons 
+                  message="I'm waiting for an opponent in crypto duel! 🔥⚔️ Join me for an ETH duel on the blockchain!"
+                  className="justify-center"
+                />
+              </div>
               <div className="flex flex-col gap-3 items-center">
                 <Link href="/user" className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold transition-colors">
                   👤 Go to My Duels

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { ethers } from 'ethers';
+import ShareButtons from '../components/ShareButtons';
 
 const CONTRACT_ABI = [
   "event DuelCompleted(uint256 indexed duelId, address winner, uint256 prize, uint256 randomSeed)",
@@ -368,6 +369,15 @@ export default function UserPage() {
                       <summary className="cursor-pointer text-gray-400">Details (randomSeed)</summary>
                       <div className="mt-2 font-mono break-all">{d.randomSeed}</div>
                     </details>
+                    
+                    <div className="mt-3 pt-3 border-t border-gray-700">
+                      <div className="text-xs text-gray-400 mb-2">Share this duel result:</div>
+                      <ShareButtons 
+                        message={`Just ${d.isWinner ? 'WON' : 'fought'} a crypto duel! 🎮${d.isWinner ? '🏆' : '⚔️'} ${d.betEth.toFixed(5)} ETH bet on the blockchain. ${d.isWinner ? 'Victory tastes sweet!' : 'Ready for revenge!'}`}
+                        url={`https://cryptoduel.xyz/duel/${d.id}`}
+                        className="flex-wrap"
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
