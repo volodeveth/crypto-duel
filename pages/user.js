@@ -76,6 +76,11 @@ export default function UserPage() {
         try {
           const d = await contract.getDuel(i);
           
+          // Skip if duel doesn't exist (empty data)
+          if (!d.player1 || d.player1 === '0x0000000000000000000000000000000000000000') {
+            continue;
+          }
+          
           const meInDuel =
             d.player1?.toLowerCase() === address.toLowerCase() ||
             d.player2?.toLowerCase() === address.toLowerCase();
@@ -119,8 +124,10 @@ export default function UserPage() {
               completed: false
             });
           }
-        } catch {
-          break;
+        } catch (error) {
+          // Log error but continue with next duel instead of breaking
+          console.warn(`Error loading duel ${i}:`, error.message);
+          continue;
         }
       }
 
