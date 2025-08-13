@@ -25,6 +25,27 @@ export default function UserPage() {
   const [pendingLocal, setPendingLocal] = useState(null);
 
   useEffect(() => {
+    // Auto-detect connected wallet on page load
+    async function autoDetectWallet() {
+      try {
+        if (window.ethereum) {
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          const accounts = await provider.listAccounts();
+          if (accounts.length > 0) {
+            const connectedAddress = accounts[0].address;
+            setAddress(connectedAddress);
+            // Auto-load duels after detecting wallet
+            setTimeout(() => {
+              loadMyDuelsWithAddress(connectedAddress);
+            }, 100);
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to auto-detect wallet:', error.message);
+      }
+    }
+
+    // Check for pending local data
     try {
       const raw = localStorage.getItem('cd_currentWaiting');
       if (raw) {
@@ -39,6 +60,9 @@ export default function UserPage() {
         }
       }
     } catch {}
+
+    // Auto-detect wallet
+    autoDetectWallet();
   }, []);
 
   async function connectAddress() {
@@ -61,7 +85,10 @@ export default function UserPage() {
   }
 
   async function loadMyDuels() {
-    const targetAddress = address;
+    return loadMyDuelsWithAddress(address);
+  }
+
+  async function loadMyDuelsWithAddress(targetAddress) {
     if (!targetAddress) return alert('Enter your wallet address or connect.');
     setLoading(true);
     try {
