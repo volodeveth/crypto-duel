@@ -476,9 +476,14 @@ export default function DuelApp() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="fc:miniapp" content={JSON.stringify({
           version: "1",
-          imageUrl: `${baseUrl}/icon.png`,
-          button: { title: "🎮 Duel Now", action: { type: "launch_miniapp", name: "Crypto Duel", url: `${baseUrl}/app`, splashImageUrl: `${baseUrl}/icon.png`, splashBackgroundColor: "#8B5CF6" } }
+          imageUrl: `${baseUrl}/image.png`,
+          button: { title: "🎮 Duel Now", action: { type: "launch_miniapp", name: "Crypto Duel", url: `${baseUrl}/app`, splashImageUrl: `${baseUrl}/splash.png`, splashBackgroundColor: "#8B5CF6" } }
         })} />
+        <meta property="og:image" content={`${baseUrl}/image.png`} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="800" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={`${baseUrl}/image.png`} />
       </Head>
 
       <FarcasterInit />

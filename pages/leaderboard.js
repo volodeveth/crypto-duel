@@ -130,6 +130,13 @@ export default function Leaderboard() {
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/icon.png" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta property="og:title" content="Leaderboard - Crypto Duel" />
+        <meta property="og:description" content="Top players in Crypto Duel Arena - See who's winning the most ETH!" />
+        <meta property="og:image" content="https://cryptoduel.xyz/image.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="800" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://cryptoduel.xyz/image.png" />
       </Head>
 
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white">

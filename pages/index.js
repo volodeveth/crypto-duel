@@ -5,14 +5,14 @@ export default function Home() {
   
   const embedData = {
     version: "1",
-    imageUrl: `${baseUrl}/icon.png`,
+    imageUrl: `${baseUrl}/image.png`,
     button: {
       title: "🎮 Start Dueling",
       action: {
         type: "launch_miniapp",
         name: "Crypto Duel",
         url: `${baseUrl}/app`,
-        splashImageUrl: `${baseUrl}/icon.png`,
+        splashImageUrl: `${baseUrl}/splash.png`,
         splashBackgroundColor: "#8B5CF6"
       }
     }
@@ -27,7 +27,11 @@ export default function Home() {
         <meta property="og:description" content="ETH dueling game - Challenge and win!" />
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/icon.png" />
-        <meta property="og:image" content={`${baseUrl}/icon.png`} />
+        <meta property="og:image" content={`${baseUrl}/image.png`} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="800" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={`${baseUrl}/image.png`} />
       </Head>
       
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white">
