@@ -281,6 +281,12 @@ export default function DuelApp() {
     for (let i = 1; i <= maxDuels; i++) {
       try {
         const duel = await contract.getDuel(i);
+        
+        // Skip if duel doesn't exist (empty data)
+        if (!duel.player1 || duel.player1 === '0x0000000000000000000000000000000000000000') {
+          continue;
+        }
+        
         if (duel.completed) {
           const betAmount = duel.betAmount.toString();
           const totalPool = Number(duel.betAmount) * 2;
@@ -295,8 +301,9 @@ export default function DuelApp() {
             analytics.duelsByBet[betAmount].volume += totalPool;
           }
         }
-      } catch {
-        break;
+      } catch (error) {
+        console.warn(`Error loading duel ${i} for analytics:`, error.message);
+        continue;
       }
     }
 
