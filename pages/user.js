@@ -79,7 +79,7 @@ export default function UserPage() {
       const completedDuels = [];
       const pendingDuels = [];
 
-      // Load completed duels
+      // Load all duels (simplified approach like Leaderboard)
       for (let i = 1; i <= max; i++) {
         try {
           const d = await contract.getDuel(i);
@@ -96,17 +96,6 @@ export default function UserPage() {
           if (!meInDuel) continue;
 
           if (d.completed) {
-            const logs = await provider.getLogs({
-              fromBlock: 0,
-              toBlock: 'latest',
-              address: CONTRACT_ADDRESS,
-              topics: [
-                duelCompletedTopic,
-                ethers.zeroPadValue(ethers.toBeHex(i), 32)
-              ]
-            });
-
-            const txHash = logs?.[0]?.transactionHash || null;
             const isWinner = d.winner?.toLowerCase() === targetAddress.toLowerCase();
 
             completedDuels.push({
@@ -118,10 +107,10 @@ export default function UserPage() {
               winner: d.winner,
               isWinner,
               randomSeed: d.randomSeed?.toString() || '',
-              txHash,
+              txHash: null, // Will add later if needed
               completed: true
             });
-          } else if (d.player1 && d.player1 !== '0x0000000000000000000000000000000000000000') {
+          } else if (d.player2 && d.player2 !== '0x0000000000000000000000000000000000000000') {
             // Started but not completed duel
             pendingDuels.push({
               id: d.id?.toString() || String(i),
@@ -139,29 +128,18 @@ export default function UserPage() {
         }
       }
 
-      // Load waiting players (not yet matched)
+      // Load waiting players (simplified - just check recent waiting players)
       try {
+        // Only check for waiting players from recent blocks to avoid timeout
+        const recentBlockNumber = await provider.getBlockNumber();
+        const fromBlock = Math.max(0, recentBlockNumber - 10000); // Last ~10000 blocks
+
         const waitingLogs = await provider.getLogs({
-          fromBlock: 0,
+          fromBlock: fromBlock,
           toBlock: 'latest',
           address: CONTRACT_ADDRESS,
           topics: [playerWaitingTopic]
         });
-
-        const startedLogs = await provider.getLogs({
-          fromBlock: 0,
-          toBlock: 'latest',
-          address: CONTRACT_ADDRESS,
-          topics: [duelStartedTopic]
-        });
-
-        // Get started duel players to exclude from waiting
-        const startedPlayers = new Set();
-        for (const log of startedLogs) {
-          const decoded = iface.parseLog(log);
-          startedPlayers.add(decoded.args.player1.toLowerCase());
-          startedPlayers.add(decoded.args.player2.toLowerCase());
-        }
 
         for (const log of waitingLogs) {
           try {
@@ -173,28 +151,18 @@ export default function UserPage() {
               continue;
             }
             
-            // Check if this player is still waiting (not started a duel after this wait)
-            const laterStarted = startedLogs.some(startLog => {
-              const startDecoded = iface.parseLog(startLog);
-              return (startDecoded.args.player1.toLowerCase() === targetAddress.toLowerCase() || 
-                      startDecoded.args.player2.toLowerCase() === targetAddress.toLowerCase()) &&
-                     startLog.blockNumber > log.blockNumber;
-            });
-
-            if (!laterStarted) {
-              // Check if still active in contract
-              const waitingPlayer = await contract.waitingPlayers(waitingId);
-              if (waitingPlayer.active) {
-                pendingDuels.push({
-                  id: `wait-${waitingId}`,
-                  player1: decoded.args.player,
-                  player2: '0x0000000000000000000000000000000000000000',
-                  betEth: Number(ethers.formatEther(decoded.args.betAmount)),
-                  timestamp: log.blockNumber * 12000, // Approximate timestamp
-                  completed: false,
-                  isWaiting: true
-                });
-              }
+            // Check if still active in contract
+            const waitingPlayer = await contract.waitingPlayers(waitingId);
+            if (waitingPlayer.active) {
+              pendingDuels.push({
+                id: `wait-${waitingId}`,
+                player1: decoded.args.player,
+                player2: '0x0000000000000000000000000000000000000000',
+                betEth: Number(ethers.formatEther(decoded.args.betAmount)),
+                timestamp: Date.now(), // Use current time as approximation
+                completed: false,
+                isWaiting: true
+              });
             }
           } catch (e) {
             console.warn('Error processing waiting log:', e);
