@@ -41,7 +41,7 @@ const ShareButtons = ({ message, url = 'https://cryptoduel.xyz', className = '' 
         className="flex items-center gap-1 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-lg transition-colors"
         title="Share on Farcaster"
       >
-        <span className="text-sm">🟣</span>
+        <img src="/farcaster.png" alt="Farcaster" className="w-4 h-4" />
         <span>Farcaster</span>
       </button>
       
@@ -50,7 +50,7 @@ const ShareButtons = ({ message, url = 'https://cryptoduel.xyz', className = '' 
         className="flex items-center gap-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded-lg transition-colors"
         title="Share on X (Twitter)"
       >
-        <span className="text-sm">🐦</span>
+        <img src="/x.png" alt="X" className="w-4 h-4" />
         <span>X</span>
       </button>
       

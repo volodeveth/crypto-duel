@@ -374,7 +374,7 @@ export default function UserPage() {
                       <div className="text-xs text-gray-400 mb-2">Share this duel result:</div>
                       <ShareButtons 
                         message={`Just ${d.isWinner ? 'WON' : 'fought'} a crypto duel! 🎮${d.isWinner ? '🏆' : '⚔️'} ${d.betEth.toFixed(5)} ETH bet on the blockchain. ${d.isWinner ? 'Victory tastes sweet!' : 'Ready for revenge!'}`}
-                        url={`https://cryptoduel.xyz/duel/${d.id}`}
+                        url="https://cryptoduel.xyz"
                         className="flex-wrap"
                       />
                     </div>
