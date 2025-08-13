@@ -47,14 +47,22 @@ export default function UserPage() {
       const prov = new ethers.BrowserProvider(window.ethereum);
       await prov.send('eth_requestAccounts', []);
       const signer = await prov.getSigner();
-      setAddress(await signer.getAddress());
+      const newAddress = await signer.getAddress();
+      setAddress(newAddress);
+      // Auto-load duels after connecting
+      setTimeout(() => {
+        if (newAddress) {
+          loadMyDuels();
+        }
+      }, 500);
     } catch (e) {
       alert(e.message);
     }
   }
 
   async function loadMyDuels() {
-    if (!address) return alert('Enter your wallet address or connect.');
+    const targetAddress = address;
+    if (!targetAddress) return alert('Enter your wallet address or connect.');
     setLoading(true);
     try {
       const provider = new ethers.JsonRpcProvider(RPC);
@@ -82,8 +90,8 @@ export default function UserPage() {
           }
           
           const meInDuel =
-            d.player1?.toLowerCase() === address.toLowerCase() ||
-            d.player2?.toLowerCase() === address.toLowerCase();
+            d.player1?.toLowerCase() === targetAddress.toLowerCase() ||
+            d.player2?.toLowerCase() === targetAddress.toLowerCase();
 
           if (!meInDuel) continue;
 
@@ -99,7 +107,7 @@ export default function UserPage() {
             });
 
             const txHash = logs?.[0]?.transactionHash || null;
-            const isWinner = d.winner?.toLowerCase() === address.toLowerCase();
+            const isWinner = d.winner?.toLowerCase() === targetAddress.toLowerCase();
 
             completedDuels.push({
               id: d.id?.toString() || String(i),
@@ -137,7 +145,7 @@ export default function UserPage() {
           fromBlock: 0,
           toBlock: 'latest',
           address: CONTRACT_ADDRESS,
-          topics: [playerWaitingTopic, null, ethers.zeroPadValue(address, 32)]
+          topics: [playerWaitingTopic, ethers.zeroPadValue(targetAddress, 32)]
         });
 
         const startedLogs = await provider.getLogs({
@@ -163,8 +171,8 @@ export default function UserPage() {
             // Check if this player is still waiting (not started a duel after this wait)
             const laterStarted = startedLogs.some(startLog => {
               const startDecoded = iface.parseLog(startLog);
-              return (startDecoded.args.player1.toLowerCase() === address.toLowerCase() || 
-                      startDecoded.args.player2.toLowerCase() === address.toLowerCase()) &&
+              return (startDecoded.args.player1.toLowerCase() === targetAddress.toLowerCase() || 
+                      startDecoded.args.player2.toLowerCase() === targetAddress.toLowerCase()) &&
                      startLog.blockNumber > log.blockNumber;
             });
 
@@ -316,7 +324,7 @@ export default function UserPage() {
 
             {completedDuels.length === 0 && !loading && (
               <div className="p-6 text-center text-gray-400">
-                {hasAny ? 'No completed duels found.' : 'No data yet. Click "Load history" to fetch your results.'}
+                {hasAny ? 'No completed duels found.' : address ? 'Click "Load history" to fetch your duel results.' : 'Enter your wallet address and click "Load history" to see your duels.'}
               </div>
             )}
 
