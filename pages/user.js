@@ -8,7 +8,7 @@ const CONTRACT_ABI = [
   "event PlayerWaiting(uint256 indexed waitingId, address player, uint256 betAmount)",
   "event DuelStarted(uint256 indexed duelId, address player1, address player2, uint256 betAmount)",
   "function getDuel(uint256 duelId) external view returns (tuple(uint256 id, address player1, address player2, uint256 betAmount, uint256 timestamp, address winner, bool completed, uint256 randomSeed))",
-  "function totalDuels() external view returns (uint256)",
+  "uint256 public totalDuels",
   "function waitingPlayers(uint256 waitingId) external view returns (tuple(address player, uint256 betAmount, uint256 joinTime, bool active))"
 ];
 
@@ -145,7 +145,7 @@ export default function UserPage() {
           fromBlock: 0,
           toBlock: 'latest',
           address: CONTRACT_ADDRESS,
-          topics: [playerWaitingTopic, ethers.zeroPadValue(targetAddress, 32)]
+          topics: [playerWaitingTopic]
         });
 
         const startedLogs = await provider.getLogs({
@@ -167,6 +167,11 @@ export default function UserPage() {
           try {
             const decoded = iface.parseLog(log);
             const waitingId = Number(decoded.args.waitingId);
+            
+            // Filter by player address (since it's not indexed)
+            if (decoded.args.player.toLowerCase() !== targetAddress.toLowerCase()) {
+              continue;
+            }
             
             // Check if this player is still waiting (not started a duel after this wait)
             const laterStarted = startedLogs.some(startLog => {
