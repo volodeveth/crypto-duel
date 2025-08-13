@@ -8,7 +8,7 @@ const CONTRACT_ABI = [
   "event PlayerWaiting(uint256 indexed waitingId, address player, uint256 betAmount)",
   "event DuelStarted(uint256 indexed duelId, address player1, address player2, uint256 betAmount)",
   "function getDuel(uint256 duelId) external view returns (tuple(uint256 id, address player1, address player2, uint256 betAmount, uint256 timestamp, address winner, bool completed, uint256 randomSeed))",
-  "uint256 public totalDuels",
+  "function totalDuels() external view returns (uint256)",
   "function waitingPlayers(uint256 waitingId) external view returns (tuple(address player, uint256 betAmount, uint256 joinTime, bool active))"
 ];
 

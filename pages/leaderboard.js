@@ -6,7 +6,7 @@ import Link from 'next/link';
 const CONTRACT_ABI = [
   "function getPlayerStats(address player) external view returns (uint256 totalGames, uint256 wins, uint256 totalWinnings)",
   "function getDuel(uint256 duelId) external view returns (tuple(uint256 id, address player1, address player2, uint256 betAmount, uint256 timestamp, address winner, bool completed, uint256 randomSeed))",
-  "uint256 public totalDuels"
+  "function totalDuels() external view returns (uint256)"
 ];
 
 export default function Leaderboard() {
