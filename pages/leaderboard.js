@@ -79,6 +79,7 @@ export default function Leaderboard() {
       const playersStats = [];
       for (const playerAddress of uniquePlayers) {
         try {
+          // Try contract getPlayerStats first
           const [totalGames, wins, totalWinnings] = await contract.getPlayerStats(playerAddress);
           
           console.log(`🔍 Player ${playerAddress.slice(0, 8)}: games=${Number(totalGames)}, wins=${Number(wins)}, winnings=${ethers.formatEther(totalWinnings)}`);
@@ -98,7 +99,57 @@ export default function Leaderboard() {
             console.log(`⚠️ Player ${playerAddress.slice(0, 8)} has 0 games - skipping`);
           }
         } catch (error) {
-          console.log(`⚠️ Could not get stats for ${playerAddress}:`, error.message);
+          console.log(`⚠️ getPlayerStats failed for ${playerAddress.slice(0, 8)}: ${error.message}`);
+          console.log(`🔄 Trying manual calculation...`);
+          
+          // Fallback: calculate stats manually from duels
+          try {
+            let totalGames = 0;
+            let wins = 0;
+            let totalWinnings = ethers.parseEther("0");
+            
+            for (let i = 1; i < maxDuels + 1; i++) {
+              try {
+                const duel = await contract.getDuel(i);
+                
+                if (duel.player1 === playerAddress || duel.player2 === playerAddress) {
+                  if (duel.completed) {
+                    totalGames++;
+                    if (duel.winner === playerAddress) {
+                      wins++;
+                      // Calculate winnings: total pool - owner fee
+                      const totalPool = duel.betAmount * 2n;
+                      const ownerFee = (totalPool * 10n) / 100n; // 10% fee
+                      const winnerPrize = totalPool - ownerFee;
+                      totalWinnings += winnerPrize;
+                    }
+                  }
+                }
+              } catch (duelError) {
+                // Skip invalid duels
+                continue;
+              }
+            }
+            
+            console.log(`🔄 Manual calc for ${playerAddress.slice(0, 8)}: games=${totalGames}, wins=${wins}, winnings=${ethers.formatEther(totalWinnings)}`);
+            
+            if (totalGames > 0) {
+              const winRate = totalGames > 0 ? (wins / totalGames * 100) : 0;
+              
+              playersStats.push({
+                address: playerAddress,
+                totalGames: totalGames,
+                wins: wins,
+                losses: totalGames - wins,
+                totalWinnings: ethers.formatEther(totalWinnings),
+                winRate: winRate
+              });
+            } else {
+              console.log(`⚠️ Player ${playerAddress.slice(0, 8)} has 0 games after manual calc - skipping`);
+            }
+          } catch (fallbackError) {
+            console.log(`❌ Manual calculation also failed for ${playerAddress.slice(0, 8)}: ${fallbackError.message}`);
+          }
         }
       }
 
