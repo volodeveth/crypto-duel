@@ -34,9 +34,34 @@ export default function Leaderboard() {
     console.log('🏆 Loading leaderboard data...');
 
     try {
-      // Connect to contract
-      const provider = new ethers.JsonRpcProvider('https://mainnet.base.org');
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+      // Connect to contract - try multiple RPC providers
+      let provider, contract;
+      const rpcUrls = [
+        'https://mainnet.base.org',
+        'https://base-mainnet.public.blastapi.io',
+        'https://base.gateway.tenderly.co',
+        'https://base-rpc.publicnode.com'
+      ];
+      
+      for (const rpcUrl of rpcUrls) {
+        try {
+          console.log(`🔗 Trying RPC: ${rpcUrl}`);
+          provider = new ethers.JsonRpcProvider(rpcUrl);
+          contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+          
+          // Test connection by calling nextDuelId
+          await contract.nextDuelId();
+          console.log(`✅ RPC working: ${rpcUrl}`);
+          break;
+        } catch (error) {
+          console.log(`❌ RPC failed: ${rpcUrl}`, error.message);
+          continue;
+        }
+      }
+      
+      if (!contract) {
+        throw new Error('All RPC providers failed');
+      }
 
       // Get next duel ID to include all created duels (completed and pending)
       const nextId = await contract.nextDuelId();
