@@ -66,13 +66,13 @@ export default function Home() {
                 </li>
                 <li className="flex items-center">
                   <span className="text-green-400 mr-3">4.</span>
-                  Fair random selection
+                  50/50 chance to win - Fair random
                 </li>
               </ul>
               
               <div className="mt-6 p-4 bg-yellow-400/10 rounded-lg border border-yellow-400/20">
                 <p className="text-sm text-yellow-200">
-                  <strong>Fair & Transparent:</strong> Uses blockchain randomness for fair results
+                  <strong>Fair & Transparent:</strong> Uses blockchain randomness for fair results. Each player has exactly 50% chance to win!
                 </p>
               </div>
               
