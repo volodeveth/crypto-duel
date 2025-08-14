@@ -111,8 +111,10 @@ export default function Leaderboard() {
             for (let i = 1; i < maxDuels + 1; i++) {
               try {
                 const duel = await contract.getDuel(i);
+                console.log(`🔍 Fallback duel ${i}: player1=${duel.player1?.slice(0,8)}, player2=${duel.player2?.slice(0,8)}, completed=${duel.completed}, winner=${duel.winner?.slice(0,8)}`);
                 
                 if (duel.player1 === playerAddress || duel.player2 === playerAddress) {
+                  console.log(`✅ Found player ${playerAddress.slice(0,8)} in duel ${i}, completed=${duel.completed}`);
                   if (duel.completed) {
                     totalGames++;
                     if (duel.winner === playerAddress) {
@@ -123,10 +125,11 @@ export default function Leaderboard() {
                       const winnerPrize = totalPool - ownerFee;
                       totalWinnings += winnerPrize;
                     }
+                    console.log(`📊 Updated stats: games=${totalGames}, wins=${wins}`);
                   }
                 }
               } catch (duelError) {
-                // Skip invalid duels
+                console.log(`⚠️ Could not load duel ${i} in fallback: ${duelError.message}`);
                 continue;
               }
             }
