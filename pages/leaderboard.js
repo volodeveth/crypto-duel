@@ -6,7 +6,8 @@ import Link from 'next/link';
 const CONTRACT_ABI = [
   "function getPlayerStats(address player) external view returns (uint256 totalGames, uint256 wins, uint256 totalWinnings)",
   "function getDuel(uint256 duelId) external view returns (tuple(uint256 id, address player1, address player2, uint256 betAmount, uint256 timestamp, address winner, bool completed, uint256 randomSeed))",
-  "function totalDuels() external view returns (uint256)"
+  "function totalDuels() external view returns (uint256)",
+  "function nextDuelId() external view returns (uint256)"
 ];
 
 export default function Leaderboard() {
@@ -37,13 +38,14 @@ export default function Leaderboard() {
       const provider = new ethers.JsonRpcProvider('https://mainnet.base.org');
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
 
-      // Get total duels
-      const totalDuels = await contract.totalDuels();
-      console.log('📈 Total duels found:', totalDuels.toString());
+      // Get next duel ID to include all created duels (completed and pending)
+      const nextId = await contract.nextDuelId();
+      const totalDuels = await contract.totalDuels(); // Keep for logging
+      console.log('📈 Next duel ID:', nextId.toString(), '| Completed duels:', totalDuels.toString());
 
       // Collect all unique players
       const playersMap = new Map();
-      const maxDuels = Math.min(Number(totalDuels), 2000); // Limit to avoid timeout
+      const maxDuels = Math.min(Number(nextId) - 1, 2000); // Use nextId - 1 because IDs start from 1
 
       for (let i = 1; i <= maxDuels; i++) {
         try {
@@ -54,6 +56,7 @@ export default function Leaderboard() {
             continue;
           }
           
+          // Only process completed duels for leaderboard
           if (duel.completed) {
             // Add both players to our map
             if (!playersMap.has(duel.player1)) {
@@ -63,6 +66,7 @@ export default function Leaderboard() {
               playersMap.set(duel.player2, true);
             }
           }
+          // Skip incomplete duels (they don't affect player stats yet)
         } catch (error) {
           console.log(`⚠️ Could not load duel ${i}:`, error.message);
           continue;
