@@ -81,6 +81,8 @@ export default function Leaderboard() {
         try {
           const [totalGames, wins, totalWinnings] = await contract.getPlayerStats(playerAddress);
           
+          console.log(`🔍 Player ${playerAddress.slice(0, 8)}: games=${Number(totalGames)}, wins=${Number(wins)}, winnings=${ethers.formatEther(totalWinnings)}`);
+          
           if (Number(totalGames) > 0) { // Only include players who have played
             const winRate = Number(totalGames) > 0 ? (Number(wins) / Number(totalGames) * 100) : 0;
             
@@ -92,6 +94,8 @@ export default function Leaderboard() {
               totalWinnings: ethers.formatEther(totalWinnings),
               winRate: winRate
             });
+          } else {
+            console.log(`⚠️ Player ${playerAddress.slice(0, 8)} has 0 games - skipping`);
           }
         } catch (error) {
           console.log(`⚠️ Could not get stats for ${playerAddress}:`, error.message);
