@@ -19,6 +19,13 @@ export default function Leaderboard() {
 
   useEffect(() => {
     loadLeaderboard();
+    
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      loadLeaderboard();
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   async function loadLeaderboard() {
@@ -36,7 +43,7 @@ export default function Leaderboard() {
 
       // Collect all unique players
       const playersMap = new Map();
-      const maxDuels = Math.min(Number(totalDuels), 1000); // Limit to avoid timeout
+      const maxDuels = Math.min(Number(totalDuels), 2000); // Limit to avoid timeout
 
       for (let i = 1; i <= maxDuels; i++) {
         try {
@@ -150,12 +157,26 @@ export default function Leaderboard() {
             <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">Leaderboard</h1>
             <p className="text-gray-300 mb-4">Top players in Crypto Duel Arena</p>
             
-            <Link 
-              href="/app"
-              className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg font-semibold transition-colors"
-            >
-              🎮 Back to Game
-            </Link>
+            <div className="flex items-center justify-center gap-3">
+              <Link 
+                href="/app"
+                className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg font-semibold transition-colors"
+              >
+                🎮 Back to Game
+              </Link>
+              
+              <button
+                onClick={loadLeaderboard}
+                disabled={loading}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors ${
+                  loading 
+                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}
+              >
+                {loading ? '🔄' : '🔄'} {loading ? 'Loading...' : 'Refresh'}
+              </button>
+            </div>
           </div>
 
           {/* Sort Controls */}
