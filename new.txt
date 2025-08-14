@@ -1,0 +1,148 @@
+New Manifest
+View Docs
+Manage Hosted Manifests
+Create a new manifest
+Understanding Manifests
+A Manifest (farcaster.json) is required to register your Mini App and bind it to your domain. Think of it as DNS for your Mini App - it tells Farcaster clients about your app's name, icon, functionality, and enables deep integrations with the Farcaster ecosystem.
+Domain
+ 
+App Identity & Store Presence
+App Name
+name
+ 
+Value is required
+App Icon
+iconUrl
+ 
+Subtitle
+subtitle
+ 
+Required
+Description
+description
+ 
+Required
+Primary Category
+primaryCategory
+ 
+Required
+Visuals & Branding
+Screenshots
+screenshotUrls
+ 
+Preview Image
+imageUrl
+ 
+Hero Image
+heroImageUrl
+ 
+Splash Screen Image
+splashImageUrl
+ 
+Splash Background Color
+splashBackgroundColor
+ 
+Required
+Engagement & Discovery
+Search Tags
+tags
+ 
+Marketing Tagline
+tagline
+ 
+Button Title
+buttonTitle
+ 
+Social Share Title
+ogTitle
+ 
+Social Share Description
+ogDescription
+ 
+Social Share Image
+ogImageUrl
+ 
+Cast Share URL
+castShareUrl
+ 
+Technical Configuration
+Home URL
+homeUrl
+ 
+Webhook URL
+webhookUrl
+ 
+
+● Тепер бачу всі поля! Ось повне заповнення Farcaster маніфесту для Crypto Duel:
+
+  Domain
+
+  Domain:
+  cryptoduel.xyz
+
+  App Identity & Store Presence
+
+  App Name (name):
+  Crypto Duel
+
+  App Icon (iconUrl):
+  https://cryptoduel.xyz/icon.png
+
+  Subtitle (subtitle):
+  Blockchain PvP betting game
+
+  Description (description):
+  Challenge opponents in exciting crypto duels! Bet ETH in fair blockchain-based matches with transparent smart
+  contract results. Connect your wallet and prove your skills in this decentralized gaming experience.
+
+  Primary Category (primaryCategory):
+  Games
+
+  Visuals & Branding
+
+  Screenshots (screenshotUrls):
+  https://cryptoduel.xyz/screenshot1.png
+  https://cryptoduel.xyz/screenshot2.png
+
+  Preview Image (imageUrl):
+  https://cryptoduel.xyz/image.png
+
+  Hero Image (heroImageUrl):
+  https://cryptoduel.xyz/hero.png
+
+  Splash Screen Image (splashImageUrl):
+  https://cryptoduel.xyz/splash.png
+
+  Splash Background Color (splashBackgroundColor):
+  #1a1a2e
+
+  Engagement & Discovery
+
+  Search Tags (tags):
+  crypto, blockchain, duel, betting, ethereum, gaming, pvp, web3
+
+  Marketing Tagline (tagline):
+  ⚔️ Duel. Bet. Win. On-chain!
+
+  Button Title (buttonTitle):
+  Start Duel
+
+  Social Share Title (ogTitle):
+  Crypto Duel - Blockchain PvP Gaming
+
+  Social Share Description (ogDescription):
+  Challenge opponents in crypto duels! Bet ETH, fair blockchain results. Join the ultimate Web3 gaming experience.
+
+  Social Share Image (ogImageUrl):
+  https://cryptoduel.xyz/image.png
+
+  Cast Share URL (castShareUrl):
+  https://cryptoduel.xyz
+
+  Technical Configuration
+
+  Home URL (homeUrl):
+  https://cryptoduel.xyz
+
+  Webhook URL (webhookUrl):
+  Залиште порожнім якщо не використовуєте вебхуки

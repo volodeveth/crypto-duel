@@ -75,6 +75,15 @@ export default function Home() {
                   <strong>Fair & Transparent:</strong> Uses blockchain randomness for fair results
                 </p>
               </div>
+              
+              <div className="mt-6">
+                <a 
+                  href="/app"
+                  className="block w-full bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-xl text-center text-lg transition-all duration-200 transform hover:scale-105"
+                >
+                  🎮 Start Playing Now!
+                </a>
+              </div>
             </div>
           </div>
         </div>
