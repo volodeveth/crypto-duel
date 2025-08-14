@@ -31,7 +31,6 @@ export default function Leaderboard() {
 
   async function loadLeaderboard() {
     setLoading(true);
-    console.log('🏆 Loading leaderboard data...');
 
     try {
       // Connect to contract - try multiple RPC providers
@@ -45,16 +44,13 @@ export default function Leaderboard() {
       
       for (const rpcUrl of rpcUrls) {
         try {
-          console.log(`🔗 Trying RPC: ${rpcUrl}`);
           provider = new ethers.JsonRpcProvider(rpcUrl);
           contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
           
           // Test connection by calling nextDuelId
           await contract.nextDuelId();
-          console.log(`✅ RPC working: ${rpcUrl}`);
           break;
         } catch (error) {
-          console.log(`❌ RPC failed: ${rpcUrl}`, error.message);
           continue;
         }
       }
@@ -65,8 +61,7 @@ export default function Leaderboard() {
 
       // Get next duel ID to include all created duels (completed and pending)
       const nextId = await contract.nextDuelId();
-      const totalDuels = await contract.totalDuels(); // Keep for logging
-      console.log('📈 Next duel ID:', nextId.toString(), '| Completed duels:', totalDuels.toString());
+      const totalDuels = await contract.totalDuels();
 
       // Collect all unique players
       const playersMap = new Map();
@@ -92,13 +87,11 @@ export default function Leaderboard() {
             }
           }
         } catch (error) {
-          console.log(`⚠️ Could not load duel ${i}:`, error.message);
           continue;
         }
       }
 
       const uniquePlayers = Array.from(playersMap.keys());
-      console.log('👥 Found unique players:', uniquePlayers.length);
 
       // Get stats for each player
       const playersStats = [];
@@ -106,8 +99,6 @@ export default function Leaderboard() {
         try {
           // Try contract getPlayerStats first
           const [totalGames, wins, totalWinnings] = await contract.getPlayerStats(playerAddress);
-          
-          console.log(`🔍 Player ${playerAddress.slice(0, 8)}: games=${Number(totalGames)}, wins=${Number(wins)}, winnings=${ethers.formatEther(totalWinnings)}`);
           
           if (Number(totalGames) > 0) { // Only include players who have played
             const winRate = Number(totalGames) > 0 ? (Number(wins) / Number(totalGames) * 100) : 0;
@@ -120,12 +111,8 @@ export default function Leaderboard() {
               totalWinnings: ethers.formatEther(totalWinnings),
               winRate: winRate
             });
-          } else {
-            console.log(`⚠️ Player ${playerAddress.slice(0, 8)} has 0 games - skipping`);
           }
         } catch (error) {
-          console.log(`⚠️ getPlayerStats failed for ${playerAddress.slice(0, 8)}: ${error.message}`);
-          console.log(`🔄 Trying manual calculation...`);
           
           // Fallback: calculate stats manually from duels
           try {
@@ -136,10 +123,8 @@ export default function Leaderboard() {
             for (let i = 1; i < maxDuels + 1; i++) {
               try {
                 const duel = await contract.getDuel(i);
-                console.log(`🔍 Fallback duel ${i}: player1=${duel.player1?.slice(0,8)}, player2=${duel.player2?.slice(0,8)}, completed=${duel.completed}, winner=${duel.winner?.slice(0,8)}`);
                 
                 if (duel.player1 === playerAddress || duel.player2 === playerAddress) {
-                  console.log(`✅ Found player ${playerAddress.slice(0,8)} in duel ${i}, completed=${duel.completed}`);
                   if (duel.completed) {
                     totalGames++;
                     if (duel.winner === playerAddress) {
@@ -150,16 +135,12 @@ export default function Leaderboard() {
                       const winnerPrize = totalPool - ownerFee;
                       totalWinnings += winnerPrize;
                     }
-                    console.log(`📊 Updated stats: games=${totalGames}, wins=${wins}`);
                   }
                 }
               } catch (duelError) {
-                console.log(`⚠️ Could not load duel ${i} in fallback: ${duelError.message}`);
                 continue;
               }
             }
-            
-            console.log(`🔄 Manual calc for ${playerAddress.slice(0, 8)}: games=${totalGames}, wins=${wins}, winnings=${ethers.formatEther(totalWinnings)}`);
             
             if (totalGames > 0) {
               const winRate = totalGames > 0 ? (wins / totalGames * 100) : 0;
@@ -172,16 +153,13 @@ export default function Leaderboard() {
                 totalWinnings: ethers.formatEther(totalWinnings),
                 winRate: winRate
               });
-            } else {
-              console.log(`⚠️ Player ${playerAddress.slice(0, 8)} has 0 games after manual calc - skipping`);
             }
           } catch (fallbackError) {
-            console.log(`❌ Manual calculation also failed for ${playerAddress.slice(0, 8)}: ${fallbackError.message}`);
+            continue;
           }
         }
       }
 
-      console.log('📊 Player stats loaded:', playersStats.length);
       setLeaderboardData(playersStats);
     } catch (error) {
       console.error('❌ Error loading leaderboard:', error);
