@@ -496,7 +496,7 @@ export default function DuelApp() {
             <div className="mb-2">
               <img src="/icon.png" alt="Crypto Duel" className="w-16 h-16 mx-auto" />
             </div>
-            <h1 className="text-2xl font-bold mb-1">Duel Arena</h1>
+            <h1 className="text-2xl font-bold mb-1 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">Duel Arena</h1>
             <div className="text-xs text-gray-400 font-mono">
               Contract: {CONTRACT_ADDRESS.slice(0, 6)}...{CONTRACT_ADDRESS.slice(-4)}
             </div>

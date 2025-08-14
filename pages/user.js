@@ -238,7 +238,7 @@ export default function UserPage() {
             <div className="mb-2">
               <img src="/icon.png" alt="Crypto Duel" className="w-14 h-14 mx-auto" />
             </div>
-            <h1 className="text-2xl font-bold">My Duels</h1>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">My Duels</h1>
             <div className="mt-2">
               <Link href="/app" className="text-sm text-purple-200 hover:text-purple-100">🎮 Back to Game</Link>
             </div>

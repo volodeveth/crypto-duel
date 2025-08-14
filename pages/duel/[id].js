@@ -88,7 +88,7 @@ export default function DuelDetails() {
             <div className="mb-2">
               <img src="/icon.png" alt="Crypto Duel" className="w-14 h-14 mx-auto" />
             </div>
-            <h1 className="text-2xl font-bold">Duel #{id}</h1>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">Duel #{id}</h1>
             <div className="mt-2 flex items-center justify-center gap-3">
               <Link href="/app" className="text-sm text-purple-200 hover:text-purple-100">🎮 Back to Game</Link>
               <span className="opacity-40">•</span>

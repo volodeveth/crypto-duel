@@ -147,7 +147,7 @@ export default function Leaderboard() {
             <div className="mb-2">
               <img src="/icon.png" alt="Crypto Duel" className="w-16 h-16 mx-auto" />
             </div>
-            <h1 className="text-3xl font-bold mb-2">Leaderboard</h1>
+            <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">Leaderboard</h1>
             <p className="text-gray-300 mb-4">Top players in Crypto Duel Arena</p>
             
             <Link 
