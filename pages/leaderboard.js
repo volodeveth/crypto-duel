@@ -56,17 +56,16 @@ export default function Leaderboard() {
             continue;
           }
           
-          // Only process completed duels for leaderboard
-          if (duel.completed) {
-            // Add both players to our map
-            if (!playersMap.has(duel.player1)) {
-              playersMap.set(duel.player1, true);
-            }
+          // Add both players to our map (from ALL duels, not just completed)
+          // This ensures we capture all players who have ever participated
+          if (!playersMap.has(duel.player1)) {
+            playersMap.set(duel.player1, true);
+          }
+          if (duel.player2 && duel.player2 !== '0x0000000000000000000000000000000000000000') {
             if (!playersMap.has(duel.player2)) {
               playersMap.set(duel.player2, true);
             }
           }
-          // Skip incomplete duels (they don't affect player stats yet)
         } catch (error) {
           console.log(`⚠️ Could not load duel ${i}:`, error.message);
           continue;
