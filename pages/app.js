@@ -620,6 +620,14 @@ export default function DuelApp() {
           {/* Selecting bet */}
           {gameState === 'selecting' && (
             <div>
+              <div className="mb-6 text-center">
+                <div className="text-sm text-gray-300 mb-3">Share the game with friends:</div>
+                <ShareButtons 
+                  message="Try yourself in crypto duel! 🎮⚡️ Bet ETH, fair blockchain results. Ready for the challenge?"
+                  className="justify-center"
+                />
+              </div>
+              
               <h2 className="text-xl font-semibold mb-4 text-center">Choose Your Bet</h2>
               <div className="space-y-3">
                 {betAmounts.map((bet, idx) => (
@@ -640,14 +648,6 @@ export default function DuelApp() {
               </div>
               <div className="mt-6 p-4 bg-blue-600/20 rounded-lg border border-blue-600/30 text-center text-sm text-blue-200">
                 <strong>Fair Play:</strong> Winner determined by on-chain randomness
-              </div>
-              
-              <div className="mt-6 text-center">
-                <div className="text-sm text-gray-300 mb-3">Share the game with friends:</div>
-                <ShareButtons 
-                  message="Try yourself in crypto duel! 🎮⚡️ Bet ETH, fair blockchain results. Ready for the challenge?"
-                  className="justify-center"
-                />
               </div>
             </div>
           )}
