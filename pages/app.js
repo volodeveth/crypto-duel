@@ -269,14 +269,14 @@ export default function DuelApp() {
       
       const analytics = {
         totalDuels: Number(totalDuels),
-        totalVolume: 0,
-        totalCommissions: 0,
+        totalVolume: 0n, // BigInt
+        totalCommissions: 0n, // BigInt
         duelsByBet: {},
         duelsCount: 0
       };
 
     betAmounts.forEach(bet => {
-      analytics.duelsByBet[bet.value] = { count: 0, volume: 0, label: bet.label };
+      analytics.duelsByBet[bet.value] = { count: 0, volume: 0n, label: bet.label }; // BigInt
     });
 
     const maxDuels = Math.min(Number(totalDuels), 1000);
@@ -302,8 +302,8 @@ export default function DuelApp() {
         if (duel.completed) {
           console.log(`📊 Processing completed duel ${i}`);
           const betAmount = duel.betAmount.toString();
-          const totalPool = Number(duel.betAmount) * 2;
-          const commission = totalPool * 0.10;
+          const totalPool = duel.betAmount * 2n; // BigInt арифметика
+          const commission = (totalPool * 10n) / 100n; // 10% комісії в BigInt
 
           analytics.totalVolume += totalPool;
           analytics.totalCommissions += commission;
@@ -329,13 +329,22 @@ export default function DuelApp() {
       }
     }
 
+      // Конвертуємо BigInt в рядки для ethers.formatEther
+      const duelsByBetFormatted = {};
+      Object.keys(analytics.duelsByBet).forEach(key => {
+        duelsByBetFormatted[key] = {
+          ...analytics.duelsByBet[key],
+          volume: analytics.duelsByBet[key].volume.toString() // BigInt to string
+        };
+      });
+
       setAdminAnalytics({
         totalDuels: analytics.totalDuels,
         totalVolume: ethers.formatEther(analytics.totalVolume.toString()),
         totalCommissions: ethers.formatEther(analytics.totalCommissions.toString()),
-        duelsByBet: analytics.duelsByBet,
+        duelsByBet: duelsByBetFormatted,
         averageBet: analytics.duelsCount > 0
-          ? ethers.formatEther((analytics.totalVolume / analytics.duelsCount / 2).toString())
+          ? ethers.formatEther((analytics.totalVolume / BigInt(analytics.duelsCount) / 2n).toString())
           : '0',
         mostPopularBet: Object.values(analytics.duelsByBet).reduce((acc, v) => v.count > (acc.count || 0) ? v : acc, {}).label || 'None'
       });
