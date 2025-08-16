@@ -1,0 +1,331 @@
+Щоб додати до Crypto Duel повноцінну систему сповіщень для користувачів, які під’єднують Farcaster‑гаманець (але не для тих, хто грає через MetaMask), треба розширити існуючий проект трьома напрямками:
+
+Приймати й зберігати notification‑tokens, які Warpcast/Farcaster клієнт надішле при активації сповіщень.
+
+Відслідковувати завершення дуелей на блокчейні й надсилати персоналізовані повідомлення.
+
+Запускати щоденні нагадування всім підписаним користувачам.
+
+Нижче викладено покроковий план, що базується на офіційній документації Farcaster mini‑apps і коді репозиторію.
+
+1. Дослідити Farcaster API
+
+У Farcaster є два різні механізми повідомлень:
+
+Mini‑app notifications – користувач додає ваш міні‑додаток у Warpcast, активує “Allow notifications”, і клієнт генерує token та url. Коли хочете надіслати повідомлення, робите POST‑запит на цей url з об’єктом { notificationId, title, body, targetUrl, tokens }. Цей механізм описаний у розділі “Sending notifications” Farcaster mini‑apps документації
+miniapps.farcaster.xyz
+. Важливо використовувати стабільні notificationId (наприклад, duel-result-<id> чи daily-reminder-YYYY-MM-DD), щоб уникати дублювань
+miniapps.farcaster.xyz
+, і не перевищувати ліміти (1 повідомлення кожні 30 с і 100 на добу)
+miniapps.farcaster.xyz
+.
+
+Warpcast Direct Cast API – дає змогу надсилати приватні “direct casts” будь‑яким користувачам, але потребує окремого API‑ключа (wc_secret_…). Оскільки документацію важко отримати, у плані нижче використовується офіційний механізм mini‑app notifications. Ключ wc_secret_… можна зберегти як резервний і інтегрувати, якщо Farcaster публічно надасть Direct Cast API.
+
+2. Архітектура системи
+
+Компоненти:
+
+База даних (PostgreSQL або SQLite) для зберігання гаманців, FID і notification‑token’ів:
+
+CREATE TABLE farcaster_users (
+  id SERIAL PRIMARY KEY,
+  wallet_address VARCHAR(42) UNIQUE,
+  fid INTEGER,
+  username TEXT,
+  notification_url TEXT,
+  notification_token TEXT,
+  notifications_enabled BOOLEAN DEFAULT TRUE,
+  last_notification_sent TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+
+Webhook endpoint – URL, який Warpcast буде викликати при miniapp_added, notifications_enabled, notifications_disabled і miniapp_removed
+miniapps.farcaster.xyz
+.
+
+Duel listener – WebSocket listener або cron‑процес, який слухає подію DuelCompleted у смарт‑контракті і відправляє сповіщення про результат.
+
+Cron job – щодня відправляє всім підписаним користувачам нагадування зі словами “Ready for another crypto duel?”.
+
+API‑ендпоінти для підписки/відписки та тестових викликів.
+
+Технічний стек: Next.js API routes, ethers.js для прослуховування смарт‑контракту, node-cron або Vercel Cron для планувальника, та бібліотека @farcaster/miniapp-node для перевірки підписів від Warpcast.
+
+3. Додавання webhook у manifest
+
+У вашому farcaster.json (в public/.well-known або через API‑endpoint /api/manifest) додайте поле webhookUrl:
+
+{
+  "version": "1",
+  "name": "Crypto Duel",
+  "iconUrl": "https://cryptoduel.xyz/icon.png",
+  "homeUrl": "https://cryptoduel.xyz/app",
+  "imageUrl": "https://cryptoduel.xyz/image.png",
+  "buttonTitle": "Play",
+  "splashImageUrl": "https://cryptoduel.xyz/splash.png",
+  "splashBackgroundColor": "#1d1231",
+  "webhookUrl": "https://cryptoduel.xyz/api/farcaster-webhook"
+}
+}
+
+
+Після деплою міні‑апки в користувачів з’явиться можливість увімкнути сповіщення; Warpcast буде слати події на /api/farcaster-webhook
+miniapps.farcaster.xyz
+.
+
+4. Webhook endpoint для обробки подій
+
+Створіть файл pages/api/farcaster-webhook.js:
+
+// pages/api/farcaster-webhook.js
+import { parseWebhookEvent, verifyAppKeyWithNeynar } from '@farcaster/miniapp-node';
+import db from '@/lib/database'; // ваш модуль БД
+
+export const config = { api: { bodyParser: true } };
+
+export default async function handler(req, res) {
+  // приймаємо лише POST
+  if (req.method !== 'POST') return res.status(405).send('Method not allowed');
+
+  // Валідація підпису. Neynar API потребує `FARCASTER_APP_KEY` та `FARCASTER_APP_SECRET`
+  try {
+    const event = parseWebhookEvent(req.body);
+    // verify signature if necessary:
+    await verifyAppKeyWithNeynar(event, {
+      appFid: process.env.FARCASTER_APP_FID,
+      neynarApiKey: process.env.NEYNAR_API_KEY
+    });
+
+    const { event: eventType, fid, userFid, notificationDetails } = event;
+
+    const savedFid = fid ?? userFid;
+    if (!savedFid) return res.status(200).json({ ok: true });
+
+    if (eventType === 'miniapp_added' || eventType === 'notifications_enabled') {
+      // зберігаємо notification url + token
+      await db.upsertUser({
+        fid: savedFid,
+        notification_url: notificationDetails.url,
+        notification_token: notificationDetails.token,
+        notifications_enabled: true
+      });
+    } else if (eventType === 'notifications_disabled' || eventType === 'miniapp_removed') {
+      await db.updateUser(savedFid, { notifications_enabled: false });
+    }
+
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error('Webhook error:', err);
+    return res.status(400).json({ error: err.message });
+  }
+}
+
+
+Цей endpoint приймає події Farcaster, перевіряє підпис і зберігає (або видаляє) tokens у БД.
+
+5. Отримання FID і підписка зі сторони клієнта
+
+У компоненті FarcasterInit.js (він уже завантажує context і показує FID) слід викликати ваш API, щоб зберегти FID і адресу гаманця. Наприклад, після успішного sdk.actions.ready() і отримання context:
+
+import { sdk } from '@farcaster/miniapp-sdk';
+
+async function subscribeUserToNotifications(address) {
+  const context = typeof sdk.context === 'function' ? sdk.context() : sdk.context;
+  if (!context?.user?.fid) return;
+
+  await fetch('/api/notifications/subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      fid: context.user.fid,
+      username: context.user.username,
+      walletAddress: address
+    })
+  });
+}
+
+
+Файл pages/api/notifications/subscribe.js:
+
+// pages/api/notifications/subscribe.js
+import db from '@/lib/database';
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).end('Method not allowed');
+
+  const { fid, username, walletAddress } = req.body;
+  if (!fid || !walletAddress) return res.status(400).json({ error: 'Missing fid or wallet' });
+
+  await db.upsertUser({
+    fid: Number(fid),
+    username,
+    wallet_address: walletAddress.toLowerCase()
+  });
+  res.status(200).json({ ok: true });
+}
+
+
+Це дозволить зв’язати on‑chain адресу з FID користувача в таблиці farcaster_users.
+
+6. Слухач подій дуелей
+
+Створіть модуль lib/blockchain.js, який підключається до смарт‑контракту через ethers і слухає подію DuelCompleted(duelId, winner, prize, randomSeed)
+raw.githubusercontent.com
+:
+
+// lib/blockchain.js
+import { ethers } from 'ethers';
+import { sendResultNotification } from './notifications';
+import db from './database';
+
+const provider = new ethers.WebSocketProvider(process.env.BASE_RPC_WSS);
+const contract = new ethers.Contract(process.env.CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+
+export function listenForDuels() {
+  contract.on('DuelCompleted', async (duelId, winner, prize, randomSeed) => {
+    const duelIdNum = Number(duelId);
+    const winnerAddr = winner.toLowerCase();
+    const prizeEth = ethers.formatEther(prize);
+    // Знаходимо обох гравців через свою бізнес‑логіку (наприклад, читаємо getDuel())
+    const duel = await contract.getDuel(duelIdNum);
+    const players = [duel.player1.toLowerCase(), duel.player2.toLowerCase()];
+
+    // Для кожного гравця шукаємо його FID у БД і відправляємо сповіщення
+    for (const addr of players) {
+      const user = await db.getUserByWallet(addr);
+      if (!user || !user.notifications_enabled || !user.notification_url) continue;
+      const won = addr === winnerAddr;
+      await sendResultNotification(user, {
+        duelId: duelIdNum,
+        win: won,
+        prizeEth
+      });
+    }
+  });
+}
+
+
+Функція sendResultNotification() створює сповіщення і робить POST на notification_url:
+
+// lib/notifications.js
+import fetch from 'node-fetch';
+
+export async function sendResultNotification(user, { duelId, win, prizeEth }) {
+  const notificationId = `duel-${duelId}-${user.fid}`; // стабільний id
+  const title = win ? '🥳 You won your duel!' : '😓 Duel result';
+  const body = win
+    ? `You won ${prizeEth} ETH in duel #${duelId}!`
+    : `You lost your duel #${duelId}. Better luck next time!`;
+  const payload = {
+    notificationId,
+    title,
+    body,
+    targetUrl: `https://cryptoduel.xyz/duel/${duelId}`,
+    tokens: [user.notification_token]
+  };
+  await fetch(user.notification_url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+}
+
+
+Таким чином, коли контракт генерує DuelCompleted, кожен зареєстрований гравець отримає push‑повідомлення з результатом.
+
+7. Щоденні нагадування через Cron
+
+Створіть lib/dailyReminder.js для розрахунку статистики за добу:
+
+import { ethers } from 'ethers';
+import db from './database';
+
+export async function getActiveFarcasterUsers() {
+  return db.getUsersWithNotificationsEnabled();
+}
+
+export async function sendDailyReminders() {
+  const users = await getActiveFarcasterUsers();
+  for (const user of users) {
+    // Перевірка, щоб не спамити якщо вже надсилали цього дня
+    if (user.last_notification_sent && new Date() - user.last_notification_sent < 12 * 60 * 60 * 1000) continue;
+    const id = `daily-${new Date().toISOString().slice(0,10)}-${user.fid}`;
+    const body = `Ready for another crypto duel? 🎮 Challenge someone today!`;
+    const payload = {
+      notificationId: id,
+      title: 'Time to Duel!',
+      body,
+      targetUrl: 'https://cryptoduel.xyz/app',
+      tokens: [user.notification_token]
+    };
+    await fetch(user.notification_url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    await db.updateUser(user.fid, { last_notification_sent: new Date() });
+  }
+}
+
+
+У файлі pages/api/cron/daily.js можна запустити нагадування:
+
+// pages/api/cron/daily.js
+import { sendDailyReminders } from '@/lib/dailyReminder';
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).end();
+  await sendDailyReminders();
+  res.status(200).json({ ok: true });
+}
+
+
+Для планування виклику на Vercel можна додати до vercel.json:
+
+{
+  "triggers": [
+    {
+      "type": "cron",
+      "schedule": "0 12 * * *",
+      "url": "/api/cron/daily"
+    }
+  ]
+}
+
+
+На звичайному сервері використовуйте node-cron:
+
+import cron from 'node-cron';
+import { sendDailyReminders } from './lib/dailyReminder';
+
+cron.schedule('0 12 * * *', sendDailyReminders); // 12:00 UTC щодня
+
+8. Інтеграція з фронтендом
+
+Додайте кнопку “Enable notifications” у вашій грі, яка викликає sdk.actions.addMiniApp() – користувачеві з’явиться діалог увімкнення сповіщень.
+
+Після підключення Farcaster‑гаманця й успішного ready(), викликайте subscribeUserToNotifications(address) – це збереже FID та адресу у БД.
+
+У компоненті “My Duels” додайте індикатор підписки (наприклад, прапорець “Notifications enabled”) та кнопку для відписки, що шле запит на /api/notifications/unsubscribe.
+
+9. Підсумок
+
+Зберігаємо FIDs, токени та URL повідомлень у БД (один рядок на користувача).
+
+Обробляємо події miniapp_added / notifications_enabled щоб отримати notificationDetails і зберегти token та url
+miniapps.farcaster.xyz
+.
+
+Викликаємо contract.on('DuelCompleted', ...), знаходимо FID обох гравців та надсилаємо персоналізовані повідомлення.
+
+Налаштовуємо щоденний cron job, щоб надсилати нагадування.
+
+Використовуємо стабільні notificationId й дотримуємось лімітів Farcaster (не більше 1 повідомлення кожні 30 с і 100 на добу)
+miniapps.farcaster.xyz
+.
+
+Якщо згодом захочете використовувати Direct Cast API (wc_secret_...), замініть sendResultNotification() та sendDailyReminders() на виклики офіційного Warpcast API з авторизаційним заголовком Bearer ${process.env.WC_SECRET}; структура JSON (наприклад recipientFid, text і embeds) описана у Warpcast API документації.
+
+Цей підхід надає надійну систему сповіщень для гравців з Farcaster‑гаманцями: вони отримують push‑повідомлення після завершення дуелі та щоденні запрошення змагатися, а також можуть легко вмикати/вимикати повідомлення.

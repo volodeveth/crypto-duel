@@ -2,18 +2,24 @@
   "version": 2,
   "env": {
     "NEXT_PUBLIC_BASE_URL": "https://cryptoduel.xyz",
-    "NEXT_PUBLIC_CONTRACT_ADDRESS": "0x2b844d2b55a64dC7d9a195DF2C2Ee9cEB9b53035"
+    "NEXT_PUBLIC_CONTRACT_ADDRESS": "0x238300D6570Deee3765d72Fa8e2af447612FaE06"
   },
   "build": {
     "env": {
       "NEXT_PUBLIC_BASE_URL": "https://cryptoduel.xyz",
-      "NEXT_PUBLIC_CONTRACT_ADDRESS": "0x2b844d2b55a64dC7d9a195DF2C2Ee9cEB9b53035"
+      "NEXT_PUBLIC_CONTRACT_ADDRESS": "0x238300D6570Deee3765d72Fa8e2af447612FaE06"
     }
   },
   "builds": [
     {
       "src": "next.config.js",
       "use": "@vercel/next"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/daily",
+      "schedule": "0 12 * * *"
     }
   ]
 }

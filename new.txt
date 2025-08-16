@@ -146,3 +146,34 @@ webhookUrl
 
   Webhook URL (webhookUrl):
   Залиште порожнім якщо не використовуєте вебхуки
+
+{
+  "frame": {
+    "name": "Crypto Duel",
+    "version": "1",
+    "iconUrl": "https://cryptoduel.xyz/icon.png",
+    "homeUrl": "https://cryptoduel.xyz",
+    "imageUrl": "https://cryptoduel.xyz/image.png",
+    "buttonTitle": "Start Duel",
+    "splashImageUrl": "https://cryptoduel.xyz/splash.png",
+    "splashBackgroundColor": "#342E88",
+    "screenshotUrls": [
+      "https://www.cryptoduel.xyz/screenshot2.jpg"
+    ],
+    "primaryCategory": "games",
+    "subtitle": "Blockchain PvP betting game",
+    "description": "Challenge opponents in exciting crypto duels! Bet ETH in fair blockchain-based matches with transparent smart   contract results. Connect your wallet and prove your skills in this decentralized gaming experience.",
+    "heroImageUrl": "https://www.cryptoduel.xyz/hero.png",
+    "tags": [
+      "blockchain",
+      "duel",
+      "betting",
+      "ethereum",
+      "pvp"
+    ],
+    "tagline": "Duel. Bet. Win. On-chain!",
+    "ogTitle": "Crypto Duel Onchain PvP Gaming",
+    "ogDescription": "Challenge opponents in crypto duels! Bet ETH, fair onchain results. ",
+    "ogImageUrl": "https://www.cryptoduel.xyz/image.png"
+  }
+}

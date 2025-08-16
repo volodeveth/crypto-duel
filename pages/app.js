@@ -597,11 +597,12 @@ export default function DuelApp() {
                 <p className="text-gray-300 mb-6">Select how you want to connect your wallet</p>
                 <div className="space-y-4">
                   <button onClick={() => connectFarcasterWallet().catch(e => alert(e.message))}
-                          className="w-full bg-blue-600 hover:bg-blue-700 px-6 py-4 rounded-lg font-semibold transition-colors flex items-center justify-center gap-3">
-                    <span className="text-2xl">🎯</span>
+                          style={{backgroundColor: '#815CC3'}} 
+                          className="w-full hover:opacity-90 px-6 py-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-3">
+                    <img src="/farcaster.png" alt="Farcaster" className="w-6 h-6" />
                     <div className="text-left">
                       <div className="font-semibold">Farcaster Wallet</div>
-                      <div className="text-sm text-blue-200">Use built-in Farcaster wallet</div>
+                      <div className="text-sm text-purple-200">Use built-in Farcaster wallet</div>
                     </div>
                   </button>
                   <button onClick={() => connectExternalWallet().catch(e => alert(e.message))}

@@ -19,12 +19,16 @@
     "node": ">=22.11.0"
   },
   "dependencies": {
+    "@farcaster/miniapp-node": "^0.1.7",
     "@farcaster/miniapp-sdk": "^0.1.8",
+    "better-sqlite3": "^12.2.0",
     "dotenv": "^16.4.5",
     "ethers": "^6.13.4",
     "next": "^14.2.31",
+    "node-cron": "^4.2.1",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",

@@ -15,20 +15,23 @@ export default function handler(req, res) {
     homeUrl: `${baseUrl}/app`,
     imageUrl: `${baseUrl}/icon.png`,
     buttonTitle: "🎮 Duel Now",
-    splashImageUrl: `${baseUrl}/icon.png`,
+    splashImageUrl: `${baseUrl}/splash.png`,
     splashBackgroundColor: "#8B5CF6",
     description: "Challenge other users and win ETH in fair duels! Uses blockchain randomness for fair results.",
+    webhookUrl: `${baseUrl}/api/farcaster-webhook`,
     subtitle: "ETH dueling game",
     screenshotUrls: [
-      `${baseUrl}/icon.png`
+      `${baseUrl}/screenshot1.jpg`,
+      `${baseUrl}/screenshot2.jpg`,
+      `${baseUrl}/screenshot3.jpg`
     ],
     primaryCategory: "games",
     tags: ["crypto", "game", "duel", "eth", "blockchain"],
-    heroImageUrl: `${baseUrl}/icon.png`,
+    heroImageUrl: `${baseUrl}/hero.png`,
     tagline: "Challenge and win ETH!",
     ogTitle: "Crypto Duel - ETH Dueling Game",
     ogDescription: "Challenge other users and win ETH in fair duels! Uses blockchain randomness for fair results.",
-    ogImageUrl: `${baseUrl}/icon.png`,
+    ogImageUrl: `${baseUrl}/image.png`,
     castShareUrl: "https://warpcast.com/~/compose?text=Check+out+Crypto+Duel+🎮+Challenge+and+win+ETH!&embeds[]=https://cryptoduel.xyz",
     // Keep nested structure for compatibility
     miniapp: {
@@ -36,9 +39,9 @@ export default function handler(req, res) {
       name: "Crypto Duel",
       iconUrl: `${baseUrl}/icon.png`,
       homeUrl: `${baseUrl}/app`,
-      imageUrl: `${baseUrl}/icon.png`,
+      imageUrl: `${baseUrl}/image.png`,
       buttonTitle: "🎮 Duel Now",
-      splashImageUrl: `${baseUrl}/icon.png`,
+      splashImageUrl: `${baseUrl}/splash.png`,
       splashBackgroundColor: "#8B5CF6",
       description: "Challenge other users and win ETH in fair duels! Uses blockchain randomness for fair results.",
       subtitle: "ETH dueling game"
@@ -49,9 +52,9 @@ export default function handler(req, res) {
       name: "Crypto Duel",
       iconUrl: `${baseUrl}/icon.png`,
       homeUrl: `${baseUrl}/app`,
-      imageUrl: `${baseUrl}/icon.png`,
+      imageUrl: `${baseUrl}/image.png`,
       buttonTitle: "🎮 Duel Now",
-      splashImageUrl: `${baseUrl}/icon.png`,
+      splashImageUrl: `${baseUrl}/splash.png`,
       splashBackgroundColor: "#8B5CF6"
     }
   };

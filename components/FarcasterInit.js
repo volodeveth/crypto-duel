@@ -1,6 +1,46 @@
 import { useEffect, useState } from 'react';
 import { sdk } from '@farcaster/miniapp-sdk';
 
+// Function to subscribe user to notifications
+async function subscribeToNotifications(fid, username) {
+  // We need to get the wallet address from somewhere
+  // For now, we'll try to get it from localStorage or context
+  let walletAddress = null;
+  
+  try {
+    // Try to get connected wallet address
+    if (typeof window !== 'undefined' && window.ethereum) {
+      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+      if (accounts && accounts.length > 0) {
+        walletAddress = accounts[0];
+      }
+    }
+    
+    if (!walletAddress) {
+      console.log('⚠️ No wallet address found for notification subscription');
+      return;
+    }
+
+    const response = await fetch('/api/notifications/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fid: Number(fid),
+        username: username || '',
+        walletAddress: walletAddress
+      })
+    });
+
+    if (response.ok) {
+      console.log('✅ Successfully subscribed to notifications');
+    } else {
+      console.error('❌ Failed to subscribe to notifications:', response.status);
+    }
+  } catch (error) {
+    console.error('❌ Error subscribing to notifications:', error);
+  }
+}
+
 export default function FarcasterInit() {
   const [debugInfo, setDebugInfo] = useState([]);
 
@@ -114,6 +154,12 @@ export default function FarcasterInit() {
           if (context.user) {
             addLog(`👤 User FID: ${context.user.fid || 'N/A'}`);
             addLog(`👤 User username: ${context.user.username || 'N/A'}`);
+            
+            // Subscribe user to notifications if we have wallet address
+            if (context.user.fid && typeof window !== 'undefined') {
+              addLog('🔔 Attempting to subscribe user to notifications...');
+              subscribeToNotifications(context.user.fid, context.user.username);
+            }
           }
           
           if (context.client) {
