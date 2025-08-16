@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
+import { EthWithUsd } from '../../lib/ethPrice';
 
 const CONTRACT_ABI = [
   "event DuelCompleted(uint256 indexed duelId, address winner, uint256 prize, uint256 randomSeed)",
@@ -122,7 +123,7 @@ export default function DuelDetails() {
                   )}
                 </div>
                 <div className="text-sm text-yellow-400 font-semibold">
-                  Bet: {duel.betEth.toFixed(5)} ETH
+                  Bet: <EthWithUsd amount={duel.betEth} decimals={5} />
                 </div>
               </div>
               <div className="mt-2 text-xs text-gray-400">

@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { ethers } from 'ethers';
 import ShareButtons from '../components/ShareButtons';
+import { EthWithUsd } from '../lib/ethPrice';
 
 const CONTRACT_ABI = [
   "event DuelCompleted(uint256 indexed duelId, address winner, uint256 prize, uint256 randomSeed)",
@@ -313,7 +314,7 @@ export default function UserPage() {
                         </Link>{' '}
                         <span className="text-yellow-400">Waiting for opponent</span>
                       </div>
-                      <div className="text-sm text-yellow-400 font-semibold">{d.betEth.toFixed(5)} ETH</div>
+                      <div className="text-sm text-yellow-400 font-semibold"><EthWithUsd amount={d.betEth} decimals={5} /></div>
                     </div>
                     <div className="mt-1 text-xs text-gray-400">
                       {short(d.player1)} vs {d.player2 === '0x0000000000000000000000000000000000000000' ? 'waiting...' : short(d.player2)} • {d.timestamp ? new Date(d.timestamp).toLocaleString() : ''} {d.isWaiting ? '(waiting for opponent)' : ''}
@@ -349,7 +350,7 @@ export default function UserPage() {
                           {d.isWinner ? 'Win' : 'Loss'}
                         </span>
                       </div>
-                      <div className="text-sm text-yellow-400 font-semibold">{d.betEth.toFixed(5)} ETH</div>
+                      <div className="text-sm text-yellow-400 font-semibold"><EthWithUsd amount={d.betEth} decimals={5} /></div>
                     </div>
                     <div className="mt-1 text-xs text-gray-400">
                       {short(d.player1)} vs {short(d.player2)} • {d.timestamp ? new Date(d.timestamp).toLocaleString() : ''}

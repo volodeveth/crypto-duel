@@ -4,6 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import FarcasterInit from '../components/FarcasterInit';
 import ShareButtons from '../components/ShareButtons';
+import { EthWithUsd } from '../lib/ethPrice';
 
 const CONTRACT_ABI = [
   "function joinDuel() external payable",
@@ -534,7 +535,7 @@ export default function DuelApp() {
                 <div><div className="text-xl font-bold text-blue-400">{userStats.totalGames}</div><div className="text-xs text-gray-400">Games</div></div>
                 <div><div className="text-xl font-bold text-green-400">{userStats.wins}</div><div className="text-xs text-gray-400">Wins</div></div>
                 <div><div className="text-xl font-bold text-red-400">{userStats.totalGames - userStats.wins}</div><div className="text-xs text-gray-400">Losses</div></div>
-                <div><div className="text-xl font-bold text-yellow-400">{parseFloat(userStats.totalWinnings).toFixed(4)}</div><div className="text-xs text-gray-400">ETH Won</div></div>
+                <div><div className="text-xl font-bold text-yellow-400"><EthWithUsd amount={userStats.totalWinnings} decimals={5} /></div><div className="text-xs text-gray-400">Won</div></div>
               </div>
             </div>
           )}
@@ -555,13 +556,13 @@ export default function DuelApp() {
                 <div className="bg-black/20 rounded-lg p-3">
                   <div className="text-sm text-gray-300">Total Volume</div>
                   <div className="text-2xl font-bold text-green-400">
-                    {parseFloat(adminAnalytics.totalVolume).toFixed(4)} ETH
+                    <EthWithUsd amount={adminAnalytics.totalVolume} decimals={4} />
                   </div>
                 </div>
                 <div className="bg-black/20 rounded-lg p-3">
                   <div className="text-sm text-gray-300">Total Commissions</div>
                   <div className="text-2xl font-bold text-yellow-400">
-                    {parseFloat(adminAnalytics.totalCommissions).toFixed(4)} ETH
+                    <EthWithUsd amount={adminAnalytics.totalCommissions} decimals={4} />
                   </div>
                 </div>
                 <div className="bg-black/20 rounded-lg p-3">
@@ -579,7 +580,7 @@ export default function DuelApp() {
                       <div className="text-right">
                         <div className="text-sm font-semibold text-white">{data.count} duels</div>
                         <div className="text-xs text-gray-400">
-                          {ethers.formatEther(data.volume.toString())} ETH
+                          <EthWithUsd amount={ethers.formatEther(data.volume.toString())} decimals={4} />
                         </div>
                       </div>
                     </div>
@@ -640,7 +641,7 @@ export default function DuelApp() {
                         <div className="text-sm text-gray-400">Waiting: {waitingCount[bet.value] || 0} players</div>
                       </div>
                       <div className="text-right">
-                        <div className="text-green-400 font-semibold">Win: {(bet.eth * 1.8).toFixed(5)} ETH</div>
+                        <div className="text-green-400 font-semibold">Win: <EthWithUsd amount={bet.eth * 1.8} decimals={5} /></div>
                         <div className="text-sm text-yellow-400">1.8x multiplier</div>
                       </div>
                     </div>
@@ -697,7 +698,7 @@ export default function DuelApp() {
               {lastResult.isWinner && (
                 <div className="bg-green-600/20 rounded-lg p-4 mb-6 border border-green-600/30">
                   <div className="text-2xl font-bold text-green-400 mb-2">
-                    +{parseFloat(lastResult.prize).toFixed(5)} ETH
+                    +<EthWithUsd amount={lastResult.prize} decimals={5} />
                   </div>
                   <div className="text-sm text-green-300">Prize sent to your wallet!</div>
                 </div>

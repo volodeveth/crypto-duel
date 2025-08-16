@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import Head from 'next/head';
 import Link from 'next/link';
+import { EthWithUsd } from '../lib/ethPrice';
 
 const CONTRACT_ABI = [
   "function getPlayerStats(address player) external view returns (uint256 totalGames, uint256 wins, uint256 totalWinnings)",
@@ -341,7 +342,7 @@ export default function Leaderboard() {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <div className="text-yellow-400 font-semibold">
-                            {parseFloat(player.totalWinnings).toFixed(4)} ETH
+                            <EthWithUsd amount={player.totalWinnings} decimals={5} />
                           </div>
                         </td>
                       </tr>
