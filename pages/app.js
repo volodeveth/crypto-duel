@@ -263,9 +263,7 @@ export default function DuelApp() {
     if (!contract) return;
     
     try {
-      console.log('📊 Starting admin analytics load...');
       const totalDuels = await contract.totalDuels();
-      console.log('📊 Total duels in contract:', Number(totalDuels));
       
       const analytics = {
         totalDuels: Number(totalDuels),
@@ -280,46 +278,20 @@ export default function DuelApp() {
     });
 
     const maxDuels = Math.min(Number(totalDuels), 1000);
-    console.log('📊 Will check duels from 1 to', maxDuels);
-    
-    if (maxDuels === 0) {
-      console.warn('📊 No duels found! totalDuels returned 0');
-      setAdminAnalytics({
-        totalDuels: 0,
-        totalVolume: '0',
-        totalCommissions: '0',
-        duelsByBet: analytics.duelsByBet,
-        averageBet: '0',
-        mostPopularBet: 'None'
-      });
-      return;
-    }
     
     for (let i = 1; i <= maxDuels; i++) {
       try {
         const duel = await contract.getDuel(i);
-        console.log(`📊 Duel ${i}:`, {
-          player1: duel.player1,
-          player2: duel.player2, 
-          betAmount: duel.betAmount?.toString(),
-          completed: duel.completed,
-          winner: duel.winner
-        });
         
         // Skip if duel doesn't exist (empty data)
         if (!duel.player1 || duel.player1 === '0x0000000000000000000000000000000000000000') {
-          console.log(`📊 Skipping empty duel ${i}`);
           continue;
         }
         
         if (duel.completed) {
-          console.log(`📊 Processing completed duel ${i}`);
           const betAmount = duel.betAmount.toString();
           const totalPool = duel.betAmount * 2n; // BigInt арифметика
           const commission = (totalPool * 10n) / 100n; // 10% комісії в BigInt
-
-          console.log(`📊 Bet amount string: "${betAmount}"`);
-          console.log(`📊 Available bet keys:`, Object.keys(analytics.duelsByBet));
 
           analytics.totalVolume += totalPool;
           analytics.totalCommissions += commission;
@@ -328,22 +300,10 @@ export default function DuelApp() {
           if (analytics.duelsByBet[betAmount]) {
             analytics.duelsByBet[betAmount].count++;
             analytics.duelsByBet[betAmount].volume += totalPool;
-            console.log(`📊 Updated bet category ${betAmount}`);
-          } else {
-            console.warn(`📊 Bet amount ${betAmount} not found in predefined categories`);
           }
           
-          console.log(`📊 Updated analytics:`, {
-            totalVolume: analytics.totalVolume,
-            totalCommissions: analytics.totalCommissions,
-            duelsCount: analytics.duelsCount,
-            betAmount: betAmount
-          });
-        } else {
-          console.log(`📊 Duel ${i} not completed yet`);
         }
       } catch (error) {
-        console.warn(`📊 Error loading duel ${i} for analytics:`, error.message);
         continue;
       }
     }
@@ -368,7 +328,6 @@ export default function DuelApp() {
         mostPopularBet: Object.values(analytics.duelsByBet).reduce((acc, v) => v.count > (acc.count || 0) ? v : acc, {}).label || 'None'
       });
       
-      console.log('✅ Admin analytics loaded successfully');
     } catch (error) {
       console.error('❌ Failed to load admin analytics:', error);
       
