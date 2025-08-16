@@ -204,6 +204,17 @@ export default function UserPage() {
       completedDuels.sort((a, b) => Number(b.id) - Number(a.id));
       pendingDuels.sort((a, b) => Number(b.id) - Number(a.id));
       setDuels([...pendingDuels, ...completedDuels]);
+      
+      // Clear pendingLocal if we found any duels for this address
+      if (pendingLocal && (pendingDuels.length > 0 || completedDuels.length > 0)) {
+        const foundMatchingDuel = [...pendingDuels, ...completedDuels].some(d => 
+          d.player1.toLowerCase() === targetAddress.toLowerCase()
+        );
+        if (foundMatchingDuel) {
+          setPendingLocal(null);
+          localStorage.removeItem('cd_currentWaiting');
+        }
+      }
     } catch (e) {
       console.error(e);
       alert('Failed to load duels: ' + e.message);
