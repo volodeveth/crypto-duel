@@ -342,7 +342,13 @@ export default function Leaderboard() {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <div className="text-yellow-400 font-semibold">
-                            <EthWithUsd amount={player.totalWinnings} decimals={5} />
+                            <EthWithUsd 
+                              amount={player.totalWinnings} 
+                              decimals={5} 
+                              vertical={true}
+                              className="text-yellow-400 font-semibold"
+                              usdClassName="text-xs text-gray-400"
+                            />
                           </div>
                         </td>
                       </tr>

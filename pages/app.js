@@ -535,7 +535,16 @@ export default function DuelApp() {
                 <div><div className="text-xl font-bold text-blue-400">{userStats.totalGames}</div><div className="text-xs text-gray-400">Games</div></div>
                 <div><div className="text-xl font-bold text-green-400">{userStats.wins}</div><div className="text-xs text-gray-400">Wins</div></div>
                 <div><div className="text-xl font-bold text-red-400">{userStats.totalGames - userStats.wins}</div><div className="text-xs text-gray-400">Losses</div></div>
-                <div><div className="text-xl font-bold text-yellow-400"><EthWithUsd amount={userStats.totalWinnings} decimals={5} /></div><div className="text-xs text-gray-400">Won</div></div>
+                <div>
+                  <EthWithUsd 
+                    amount={userStats.totalWinnings} 
+                    decimals={5} 
+                    vertical={true}
+                    className="text-lg font-bold text-yellow-400"
+                    usdClassName="text-xs text-gray-400"
+                  />
+                  <div className="text-xs text-gray-400 mt-1">Won</div>
+                </div>
               </div>
             </div>
           )}
@@ -637,7 +646,7 @@ export default function DuelApp() {
                           className="w-full bg-gray-800/50 hover:bg-gray-700/50 p-4 rounded-lg border border-gray-600 transition-all duration-200 hover:border-purple-500">
                     <div className="flex justify-between items-center">
                       <div className="text-left">
-                        <div className="font-semibold text-white">{bet.label}</div>
+                        <div className="font-semibold text-white"><EthWithUsd amount={bet.eth} decimals={5} /></div>
                         <div className="text-sm text-gray-400">Waiting: {waitingCount[bet.value] || 0} players</div>
                       </div>
                       <div className="text-right">
