@@ -282,6 +282,19 @@ export default function DuelApp() {
     const maxDuels = Math.min(Number(totalDuels), 1000);
     console.log('📊 Will check duels from 1 to', maxDuels);
     
+    if (maxDuels === 0) {
+      console.warn('📊 No duels found! totalDuels returned 0');
+      setAdminAnalytics({
+        totalDuels: 0,
+        totalVolume: '0',
+        totalCommissions: '0',
+        duelsByBet: analytics.duelsByBet,
+        averageBet: '0',
+        mostPopularBet: 'None'
+      });
+      return;
+    }
+    
     for (let i = 1; i <= maxDuels; i++) {
       try {
         const duel = await contract.getDuel(i);
@@ -305,6 +318,9 @@ export default function DuelApp() {
           const totalPool = duel.betAmount * 2n; // BigInt арифметика
           const commission = (totalPool * 10n) / 100n; // 10% комісії в BigInt
 
+          console.log(`📊 Bet amount string: "${betAmount}"`);
+          console.log(`📊 Available bet keys:`, Object.keys(analytics.duelsByBet));
+
           analytics.totalVolume += totalPool;
           analytics.totalCommissions += commission;
           analytics.duelsCount++;
@@ -312,6 +328,9 @@ export default function DuelApp() {
           if (analytics.duelsByBet[betAmount]) {
             analytics.duelsByBet[betAmount].count++;
             analytics.duelsByBet[betAmount].volume += totalPool;
+            console.log(`📊 Updated bet category ${betAmount}`);
+          } else {
+            console.warn(`📊 Bet amount ${betAmount} not found in predefined categories`);
           }
           
           console.log(`📊 Updated analytics:`, {
