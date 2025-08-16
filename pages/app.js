@@ -16,7 +16,7 @@ const CONTRACT_ABI = [
   "function withdrawCommissions() external",
   "function getCommissionBalance() external view returns (uint256)",
   "function getDuel(uint256 duelId) external view returns (tuple(uint256 id, address player1, address player2, uint256 betAmount, uint256 timestamp, address winner, bool completed, uint256 randomSeed))",
-  "uint256 public totalDuels",
+  "function totalDuels() external view returns (uint256)",
   "event PlayerWaiting(uint256 indexed waitingId, address player, uint256 betAmount)",
   "event DuelCompleted(uint256 indexed duelId, address winner, uint256 prize, uint256 randomSeed)"
 ];
