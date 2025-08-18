@@ -38,15 +38,32 @@ async function createProviderWithFallback() {
   for (const rpcUrl of RPC_ENDPOINTS) {
     try {
       const provider = new ethers.JsonRpcProvider(rpcUrl);
-      // Test the connection
+      // Test the connection with a simple call
       await provider.getBlockNumber();
+      console.log(`✅ Using RPC: ${rpcUrl}`);
       return provider;
     } catch (error) {
-      console.warn(`RPC ${rpcUrl} failed, trying next...`);
+      console.warn(`❌ RPC ${rpcUrl} failed:`, error.message);
       continue;
     }
   }
   throw new Error('All RPC endpoints failed');
+}
+
+// Safe wrapper for contract calls with fallback
+async function safeContractCall(methodName, ...args) {
+  for (const rpcUrl of RPC_ENDPOINTS) {
+    try {
+      const provider = new ethers.JsonRpcProvider(rpcUrl);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+      const result = await contract[methodName](...args);
+      return result;
+    } catch (error) {
+      console.warn(`Contract call ${methodName} failed on ${rpcUrl}:`, error.message);
+      continue;
+    }
+  }
+  throw new Error(`All RPC endpoints failed for ${methodName}`);
 }
 
 export default function UserPage() {
@@ -134,7 +151,7 @@ export default function UserPage() {
       const provider = await createProviderWithFallback();
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
 
-      const totalDuels = Number(await contract.totalDuels());
+      const totalDuels = Number(await safeContractCall('totalDuels'));
       const max = Math.min(totalDuels, 2000);
 
       const iface = new ethers.Interface(CONTRACT_ABI);
@@ -148,7 +165,7 @@ export default function UserPage() {
       // Load all duels (simplified approach like Leaderboard)
       for (let i = 1; i <= max; i++) {
         try {
-          const d = await contract.getDuel(i);
+          const d = await safeContractCall('getDuel', i);
           
           // Skip if duel doesn't exist (empty data)
           if (!d.player1 || d.player1 === '0x0000000000000000000000000000000000000000') {
@@ -228,7 +245,7 @@ export default function UserPage() {
             
             // Check if still active in contract with proper error handling
             try {
-              const waitingPlayer = await contract.waitingPlayers(waitingId);
+              const waitingPlayer = await safeContractCall('waitingPlayers', waitingId);
               console.log(`waitingId ${waitingId}: active=${waitingPlayer.active}`);
               
               if (waitingPlayer.active) {
@@ -302,10 +319,7 @@ export default function UserPage() {
     if (!address) return;
     setLoading(true);
     try {
-      const provider = await createProviderWithFallback();
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-
-      const totalBattles = Number(await contract.totalBattleRoyales());
+      const totalBattles = Number(await safeContractCall('totalBattleRoyales'));
       const max = Math.min(totalBattles, 1000);
 
       const battles = [];
@@ -313,7 +327,7 @@ export default function UserPage() {
       // Load all battle royales (similar to duels)
       for (let i = 1; i <= max; i++) {
         try {
-          const br = await contract.getBattleRoyale(i);
+          const br = await safeContractCall('getBattleRoyale', i);
           
           // Skip if battle royale doesn't exist
           if (!br.players || br.players.length === 0) {
@@ -389,7 +403,7 @@ export default function UserPage() {
         counts[mode.id] = {};
         for (const bet of betAmounts) {
           try {
-            const count = await contract.getWaitingPlayersCount(mode.id, bet.value);
+            const count = await safeContractCall('getWaitingPlayersCount', mode.id, bet.value);
             counts[mode.id][bet.value] = Number(count);
           } catch {
             counts[mode.id][bet.value] = 0;
