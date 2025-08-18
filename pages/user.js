@@ -17,7 +17,8 @@ const CONTRACT_ABI = [
   "function totalDuels() external view returns (uint256)",
   "function totalBattleRoyales() external view returns (uint256)",
   "function waitingPlayers(uint256 waitingId) external view returns (address player, uint256 betAmount, uint8 mode, uint256 joinTime, bool active)",
-  "function getWaitingPlayersCount(uint8 mode, uint256 betAmount) external view returns (uint256)"
+  "function getWaitingPlayersCount(uint8 mode, uint256 betAmount) external view returns (uint256)",
+  "function waitingByModeAndBet(uint8 mode, uint256 betAmount, uint256 index) external view returns (uint256 waitingId)"
 ];
 
 // Multiple RPC endpoints for fallback
@@ -361,6 +362,64 @@ export default function UserPage() {
           console.warn(`Error loading battle royale ${i}:`, error.message);
           continue;
         }
+      }
+
+      // Load pending Battle Royales from waitingPlayers
+      try {
+        const betAmounts = ['10000000000000', '100000000000000', '1000000000000000', '10000000000000000']; // 0.00001, 0.0001, 0.001, 0.01 ETH
+        const modes = [1, 2, 3]; // BR5, BR100, BR1000
+        const modeNames = { 1: 'BR5', 2: 'BR100', 3: 'BR1000' };
+        const requiredPlayers = { 1: 5, 2: 100, 3: 1000 };
+
+        for (const mode of modes) {
+          for (const betAmount of betAmounts) {
+            try {
+              const waitingCount = await safeContractCall('getWaitingPlayersCount', mode, betAmount);
+              
+              if (waitingCount > 0) {
+                // Check each waiting player to see if it's the current user
+                for (let i = 0; i < waitingCount; i++) {
+                  try {
+                    const waitingId = await safeContractCall('waitingByModeAndBet', mode, betAmount, i);
+                    const waitingPlayer = await safeContractCall('waitingPlayers', waitingId);
+                    
+                    if (waitingPlayer.player.toLowerCase() === address.toLowerCase() && waitingPlayer.active) {
+                      console.log(`Found pending ${modeNames[mode]} for user:`, {
+                        waitingId: waitingId.toString(),
+                        mode,
+                        betAmount: ethers.formatEther(betAmount),
+                        player: waitingPlayer.player
+                      });
+                      
+                      // Add as pending battle royale
+                      battles.push({
+                        id: `pending-br-${waitingId}`,
+                        mode: modeNames[mode],
+                        players: [waitingPlayer.player],
+                        playersCount: requiredPlayers[mode],
+                        betEth: Number(ethers.formatEther(betAmount)),
+                        timestamp: Number(waitingPlayer.joinTime) * 1000,
+                        winner: null,
+                        isWinner: false,
+                        randomSeed: '',
+                        completed: false,
+                        isPending: true,
+                        waitingId: waitingId.toString(),
+                        totalPrize: Number(ethers.formatEther(betAmount)) * requiredPlayers[mode]
+                      });
+                    }
+                  } catch (error) {
+                    console.warn(`Error checking waitingId ${i} for mode ${mode}:`, error.message);
+                  }
+                }
+              }
+            } catch (error) {
+              console.warn(`Error loading waiting count for mode ${mode}, betAmount ${betAmount}:`, error.message);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Error loading pending Battle Royales:', e);
       }
 
       battles.sort((a, b) => Number(b.id) - Number(a.id));
@@ -736,8 +795,8 @@ export default function UserPage() {
                         <div className="text-sm text-gray-300">
                           <span className="font-semibold text-white">Battle #{br.id}</span> • {br.mode}
                         </div>
-                        <div className={`text-lg font-semibold ${br.isWinner ? 'text-green-400' : 'text-red-400'}`}>
-                          {br.isWinner ? '🏆 WON' : '💀 LOST'}
+                        <div className={`text-lg font-semibold ${br.isPending ? 'text-yellow-400' : br.isWinner ? 'text-green-400' : 'text-red-400'}`}>
+                          {br.isPending ? '⏳ WAITING' : br.isWinner ? '🏆 WON' : '💀 LOST'}
                         </div>
                       </div>
                       
