@@ -212,69 +212,57 @@ export default function UserPage() {
         }
       }
 
-      // Load waiting players (simplified - just check recent waiting players)
+      // Load pending Duels from waitingPlayers (like Battle Royale logic)
       try {
-        // Check for waiting players from more recent blocks  
-        const recentBlockNumber = await provider.getBlockNumber();
-        const fromBlock = Math.max(0, recentBlockNumber - 20000); // Increase to last ~20000 blocks
+        const betAmounts = ['10000000000000', '100000000000000', '1000000000000000', '10000000000000000']; // 0.00001, 0.0001, 0.001, 0.01 ETH
+        const mode = 0; // Duels are mode 0
         
-        console.log(`Loading waiting players from block ${fromBlock} to ${recentBlockNumber} for address ${targetAddress}`);
-
-        const waitingLogs = await provider.getLogs({
-          fromBlock: fromBlock,
-          toBlock: 'latest',
-          address: CONTRACT_ADDRESS,
-          topics: [playerWaitingTopic]
-        });
-        
-        console.log(`Found ${waitingLogs.length} PlayerWaiting logs total`);
-
-        for (const log of waitingLogs) {
+        for (const betAmount of betAmounts) {
           try {
-            const decoded = iface.parseLog(log);
-            const waitingId = Number(decoded.args.waitingId);
-            const player = decoded.args.player.toLowerCase();
-            const mode = Number(decoded.args.mode);
-            const betAmount = decoded.args.betAmount;
+            const waitingCount = await safeContractCall('getWaitingPlayersCount', mode, betAmount);
             
-            // Filter by player address (since it's not indexed)
-            if (player !== targetAddress.toLowerCase()) {
-              continue;
-            }
-            
-            console.log(`Found user's waitingId ${waitingId}: mode=${mode}, betAmount=${ethers.formatEther(betAmount)}`);
-            
-            // Check if still active in contract with proper error handling
-            try {
-              const waitingPlayer = await safeContractCall('waitingPlayers', waitingId);
-              console.log(`waitingId ${waitingId}: active=${waitingPlayer.active}`);
-              
-              if (waitingPlayer.active) {
-                const pendingGame = {
-                  id: `wait-${waitingId}`,
-                  player1: decoded.args.player,
-                  player2: '0x0000000000000000000000000000000000000000',
-                  betEth: Number(ethers.formatEther(decoded.args.betAmount)),
-                  timestamp: Date.now(), // Use current time as approximation
-                  completed: false,
-                  isWaiting: true,
-                  mode: Number(decoded.args.mode) || 0 // Include mode from PlayerWaiting event
-                };
-                
-                console.log(`Adding pending game:`, pendingGame);
-                pendingDuels.push(pendingGame);
+            if (waitingCount > 0) {
+              // Check each waiting player to see if it's the current user
+              for (let i = 0; i < waitingCount; i++) {
+                try {
+                  const waitingId = await safeContractCall('waitingByModeAndBet', mode, betAmount, i);
+                  const waitingPlayer = await safeContractCall('waitingPlayers', waitingId);
+                  
+                  if (waitingPlayer.player.toLowerCase() === targetAddress.toLowerCase() && waitingPlayer.active) {
+                    console.log(`Found pending Duel for user:`, {
+                      waitingId: waitingId.toString(),
+                      mode,
+                      betAmount: ethers.formatEther(betAmount),
+                      player: waitingPlayer.player
+                    });
+                    
+                    // Add as pending duel
+                    pendingDuels.push({
+                      id: `pending-duel-${waitingId}`,
+                      player1: waitingPlayer.player,
+                      player2: '0x0000000000000000000000000000000000000000',
+                      betEth: Number(ethers.formatEther(betAmount)),
+                      timestamp: Number(waitingPlayer.joinTime) * 1000,
+                      completed: false,
+                      isWaiting: true,
+                      mode: 0, // Duel mode
+                      waitingId: waitingId.toString(),
+                      isPending: true
+                    });
+                  }
+                } catch (error) {
+                  console.warn(`Error checking waitingId ${i} for mode ${mode}, betAmount ${betAmount}:`, error.message);
+                  continue;
+                }
               }
-            } catch (error) {
-              console.warn(`Failed to load waitingPlayers(${waitingId}):`, error.message);
-              // Skip this waiting player and continue with the next one
-              continue;
             }
-          } catch (e) {
-            console.warn('Error processing waiting log:', e);
+          } catch (error) {
+            console.warn(`Error checking waiting players for mode ${mode}, betAmount ${betAmount}:`, error.message);
+            continue;
           }
         }
       } catch (e) {
-        console.warn('Error loading waiting players:', e);
+        console.warn('Error loading pending duels from waitingPlayers:', e);
       }
 
       // Add pendingLocal as a pending duel if it exists and no matching duel found
@@ -614,6 +602,28 @@ export default function UserPage() {
                     <div className="mt-1 text-xs text-gray-400">
                       {short(d.player1)} vs {d.player2 === '0x0000000000000000000000000000000000000000' ? 'waiting...' : short(d.player2)} • {d.timestamp ? new Date(d.timestamp).toLocaleString() : ''} {d.isWaiting ? '(waiting for opponent)' : ''}
                     </div>
+                    
+                    {/* Players Waiting для pending duels */}
+                    <div className="mt-3">
+                      <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
+                        <div>
+                          <div className="text-gray-400">Players Waiting</div>
+                          <div className="text-white font-semibold">
+                            {(() => {
+                              // For duels (mode = 0), show 1/2 as they need 2 players
+                              const betValue = ethers.parseEther(d.betEth.toString()).toString();
+                              const waitingForMode = waitingCounts[0] && waitingCounts[0][betValue] ? waitingCounts[0][betValue] : 1;
+                              return `${waitingForMode}/2`;
+                            })()}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-gray-400">Multiplier</div>
+                          <div className="text-green-400 font-semibold">1.8x</div>
+                        </div>
+                      </div>
+                    </div>
+                    
                     {d.txHash && (
                       <div className="mt-3">
                         <div className="text-xs text-gray-400 mb-2">
@@ -626,6 +636,16 @@ export default function UserPage() {
                         </a>
                       </div>
                     )}
+                    
+                    {/* Share кнопки для pending duels */}
+                    <div className="mt-3 pt-3 border-t border-gray-700">
+                      <div className="text-xs text-gray-400 mb-2">Share to find opponents:</div>
+                      <ShareButtons 
+                        message={`Looking for opponents in 1v1 duel! 🔥⚔️ 2 players needed, ${d.betEth.toFixed(5)} ETH entry. Join me in the arena!`}
+                        url="https://cryptoduel.xyz"
+                        className="flex-wrap"
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
