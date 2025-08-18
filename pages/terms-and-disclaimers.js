@@ -57,7 +57,28 @@ export default function TermsAndDisclaimers() {
               <h2 className="text-2xl font-bold text-blue-400">🎯 1. PLATFORM DESCRIPTION</h2>
             </div>
             <p className="text-gray-300 leading-relaxed">
-              Crypto Duel is a decentralized blockchain-based application that facilitates peer-to-peer wagering using cryptocurrency (ETH) on the Base network. The platform operates through smart contracts that automatically determine winners using blockchain-based randomness.
+              Crypto Duel is a decentralized blockchain-based application that facilitates peer-to-peer wagering using cryptocurrency (ETH) on the Base network. The platform offers multiple game modes including:
+            </p>
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="bg-blue-600/20 rounded-lg p-3 border border-blue-600/30">
+                <p className="text-blue-300 font-semibold">🎯 Duel (1v1) - 1.8x multiplier</p>
+                <p className="text-gray-300 text-sm">Classic head-to-head battles</p>
+              </div>
+              <div className="bg-green-600/20 rounded-lg p-3 border border-green-600/30">
+                <p className="text-green-300 font-semibold">⚔️ Battle 5 - 4.5x multiplier</p>
+                <p className="text-gray-300 text-sm">5-player Battle Royale</p>
+              </div>
+              <div className="bg-purple-600/20 rounded-lg p-3 border border-purple-600/30">
+                <p className="text-purple-300 font-semibold">👑 Battle 100 - 90x multiplier</p>
+                <p className="text-gray-300 text-sm">100-player mega battles</p>
+              </div>
+              <div className="bg-orange-600/20 rounded-lg p-3 border border-orange-600/30">
+                <p className="text-orange-300 font-semibold">🔥 Battle 1000 - 900x multiplier</p>
+                <p className="text-gray-300 text-sm">Ultimate 1000-player showdown</p>
+              </div>
+            </div>
+            <p className="text-gray-300 leading-relaxed mt-4">
+              All games operate through smart contracts that automatically determine winners using blockchain-based randomness. Winners in Battle Royale modes are selected fairly from all participants with equal probability.
             </p>
           </div>
 

@@ -49,10 +49,65 @@ export default function HowItWorks() {
                 What is Crypto Duel?
               </h2>
             </div>
-            <p className="text-gray-300 text-lg leading-relaxed">
-              Crypto Duel is a blockchain-based betting game where players compete in 1-vs-1 duels using real ETH on Base network. 
+            <p className="text-gray-300 text-lg leading-relaxed mb-6">
+              Crypto Duel is a blockchain-based betting game where players compete in multiple game modes using real ETH on Base network. 
               It's simple, fair, and transparent - with every outcome provably random and verifiable on-chain.
             </p>
+            
+            {/* Game Modes Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-blue-600/20 rounded-xl p-4 border border-blue-600/30 hover:scale-105 transition-all duration-300">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-blue-400/20 rounded-lg">
+                    <Target size={20} className="text-blue-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-blue-400">🎯 Duel (1v1)</h3>
+                    <p className="text-xs text-gray-400">Classic head-to-head</p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-300">Battle one opponent with <span className="text-green-400 font-semibold">1.8x multiplier</span></p>
+              </div>
+              
+              <div className="bg-green-600/20 rounded-xl p-4 border border-green-600/30 hover:scale-105 transition-all duration-300">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-green-400/20 rounded-lg">
+                    <Users size={20} className="text-green-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-green-400">⚔️ Battle 5</h3>
+                    <p className="text-xs text-gray-400">Small Battle Royale</p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-300">5-player battle with <span className="text-green-400 font-semibold">4.5x multiplier</span></p>
+              </div>
+              
+              <div className="bg-purple-600/20 rounded-xl p-4 border border-purple-600/30 hover:scale-105 transition-all duration-300">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-purple-400/20 rounded-lg">
+                    <Trophy size={20} className="text-purple-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-purple-400">👑 Battle 100</h3>
+                    <p className="text-xs text-gray-400">Mega battles</p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-300">100-player mayhem with <span className="text-green-400 font-semibold">90x multiplier</span></p>
+              </div>
+              
+              <div className="bg-orange-600/20 rounded-xl p-4 border border-orange-600/30 hover:scale-105 transition-all duration-300">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-orange-400/20 rounded-lg">
+                    <Zap size={20} className="text-orange-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-orange-400">🔥 Battle 1000</h3>
+                    <p className="text-xs text-gray-400">Ultimate showdown</p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-300">1000-player chaos with <span className="text-green-400 font-semibold">900x multiplier</span></p>
+              </div>
+            </div>
           </div>
 
           {/* How It Works Steps */}
@@ -69,14 +124,14 @@ export default function HowItWorks() {
                     <Target size={20} className="text-green-400" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-green-400">1. Choose Your Bet</h3>
-                    <div className="text-xs text-gray-400">Select your risk level</div>
+                    <h3 className="font-semibold text-green-400">1. Choose Your Mode & Bet</h3>
+                    <div className="text-xs text-gray-400">Select your game mode and risk level</div>
                   </div>
                 </div>
                 <ul className="text-sm text-gray-300 space-y-1">
+                  <li>• Choose: Duel, Battle 5, Battle 100, or Battle 1000</li>
                   <li>• Select: 0.00001, 0.0001, 0.001, or 0.01 ETH</li>
-                  <li>• See waiting players for each bet</li>
-                  <li>• View potential winnings (1.8x multiplier)</li>
+                  <li>• See waiting players and multipliers</li>
                 </ul>
               </div>
 
@@ -87,7 +142,7 @@ export default function HowItWorks() {
                     <HandCoins size={20} className="text-blue-400" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-blue-400">2. Confirm Your Duel</h3>
+                    <h3 className="font-semibold text-blue-400">2. Confirm Your Battle</h3>
                     <div className="text-xs text-gray-400">Review before committing</div>
                   </div>
                 </div>
@@ -105,13 +160,13 @@ export default function HowItWorks() {
                     <Clock size={20} className="text-yellow-400" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-yellow-400">3. Wait for Opponent</h3>
-                    <div className="text-xs text-gray-400">Find your match</div>
+                    <h3 className="font-semibold text-yellow-400">3. Wait for Players</h3>
+                    <div className="text-xs text-gray-400">Battle fills up</div>
                   </div>
                 </div>
                 <ul className="text-sm text-gray-300 space-y-1">
                   <li>• Your bet locks in smart contract</li>
-                  <li>• Wait for matching opponent</li>
+                  <li>• Wait for battle to fill (1, 5, 100, or 1000 players)</li>
                   <li>• Share game to find players faster!</li>
                 </ul>
               </div>
@@ -129,8 +184,8 @@ export default function HowItWorks() {
                 </div>
                 <ul className="text-sm text-gray-300 space-y-1">
                   <li>• Smart contract generates random outcome</li>
-                  <li>• 50/50 chance for each player</li>
-                  <li>• Winner gets 1.8x bet (10% platform fee)</li>
+                  <li>• Equal chance for every player to win</li>
+                  <li>• Winner gets multiplier based on mode (10% platform fee)</li>
                 </ul>
               </div>
             </div>
@@ -292,6 +347,61 @@ export default function HowItWorks() {
           </div>
 
           {/* Features */}
+          {/* Game Mode Details */}
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-8 border border-white/20 shadow-xl">
+            <h2 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+              Game Mode Details & Odds
+            </h2>
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-black/30 rounded-xl p-5 border border-white/10">
+                <h3 className="text-lg font-bold text-blue-400 mb-3">🎯 Duel Mode (1v1)</h3>
+                <ul className="text-sm text-gray-300 space-y-2">
+                  <li>• <span className="text-green-400">50% chance to win</span> (1 in 2)</li>
+                  <li>• <span className="text-yellow-400">1.8x multiplier</span> payout</li>
+                  <li>• Quick battles, instant results</li>
+                  <li>• Perfect for head-to-head challenges</li>
+                </ul>
+              </div>
+              
+              <div className="bg-black/30 rounded-xl p-5 border border-white/10">
+                <h3 className="text-lg font-bold text-green-400 mb-3">⚔️ Battle 5 Mode</h3>
+                <ul className="text-sm text-gray-300 space-y-2">
+                  <li>• <span className="text-green-400">20% chance to win</span> (1 in 5)</li>
+                  <li>• <span className="text-yellow-400">4.5x multiplier</span> payout</li>
+                  <li>• Small group Battle Royale</li>
+                  <li>• Higher risk, higher reward</li>
+                </ul>
+              </div>
+              
+              <div className="bg-black/30 rounded-xl p-5 border border-white/10">
+                <h3 className="text-lg font-bold text-purple-400 mb-3">👑 Battle 100 Mode</h3>
+                <ul className="text-sm text-gray-300 space-y-2">
+                  <li>• <span className="text-green-400">1% chance to win</span> (1 in 100)</li>
+                  <li>• <span className="text-yellow-400">90x multiplier</span> payout</li>
+                  <li>• Massive multiplayer battles</li>
+                  <li>• Huge potential winnings</li>
+                </ul>
+              </div>
+              
+              <div className="bg-black/30 rounded-xl p-5 border border-white/10">
+                <h3 className="text-lg font-bold text-orange-400 mb-3">🔥 Battle 1000 Mode</h3>
+                <ul className="text-sm text-gray-300 space-y-2">
+                  <li>• <span className="text-green-400">0.1% chance to win</span> (1 in 1000)</li>
+                  <li>• <span className="text-yellow-400">900x multiplier</span> payout</li>
+                  <li>• Ultimate high-stakes gambling</li>
+                  <li>• Life-changing potential payouts</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="mt-6 bg-yellow-600/20 rounded-xl p-4 border border-yellow-600/30">
+              <p className="text-yellow-300 text-center font-medium">
+                💡 <strong>Pro Tip:</strong> All games have equal expected value after the 10% platform fee. Choose based on your risk tolerance!
+              </p>
+            </div>
+          </div>
+
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-8 border border-white/20 shadow-xl">
             <h2 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
               Platform Features
