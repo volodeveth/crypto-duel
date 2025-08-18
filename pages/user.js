@@ -16,7 +16,8 @@ const CONTRACT_ABI = [
   "function getBattleRoyale(uint256 battleId) external view returns (tuple(uint256 id, uint8 mode, address[] players, uint256 betAmount, uint256 startTime, address winner, bool completed, uint256 randomSeed, uint256 requiredPlayers))",
   "function totalDuels() external view returns (uint256)",
   "function totalBattleRoyales() external view returns (uint256)",
-  "function waitingPlayers(uint256 waitingId) external view returns (tuple(address player, uint256 betAmount, uint8 mode, uint256 joinTime, bool active))"
+  "function waitingPlayers(uint256 waitingId) external view returns (tuple(address player, uint256 betAmount, uint8 mode, uint256 joinTime, bool active))",
+  "function getWaitingPlayersCount(uint8 mode, uint256 betAmount) external view returns (uint256)"
 ];
 
 const RPC = 'https://mainnet.base.org';
@@ -33,6 +34,7 @@ export default function UserPage() {
   const [battleRoyales, setBattleRoyales] = useState([]);
   const [pendingLocal, setPendingLocal] = useState(null);
   const [activeTab, setActiveTab] = useState('duels'); // 'duels' or 'battles'
+  const [waitingCounts, setWaitingCounts] = useState({}); // {mode_betAmount: count}
 
   useEffect(() => {
     // Auto-detect connected wallet on page load
@@ -48,6 +50,7 @@ export default function UserPage() {
             setTimeout(() => {
               loadMyDuelsWithAddress(connectedAddress);
               loadMyBattleRoyales();
+              loadWaitingCounts();
             }, 100);
           }
         }
@@ -89,6 +92,7 @@ export default function UserPage() {
         if (newAddress) {
           loadMyDuels();
           loadMyBattleRoyales();
+          loadWaitingCounts();
         }
       }, 500);
     } catch (e) {
@@ -310,6 +314,41 @@ export default function UserPage() {
     }
   }
 
+  async function loadWaitingCounts() {
+    if (!address) return;
+    try {
+      const provider = new ethers.JsonRpcProvider(RPC);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+      
+      const betAmounts = [
+        '10000000000000',     // 0.00001 ETH
+        '100000000000000',    // 0.0001 ETH
+        '1000000000000000',   // 0.001 ETH
+        '10000000000000000'   // 0.01 ETH
+      ];
+      
+      const counts = {};
+      
+      // Check waiting counts for Battle Royale modes (1, 2, 3)
+      for (let mode = 1; mode <= 3; mode++) {
+        for (const betAmount of betAmounts) {
+          try {
+            const count = await contract.getWaitingPlayersCount(mode, betAmount);
+            const key = `${mode}_${betAmount}`;
+            counts[key] = Number(count);
+          } catch (e) {
+            console.warn(`Error getting waiting count for mode ${mode}, bet ${betAmount}:`, e);
+            counts[`${mode}_${betAmount}`] = 0;
+          }
+        }
+      }
+      
+      setWaitingCounts(counts);
+    } catch (e) {
+      console.error('Failed to load waiting counts:', e);
+    }
+  }
+
   const hasAny = useMemo(() => duels.length > 0 || battleRoyales.length > 0, [duels, battleRoyales]);
   const pendingDuels = useMemo(() => duels.filter(d => !d.completed && (d.mode === undefined || d.mode === 0)), [duels]); // Only 1v1 duels
   const pendingBattleRoyales = useMemo(() => duels.filter(d => !d.completed && d.mode > 0), [duels]); // Battle Royale modes
@@ -361,7 +400,7 @@ export default function UserPage() {
                 <button onClick={connectAddress} className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-sm font-semibold transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center gap-1">
                   <Wallet size={14} /> Connect
                 </button>
-                <button onClick={() => { loadMyDuels(); loadMyBattleRoyales(); }} className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-600 hover:to-cyan-600 text-sm font-semibold transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!address || loading}>
+                <button onClick={() => { loadMyDuels(); loadMyBattleRoyales(); loadWaitingCounts(); }} className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-600 hover:to-cyan-600 text-sm font-semibold transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!address || loading}>
                   <History size={14} /> {loading ? 'Loading…' : 'Load history'}
                 </button>
               </div>
@@ -566,12 +605,15 @@ export default function UserPage() {
                         
                         <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
                           <div>
-                            <div className="text-gray-400">Players Needed</div>
+                            <div className="text-gray-400">Players Waiting</div>
                             <div className="text-white font-semibold">
-                              {d.mode === 1 ? '5 players' : 
-                               d.mode === 2 ? '100 players' : 
-                               d.mode === 3 ? '1000 players' : 
-                               'Unknown'}
+                              {(() => {
+                                const totalNeeded = d.mode === 1 ? 5 : d.mode === 2 ? 100 : d.mode === 3 ? 1000 : 0;
+                                const betAmountWei = ethers.parseEther(d.betEth.toString()).toString();
+                                const waitingKey = `${d.mode}_${betAmountWei}`;
+                                const currentWaiting = waitingCounts[waitingKey] || 0;
+                                return `${currentWaiting}/${totalNeeded}`;
+                              })()}
                             </div>
                           </div>
                           <div>
