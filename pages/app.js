@@ -684,7 +684,7 @@ export default function DuelApp() {
                   
                   <div className="text-sm text-gray-400 mb-2">Potential Win:</div>
                   <div className="text-xl font-bold text-green-400">
-                    <EthWithUsd amount={selectedBet.eth * 1.8} decimals={5} />
+                    <EthWithUsd amount={selectedBet.eth * 1.8} decimals={6} />
                   </div>
                   <div className="text-sm text-yellow-400 mt-1">1.8x multiplier</div>
                 </div>
