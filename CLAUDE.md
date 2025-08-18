@@ -365,9 +365,12 @@ vercel --prod --token $(cat vercel-token.txt)
   - **Виправлення**: Повернуто оригінальні /icon.png логотипи на всіх сторінках замість Lucide іконок у header'ах
   - **Зберігається**: Вся функціональність (Farcaster нотіфікейшонс, USD відображення, мобільна оптимізація)
   - **UX Fix**: Відцентровано кнопку Disconnect в Connected Wallet секції
-  - **Деплой**: https://crypto-duel-n57cw49ft-volodeveths-projects.vercel.app
+  - **Брендинг**: Виправлено заголовки - прибрано "2025" з головної, змінено "Duel Arena" на "Crypto Duel"
+  - **Центрування**: Остаточно виправлено центрування кнопки Disconnect через flex justify-center
+  - **Деплой**: https://crypto-duel-zgshvqs5f-volodeveths-projects.vercel.app
   - **Коміт**: b6c60d7 "feat: візуальний редизайн з технологічним glassmorphism стилем"
-  - **Hotfix**: 63ff505 "fix: повернуто оригінальні логотипи та виправлено центрування кнопки disconnect"
+  - **Hotfix 1**: 63ff505 "fix: повернуто оригінальні логотипи та виправлено центрування кнопки disconnect"
+  - **Hotfix 2**: 2056bbe "fix: виправлено заголовки та центрування кнопки disconnect"
 
 ---
 **Останнє оновлення**: 2025-08-18 через Claude Code  

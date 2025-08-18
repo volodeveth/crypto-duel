@@ -28,7 +28,7 @@ export default function DuelApp() {
   const [provider, setProvider] = useState(null);
   const [contract, setContract] = useState(null);
   const [userAddress, setUserAddress] = useState(null);
-  const [gameState, setGameState] = useState('loading'); // loading, disconnected, selecting, waiting, result
+  const [gameState, setGameState] = useState('loading'); // loading, disconnected, selecting, confirming, waiting, result
   const [waitingCount, setWaitingCount] = useState({});
   const [selectedBet, setSelectedBet] = useState(null);
   const [userStats, setUserStats] = useState({ totalGames: 0, wins: 0, totalWinnings: 0 });
@@ -374,12 +374,18 @@ export default function DuelApp() {
     return () => contract.removeAllListeners();
   }
 
-  async function joinDuel(betAmount, ethValue) {
-    if (!contract) return alert('Please connect your wallet first');
+  // New function to select bet and show confirmation
+  function selectBet(betAmount, ethValue) {
+    setSelectedBet({ amount: betAmount, eth: ethValue });
+    setGameState('confirming');
+  }
+
+  // Modified function to confirm and join duel
+  async function confirmAndJoinDuel() {
+    if (!contract || !selectedBet) return alert('Please connect your wallet first');
 
     try {
       setGameState('waiting');
-      setSelectedBet({ amount: betAmount, eth: ethValue });
 
       // fresh provider & signer
       const freshProvider = new ethers.BrowserProvider(window.ethereum);
@@ -391,15 +397,15 @@ export default function DuelApp() {
       setUserAddress(await freshSigner.getAddress());
       setContract(freshContract);
 
-      const valueWei = BigInt(betAmount);
+      const valueWei = BigInt(selectedBet.amount);
       const tx = await freshContract.joinDuel({ value: valueWei });
       setCurrentDuelTxHash(tx.hash);
 
       // save local pending for /user page
       try {
         localStorage.setItem('cd_currentWaiting', JSON.stringify({
-          betAmount: betAmount.toString(),
-          betEth: ethValue,
+          betAmount: selectedBet.amount.toString(),
+          betEth: selectedBet.eth,
           txHash: tx.hash,
           startedAt: Date.now(),
           address: await freshSigner.getAddress(),
@@ -411,7 +417,7 @@ export default function DuelApp() {
       updateWaitingCounts();
     } catch (error) {
       console.error('Error joining duel:', error);
-      setGameState('selecting');
+      setGameState('confirming'); // Return to confirmation screen on error
       if (error.code === 4001) alert('Transaction cancelled by user');
       else alert('Error joining duel: ' + (error?.message || String(error)));
     }
@@ -636,7 +642,7 @@ export default function DuelApp() {
               <h2 className="text-xl font-semibold mb-4 text-center">Choose Your Bet</h2>
               <div className="space-y-3">
                 {betAmounts.map((bet, idx) => (
-                  <button key={idx} onClick={() => joinDuel(bet.value, bet.eth)}
+                  <button key={idx} onClick={() => selectBet(bet.value, bet.eth)}
                           className="w-full bg-white/10 hover:bg-white/20 p-4 rounded-xl border border-white/20 transition-all duration-300 hover:border-cyan-400 hover:scale-105 backdrop-blur-sm shadow-lg">
                     <div className="flex justify-between items-center">
                       <div className="text-left">
@@ -653,6 +659,56 @@ export default function DuelApp() {
               </div>
               <div className="mt-6 p-4 bg-cyan-400/10 rounded-xl border border-cyan-400/30 text-center text-sm text-cyan-200 backdrop-blur-sm">
                 <strong>Fair Play:</strong> Winner determined by on-chain randomness
+              </div>
+            </div>
+          )}
+
+          {/* Confirmation state */}
+          {gameState === 'confirming' && selectedBet && (
+            <div className="text-center py-8">
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl">
+                <div className="mb-6">
+                  <div className="p-4 bg-cyan-400/10 rounded-full mx-auto w-fit mb-4 border border-cyan-400/30">
+                    <Swords size={48} className="text-cyan-400" />
+                  </div>
+                  <h2 className="text-2xl font-semibold mb-4 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                    Confirm Your Bet
+                  </h2>
+                </div>
+                
+                <div className="bg-black/30 rounded-xl p-4 mb-6 border border-white/10">
+                  <div className="text-sm text-gray-400 mb-2">Bet Amount:</div>
+                  <div className="text-2xl font-bold text-white mb-3">
+                    <EthWithUsd amount={selectedBet.eth} decimals={5} />
+                  </div>
+                  
+                  <div className="text-sm text-gray-400 mb-2">Potential Win:</div>
+                  <div className="text-xl font-bold text-green-400">
+                    <EthWithUsd amount={selectedBet.eth * 1.8} decimals={5} />
+                  </div>
+                  <div className="text-sm text-yellow-400 mt-1">1.8x multiplier</div>
+                </div>
+                
+                <div className="bg-cyan-400/10 rounded-xl p-4 mb-6 border border-cyan-400/30 text-center text-sm text-cyan-200">
+                  <strong>50/50 chance to win!</strong> Winner determined by on-chain randomness
+                </div>
+                
+                <div className="space-y-3">
+                  <button 
+                    onClick={confirmAndJoinDuel}
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 px-6 py-4 rounded-xl font-semibold transition-all duration-300 hover:scale-105 flex items-center justify-center gap-3 shadow-lg"
+                  >
+                    <Swords size={20} className="text-white" />
+                    🎮 Make Your Bet
+                  </button>
+                  
+                  <button 
+                    onClick={() => setGameState('selecting')}
+                    className="w-full bg-gray-600/80 hover:bg-gray-600 px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
+                  >
+                    ⬅️ Back to Selection
+                  </button>
+                </div>
               </div>
             </div>
           )}
