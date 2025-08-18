@@ -650,7 +650,7 @@ export default function DuelApp() {
                         <div className="text-sm text-gray-400">Waiting: {waitingCount[bet.value] || 0} players</div>
                       </div>
                       <div className="text-right">
-                        <div className="text-green-400 font-semibold">Win: <EthWithUsd amount={bet.eth * 1.8} decimals={5} /></div>
+                        <div className="text-green-400 font-semibold">Win: <EthWithUsd amount={bet.eth * 1.8} decimals={6} /></div>
                         <div className="text-sm text-yellow-400">1.8x multiplier</div>
                       </div>
                     </div>
