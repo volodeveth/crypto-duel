@@ -1,0 +1,375 @@
+{
+  "manifestVersion": "3.2",
+  "proxies": [
+    {
+      "address": "0xad82ce9aA3c98E0b72B90abc8F6aB15F795E12b6",
+      "txHash": "0x277105775d02a6a455b90e0d4cacebb2e4671fd4279877ede0468bda8454bfd4",
+      "kind": "uups"
+    }
+  ],
+  "impls": {
+    "067b32d4e32b56258a79ad0a5226899f139e997266d789594e29fd084efa322d": {
+      "address": "0x06704a931371623B99ee9B8CE1009b82577d276a",
+      "txHash": "0xe4aaaf0696c677a5439fb429759ca9ca4662e5469f1a81d2d258df191bb4e3d5",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "totalDuels",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256",
+            "contract": "GameHubV2",
+            "src": "contracts\\GameHubV2.sol:43"
+          },
+          {
+            "label": "totalBattleRoyales",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256",
+            "contract": "GameHubV2",
+            "src": "contracts\\GameHubV2.sol:44"
+          },
+          {
+            "label": "randomNonce",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "GameHubV2",
+            "src": "contracts\\GameHubV2.sol:45"
+          },
+          {
+            "label": "duels",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_mapping(t_uint256,t_struct(Duel)2208_storage)",
+            "contract": "GameHubV2",
+            "src": "contracts\\GameHubV2.sol:49"
+          },
+          {
+            "label": "battleRoyales",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_mapping(t_uint256,t_struct(BattleRoyale)2229_storage)",
+            "contract": "GameHubV2",
+            "src": "contracts\\GameHubV2.sol:50"
+          },
+          {
+            "label": "waitingPlayers",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_mapping(t_uint256,t_struct(WaitingPlayer)2241_storage)",
+            "contract": "GameHubV2",
+            "src": "contracts\\GameHubV2.sol:51"
+          },
+          {
+            "label": "waitingByModeAndBet",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_mapping(t_enum(GameMode)2191,t_mapping(t_uint256,t_array(t_uint256)dyn_storage))",
+            "contract": "GameHubV2",
+            "src": "contracts\\GameHubV2.sol:54"
+          },
+          {
+            "label": "nextDuelId",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_uint256",
+            "contract": "GameHubV2",
+            "src": "contracts\\GameHubV2.sol:57"
+          },
+          {
+            "label": "nextBattleRoyaleId",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_uint256",
+            "contract": "GameHubV2",
+            "src": "contracts\\GameHubV2.sol:58"
+          },
+          {
+            "label": "nextWaitingId",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_uint256",
+            "contract": "GameHubV2",
+            "src": "contracts\\GameHubV2.sol:59"
+          },
+          {
+            "label": "allowedBets",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_array(t_uint256)dyn_storage",
+            "contract": "GameHubV2",
+            "src": "contracts\\GameHubV2.sol:62"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)73_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)13_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)dyn_storage": {
+            "label": "uint256[]",
+            "numberOfBytes": "32"
+          },
+          "t_enum(GameMode)2191": {
+            "label": "enum GameHubV2.GameMode",
+            "members": [
+              "DUEL",
+              "BR5",
+              "BR100",
+              "BR1000"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_enum(GameMode)2191,t_mapping(t_uint256,t_array(t_uint256)dyn_storage))": {
+            "label": "mapping(enum GameHubV2.GameMode => mapping(uint256 => uint256[]))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(uint256 => uint256[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(BattleRoyale)2229_storage)": {
+            "label": "mapping(uint256 => struct GameHubV2.BattleRoyale)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(Duel)2208_storage)": {
+            "label": "mapping(uint256 => struct GameHubV2.Duel)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(WaitingPlayer)2241_storage)": {
+            "label": "mapping(uint256 => struct GameHubV2.WaitingPlayer)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(BattleRoyale)2229_storage": {
+            "label": "struct GameHubV2.BattleRoyale",
+            "members": [
+              {
+                "label": "id",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "mode",
+                "type": "t_enum(GameMode)2191",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "players",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "betAmount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "startTime",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "winner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "completed",
+                "type": "t_bool",
+                "offset": 20,
+                "slot": "5"
+              },
+              {
+                "label": "randomSeed",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "requiredPlayers",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "7"
+              }
+            ],
+            "numberOfBytes": "256"
+          },
+          "t_struct(Duel)2208_storage": {
+            "label": "struct GameHubV2.Duel",
+            "members": [
+              {
+                "label": "id",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "player1",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "player2",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "betAmount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "timestamp",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "winner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "completed",
+                "type": "t_bool",
+                "offset": 20,
+                "slot": "5"
+              },
+              {
+                "label": "randomSeed",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "6"
+              }
+            ],
+            "numberOfBytes": "224"
+          },
+          "t_struct(WaitingPlayer)2241_storage": {
+            "label": "struct GameHubV2.WaitingPlayer",
+            "members": [
+              {
+                "label": "player",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "betAmount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "mode",
+                "type": "t_enum(GameMode)2191",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "joinTime",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "active",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "4"
+              }
+            ],
+            "numberOfBytes": "160"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

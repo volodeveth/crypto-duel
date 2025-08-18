@@ -21,6 +21,8 @@
   "dependencies": {
     "@farcaster/miniapp-node": "^0.1.7",
     "@farcaster/miniapp-sdk": "^0.1.8",
+    "@openzeppelin/contracts-upgradeable": "^5.4.0",
+    "@openzeppelin/hardhat-upgrades": "^3.9.1",
     "better-sqlite3": "^12.2.0",
     "dotenv": "^16.4.5",
     "ethers": "^6.13.4",
