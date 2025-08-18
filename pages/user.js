@@ -374,6 +374,7 @@ export default function UserPage() {
         const modes = [1, 2, 3]; // BR5, BR100, BR1000
         const modeNames = { 1: 'BR5', 2: 'BR100', 3: 'BR1000' };
         const requiredPlayers = { 1: 5, 2: 100, 3: 1000 };
+        const multipliers = { 1: '4.5x', 2: '90x', 3: '900x' };
 
         for (const mode of modes) {
           for (const betAmount of betAmounts) {
@@ -409,7 +410,10 @@ export default function UserPage() {
                         completed: false,
                         isPending: true,
                         waitingId: waitingId.toString(),
-                        totalPrize: Number(ethers.formatEther(betAmount)) * requiredPlayers[mode]
+                        totalPrize: Number(ethers.formatEther(betAmount)) * requiredPlayers[mode],
+                        multiplier: multipliers[mode],
+                        waitingCount: waitingCount,
+                        modeId: mode
                       });
                     }
                   } catch (error) {
@@ -748,18 +752,24 @@ export default function UserPage() {
                             <div className="text-gray-400">Players Waiting</div>
                             <div className="text-white font-semibold">
                               {(() => {
-                                const totalNeeded = d.mode === 1 ? 5 : d.mode === 2 ? 100 : d.mode === 3 ? 1000 : 0;
-                                // Use EXACT same logic as app.js Choose Your Bet
-                                const betValue = ethers.parseEther(d.betEth.toString()).toString();
-                                const waitingForMode = waitingCounts[d.mode] && waitingCounts[d.mode][betValue] ? waitingCounts[d.mode][betValue] : 0;
-                                return `${waitingForMode}/${totalNeeded}`;
+                                if (d.isPending) {
+                                  // For pending Battle Royales, use the data we already have
+                                  return `${d.waitingCount || 1}/${d.playersCount}`;
+                                } else {
+                                  // For duels, use the existing logic
+                                  const totalNeeded = d.mode === 1 ? 5 : d.mode === 2 ? 100 : d.mode === 3 ? 1000 : 0;
+                                  const betValue = ethers.parseEther(d.betEth.toString()).toString();
+                                  const waitingForMode = waitingCounts[d.mode] && waitingCounts[d.mode][betValue] ? waitingCounts[d.mode][betValue] : 0;
+                                  return `${waitingForMode}/${totalNeeded}`;
+                                }
                               })()}
                             </div>
                           </div>
                           <div>
                             <div className="text-gray-400">Multiplier</div>
                             <div className="text-green-400 font-semibold">
-                              {d.mode === 1 ? '4.5x' : 
+                              {d.isPending && d.multiplier ? d.multiplier : 
+                               d.mode === 1 ? '4.5x' : 
                                d.mode === 2 ? '90x' : 
                                d.mode === 3 ? '900x' : 
                                '1.8x'}
