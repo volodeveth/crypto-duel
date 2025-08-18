@@ -472,6 +472,18 @@ vercel --prod --token $(cat vercel-token.txt)
 **Останнє оновлення**: 2025-08-18 через Claude Code  
 **Статус**: ✅ ПОВНІСТЮ ГОТОВА BATTLE ROYALE ПЛАТФОРМА З 4 РЕЖИМАМИ + ВСІМА ВИПРАВЛЕННЯМИ 2025
 
+- **2025-08-18**: 🔧 КРИТИЧНО ВИПРАВЛЕНО MY GAMES: Pending Battle Royales тепер відображаються
+  - **Проблема**: loadMyBattleRoyales не показував pending BR5 та BR1000, хоча вони активні
+  - **Причина**: Функція шукала тільки завершені Battle Royales з br.players, а pending знаходяться в waitingPlayers мапі
+  - **Рішення**: Додано логіку завантаження pending Battle Royales через getWaitingPlayersCount та waitingByModeAndBet
+  - **ABI доповнення**: Додано waitingByModeAndBet функцію для доступу до waiting lists
+  - **UI покращення**: Pending Battle Royales показуються з статусом "⏳ WAITING" (жовтий колір)
+  - **Покриття**: Всі режими BR5, BR100, BR1000 для всіх bet amounts (0.00001, 0.0001, 0.001, 0.01 ETH)
+  - **Безпека**: try/catch для всіх contract calls з proper error handling
+  - **Коміт**: 56cfb58 "fix: виправлено відображення pending Battle Royales в My Games"
+  - **Деплой**: https://crypto-duel-nwa65fqas-volodeveths-projects.vercel.app
+  - **Результат**: Користувачі тепер бачать свої активні pending Battle Royales у вкладці "Battles" на My Games сторінці
+
 **🎮 GAMEHUB V2 BATTLE ROYALE СИСТЕМА** (2025-08-18):
 - 🔥 **НОВИЙ КОНТРАКТ**: 0xad82ce9aA3c98E0b72B90abc8F6aB15F795E12b6 (upgradeable UUPS)
 - 🎯 **4 РЕЖИМИ**: Duel (1v1), Battle Royale 5, Battle Royale 100, Battle Royale 1000

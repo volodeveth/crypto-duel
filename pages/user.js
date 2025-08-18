@@ -89,7 +89,7 @@ export default function UserPage() {
             // Auto-load games after detecting wallet
             setTimeout(() => {
               loadMyDuelsWithAddress(connectedAddress);
-              loadMyBattleRoyales();
+              loadMyBattleRoyalesWithAddress(connectedAddress);
               setTimeout(() => loadWaitingCounts(connectedAddress), 200); // Delay waiting counts
             }, 100);
           }
@@ -130,8 +130,8 @@ export default function UserPage() {
       // Auto-load games after connecting
       setTimeout(() => {
         if (newAddress) {
-          loadMyDuels();
-          loadMyBattleRoyales();
+          loadMyDuelsWithAddress(newAddress);
+          loadMyBattleRoyalesWithAddress(newAddress);
           setTimeout(() => loadWaitingCounts(newAddress), 200); // Delay waiting counts
         }
       }, 500);
@@ -317,7 +317,11 @@ export default function UserPage() {
   }
 
   async function loadMyBattleRoyales() {
-    if (!address) return;
+    return loadMyBattleRoyalesWithAddress(address);
+  }
+
+  async function loadMyBattleRoyalesWithAddress(targetAddress) {
+    if (!targetAddress) return;
     setLoading(true);
     try {
       const totalBattles = Number(await safeContractCall('totalBattleRoyales'));
@@ -337,12 +341,12 @@ export default function UserPage() {
           
           // Check if user is a participant
           const isParticipant = br.players.some(
-            player => player.toLowerCase() === address.toLowerCase()
+            player => player.toLowerCase() === targetAddress.toLowerCase()
           );
 
           if (!isParticipant) continue;
 
-          const isWinner = br.winner?.toLowerCase() === address.toLowerCase();
+          const isWinner = br.winner?.toLowerCase() === targetAddress.toLowerCase();
           const modeNames = { 1: 'BR5', 2: 'BR100', 3: 'BR1000' };
 
           battles.push({
@@ -383,7 +387,7 @@ export default function UserPage() {
                     const waitingId = await safeContractCall('waitingByModeAndBet', mode, betAmount, i);
                     const waitingPlayer = await safeContractCall('waitingPlayers', waitingId);
                     
-                    if (waitingPlayer.player.toLowerCase() === address.toLowerCase() && waitingPlayer.active) {
+                    if (waitingPlayer.player.toLowerCase() === targetAddress.toLowerCase() && waitingPlayer.active) {
                       console.log(`Found pending ${modeNames[mode]} for user:`, {
                         waitingId: waitingId.toString(),
                         mode,
@@ -422,8 +426,16 @@ export default function UserPage() {
         console.warn('Error loading pending Battle Royales:', e);
       }
 
-      battles.sort((a, b) => Number(b.id) - Number(a.id));
-      setBattleRoyales(battles);
+      // Separate pending and completed battles
+      const pendingBattles = battles.filter(b => b.isPending);
+      const completedBattles = battles.filter(b => !b.isPending);
+      
+      // Sort each category separately
+      pendingBattles.sort((a, b) => Number(b.id) - Number(a.id));
+      completedBattles.sort((a, b) => Number(b.id) - Number(a.id));
+      
+      // Combine: pending first, then completed
+      setBattleRoyales([...pendingBattles, ...completedBattles]);
     } catch (e) {
       console.error('Failed to load battle royales:', e);
       alert('Failed to load battle royales: ' + e.message);
@@ -478,7 +490,8 @@ export default function UserPage() {
 
   const hasAny = useMemo(() => duels.length > 0 || battleRoyales.length > 0, [duels, battleRoyales]);
   const pendingDuels = useMemo(() => duels.filter(d => !d.completed && (d.mode === undefined || d.mode === 0)), [duels]); // Only 1v1 duels
-  const pendingBattleRoyales = useMemo(() => duels.filter(d => !d.completed && d.mode > 0), [duels]); // Battle Royale modes
+  const pendingBattleRoyales = useMemo(() => battleRoyales.filter(br => br.isPending), [battleRoyales]);
+  const completedBattleRoyales = useMemo(() => battleRoyales.filter(br => !br.isPending), [battleRoyales]);
   const completedDuels = useMemo(() => duels.filter(d => d.completed && (d.mode === undefined || d.mode === 0)), [duels]); // Only 1v1 duels
   const completedBattleRoyalesFromDuels = useMemo(() => duels.filter(d => d.completed && d.mode > 0), [duels]); // Completed BR from duels array
 
@@ -555,7 +568,7 @@ export default function UserPage() {
                     : 'text-gray-300 hover:text-white hover:bg-white/10'
                 }`}
               >
-                👑 Battle Royales ({pendingBattleRoyales.length + battleRoyales.length + completedBattleRoyalesFromDuels.length})
+                👑 Battle Royales ({pendingBattleRoyales.length + completedBattleRoyales.length + completedBattleRoyalesFromDuels.length})
               </button>
             </div>
           </div>
@@ -777,19 +790,19 @@ export default function UserPage() {
               {/* Completed Battle Royales */}
               <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden shadow-xl">
                 <div className="px-4 py-3 bg-black/20 border-b border-white/20 font-semibold">
-                  Completed battles {(battleRoyales.length + completedBattleRoyalesFromDuels.length) > 0 ? `(${battleRoyales.length + completedBattleRoyalesFromDuels.length})` : ''}
+                  Completed battles {(completedBattleRoyales.length + completedBattleRoyalesFromDuels.length) > 0 ? `(${completedBattleRoyales.length + completedBattleRoyalesFromDuels.length})` : ''}
                 </div>
 
-                {(battleRoyales.length + completedBattleRoyalesFromDuels.length) === 0 && !loading && (
+                {(completedBattleRoyales.length + completedBattleRoyalesFromDuels.length) === 0 && !loading && (
                   <div className="p-6 text-center text-gray-400">
                     {hasAny ? 'No completed battles found.' : address ? 'Click "Load history" to fetch your battle results.' : 'Enter your wallet address and click "Load history" to see your battles.'}
                   </div>
                 )}
 
-                {(battleRoyales.length > 0 || completedBattleRoyalesFromDuels.length > 0) && (
+                {(completedBattleRoyales.length > 0 || completedBattleRoyalesFromDuels.length > 0) && (
                 <div className="divide-y divide-gray-700">
                   {/* Battle Royales from API */}
-                  {battleRoyales.map((br) => (
+                  {completedBattleRoyales.map((br) => (
                     <div key={`br-${br.id}`} className="p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div className="text-sm text-gray-300">
@@ -833,13 +846,16 @@ export default function UserPage() {
                         </div>
                       )}
 
-                      <div className="mt-3 pt-3 border-t border-gray-700">
-                        <div className="text-xs text-gray-400 mb-2">Share this battle result:</div>
-                        <ShareButtons 
-                          message={`Just ${br.isWinner ? 'WON' : 'fought'} in a ${br.mode} battle royale! 🏆⚔️ ${br.playersCount} players, ${br.betEth.toFixed(5)} ETH each. ${br.isWinner ? 'Champion of the arena!' : 'The battle continues!'}`}
-                          url="https://cryptoduel.xyz"
-                          className="flex-wrap"
-                        />
+                      {!br.isPending && (
+                        <div className="mt-3 pt-3 border-t border-gray-700">
+                          <div className="text-xs text-gray-400 mb-2">Share this battle result:</div>
+                          <ShareButtons 
+                            message={`Just ${br.isWinner ? 'WON' : 'fought'} in a ${br.mode} battle royale! 🏆⚔️ ${br.playersCount} players, ${br.betEth.toFixed(5)} ETH each. ${br.isWinner ? 'Champion of the arena!' : 'The battle continues!'}`}
+                            url="https://cryptoduel.xyz"
+                            className="flex-wrap"
+                          />
+                        </div>
+                      )}
                       </div>
                     </div>
                   ))}
