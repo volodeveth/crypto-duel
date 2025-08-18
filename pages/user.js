@@ -247,7 +247,9 @@ export default function UserPage() {
       // Add pendingLocal as a pending duel if it exists and no matching duel found
       if (pendingLocal && pendingLocal.address?.toLowerCase() === targetAddress.toLowerCase()) {
         const hasMatchingDuel = [...pendingDuels, ...completedDuels].some(d => 
-          d.player1.toLowerCase() === targetAddress.toLowerCase()
+          d.player1.toLowerCase() === targetAddress.toLowerCase() &&
+          Math.abs(d.betEth - pendingLocal.betEth) < 0.0000001 && // Same bet amount
+          (d.mode || 0) === (pendingLocal.mode || 0) // Same mode
         );
         
         if (!hasMatchingDuel) {
@@ -346,10 +348,11 @@ export default function UserPage() {
     if (!targetAddress) return;
     
     try {
-      const provider = await createProviderWithFallback();
+      // Use primary RPC first (same as app.js logic) 
+      const provider = new ethers.JsonRpcProvider(RPC_ENDPOINTS[0]); // mainnet.base.org
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
       
-      // Use EXACT same logic as app.js
+      // EXACT same arrays as app.js
       const betAmounts = [
         { value: '10000000000000', label: '0.00001 ETH', eth: 0.00001 },
         { value: '100000000000000', label: '0.0001 ETH', eth: 0.0001 },
@@ -366,14 +369,14 @@ export default function UserPage() {
       
       const counts = {};
       
-      // Get waiting counts for all modes and bet amounts
+      // EXACT same logic as app.js updateWaitingCounts
       for (const mode of gameModes) {
         counts[mode.id] = {};
         for (const bet of betAmounts) {
           try {
             const count = await contract.getWaitingPlayersCount(mode.id, bet.value);
             counts[mode.id][bet.value] = Number(count);
-          } catch (error) {
+          } catch {
             counts[mode.id][bet.value] = 0;
           }
         }
