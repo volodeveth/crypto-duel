@@ -20,7 +20,7 @@ const CONTRACT_ABI = [
   "function getWaitingPlayersCount(uint8 mode, uint256 betAmount) external view returns (uint256)"
 ];
 
-const RPC = 'https://mainnet.base.org';
+const RPC = 'https://base-mainnet.public.blastapi.io';
 const BASESCAN = 'https://basescan.org';
 // NEW GameHub V2 contract address with Battle Royale support
 const CONTRACT_ADDRESS = '0xad82ce9aA3c98E0b72B90abc8F6aB15F795E12b6';
@@ -315,11 +315,8 @@ export default function UserPage() {
   }
 
   async function loadWaitingCounts(targetAddress = address) {
-    console.log('🚀 loadWaitingCounts called with targetAddress:', targetAddress, 'state address:', address);
-    if (!targetAddress) {
-      console.log('❌ No targetAddress, returning early');
-      return;
-    }
+    if (!targetAddress) return;
+    
     try {
       const provider = new ethers.JsonRpcProvider(RPC);
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
@@ -341,24 +338,19 @@ export default function UserPage() {
       
       const counts = {};
       
-      // Get waiting counts for all modes and bet amounts (EXACT copy from app.js)
+      // Get waiting counts for all modes and bet amounts
       for (const mode of gameModes) {
-        console.log(`🔄 Processing mode ${mode.id} (${mode.name})`);
         counts[mode.id] = {};
         for (const bet of betAmounts) {
           try {
-            console.log(`  📞 Calling getWaitingPlayersCount(${mode.id}, ${bet.value})`);
             const count = await contract.getWaitingPlayersCount(mode.id, bet.value);
             counts[mode.id][bet.value] = Number(count);
-            console.log(`  ✅ Result: ${count} for mode ${mode.id}, bet ${bet.value}`);
           } catch (error) {
-            console.log(`  ❌ Error for mode ${mode.id}, bet ${bet.value}:`, error.message);
             counts[mode.id][bet.value] = 0;
           }
         }
       }
       
-      console.log('📊 Loaded waiting counts (app.js logic):', counts);
       setWaitingCounts(counts);
     } catch (e) {
       console.error('Failed to load waiting counts:', e);
@@ -628,7 +620,6 @@ export default function UserPage() {
                                 // Use EXACT same logic as app.js Choose Your Bet
                                 const betValue = ethers.parseEther(d.betEth.toString()).toString();
                                 const waitingForMode = waitingCounts[d.mode] && waitingCounts[d.mode][betValue] ? waitingCounts[d.mode][betValue] : 0;
-                                console.log(`🔍 Mode ${d.mode}, betValue ${betValue}, betEth ${d.betEth}, waitingForMode: ${waitingForMode}, waitingCounts:`, waitingCounts);
                                 return `${waitingForMode}/${totalNeeded}`;
                               })()}
                             </div>
