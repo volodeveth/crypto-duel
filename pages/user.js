@@ -568,15 +568,15 @@ export default function UserPage() {
           {/* Duels Tab Content */}
           {activeTab === 'duels' && (
             <>
-              {/* Pending battles */}
+              {/* Pending duels */}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden mb-6 shadow-xl">
             <div className="px-4 py-3 bg-black/20 border-b border-white/20 font-semibold">
-              Pending battles {pendingDuels.length > 0 ? `(${pendingDuels.length})` : ''}
+              Pending duels {pendingDuels.length > 0 ? `(${pendingDuels.length})` : ''}
             </div>
 
             {pendingDuels.length === 0 && !loading && (
               <div className="p-6 text-center text-gray-400">
-                No pending battles found.
+                No pending duels found.
               </div>
             )}
 
@@ -584,20 +584,32 @@ export default function UserPage() {
               <div className="divide-y divide-gray-700">
                 {pendingDuels.map((d) => (
                   <div key={d.id} className="p-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-2">
                       <div className="text-sm text-gray-300">
-                        {d.id.startsWith('local-') || d.id.startsWith('wait-') ? (
-                          <span className="text-gray-400">Waiting for opponent</span>
+                        {d.id.startsWith('local-') || d.id.startsWith('wait-') || d.id.startsWith('pending-') ? (
+                          <span className="font-semibold text-white">Duel (Waiting)</span>
                         ) : (
                           <>
                             <Link href={`/duel/${d.id}`} className="underline decoration-dotted hover:text-white">
-                              Duel #{d.id}
-                            </Link>{' '}
-                            <span className="text-yellow-400">Waiting for opponent</span>
+                              <span className="font-semibold text-white">Duel #{d.id}</span>
+                            </Link>
                           </>
                         )}
                       </div>
-                      <div className="text-sm text-yellow-400 font-semibold"><EthWithUsd amount={d.betEth} decimals={5} /></div>
+                      <div className="text-lg font-semibold text-yellow-400">
+                        ⏳ WAITING
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
+                      <div>
+                        <div className="text-gray-400">Bet Amount</div>
+                        <div className="font-semibold"><EthWithUsd amount={d.betEth} decimals={5} /></div>
+                      </div>
+                      <div>
+                        <div className="text-gray-400">Mode</div>
+                        <div className="font-semibold">1v1 Duel</div>
+                      </div>
                     </div>
                     <div className="mt-1 text-xs text-gray-400">
                       {short(d.player1)} vs {d.player2 === '0x0000000000000000000000000000000000000000' ? 'waiting...' : short(d.player2)} • {d.timestamp ? new Date(d.timestamp).toLocaleString() : ''} {d.isWaiting ? '(waiting for opponent)' : ''}
@@ -652,15 +664,15 @@ export default function UserPage() {
             )}
           </div>
 
-          {/* Completed battles */}
+          {/* Completed duels */}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden shadow-xl">
             <div className="px-4 py-3 bg-black/20 border-b border-white/20 font-semibold">
-              Completed battles {completedDuels.length > 0 ? `(${completedDuels.length})` : ''}
+              Completed duels {completedDuels.length > 0 ? `(${completedDuels.length})` : ''}
             </div>
 
             {completedDuels.length === 0 && !loading && (
               <div className="p-6 text-center text-gray-400">
-                {hasAny ? 'No completed battles found.' : address ? 'Click "Load history" to fetch your battle results.' : 'Enter your wallet address and click "Load history" to see your battles.'}
+                {hasAny ? 'No completed duels found.' : address ? 'Click "Load history" to fetch your duel results.' : 'Enter your wallet address and click "Load history" to see your duels.'}
               </div>
             )}
 
@@ -668,16 +680,26 @@ export default function UserPage() {
               <div className="divide-y divide-gray-700">
                 {completedDuels.map((d) => (
                   <div key={d.id} className="p-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-2">
                       <div className="text-sm text-gray-300">
                         <Link href={`/duel/${d.id}`} className="underline decoration-dotted hover:text-white">
-                          Duel #{d.id}
-                        </Link>{' '}
-                        <span className={d.isWinner ? 'text-green-400' : 'text-red-400'}>
-                          {d.isWinner ? 'Win' : 'Loss'}
-                        </span>
+                          <span className="font-semibold text-white">Duel #{d.id}</span>
+                        </Link>
                       </div>
-                      <div className="text-sm text-yellow-400 font-semibold"><EthWithUsd amount={d.betEth} decimals={5} /></div>
+                      <div className={`text-lg font-semibold ${d.isWinner ? 'text-green-400' : 'text-red-400'}`}>
+                        {d.isWinner ? '🏆 WON' : '💀 LOST'}
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
+                      <div>
+                        <div className="text-gray-400">Bet Amount</div>
+                        <div className="font-semibold"><EthWithUsd amount={d.betEth} decimals={5} /></div>
+                      </div>
+                      <div>
+                        <div className="text-gray-400">Mode</div>
+                        <div className="font-semibold">1v1 Duel</div>
+                      </div>
                     </div>
                     <div className="mt-1 text-xs text-gray-400">
                       {short(d.player1)} vs {short(d.player2)} • {d.timestamp ? new Date(d.timestamp).toLocaleString() : ''}
@@ -888,6 +910,51 @@ export default function UserPage() {
                         </div>
                       )}
 
+                      {/* Додаткова інформація для completed Battle Royales */}
+                      {!br.isPending && (
+                        <>
+                          {/* Players info like in duels */}
+                          <div className="mt-1 text-xs text-gray-400">
+                            {br.players && br.players.length > 0 ? (
+                              <>
+                                {br.players.slice(0, 3).map((player, idx) => short(player)).join(' vs ')}
+                                {br.players.length > 3 && ` + ${br.players.length - 3} more`}
+                              </>
+                            ) : (
+                              `${br.playersCount} players`
+                            )} • {br.timestamp ? new Date(br.timestamp).toLocaleString() : ''}
+                          </div>
+                          
+                          {/* All contract events link */}
+                          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                            {br.txHash && (
+                              <a
+                                href={`${BASESCAN}/tx/${br.txHash}#eventlog`}
+                                target="_blank" rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-xs transition-all duration-300 hover:scale-105 shadow-lg"
+                              >
+                                <ExternalLink size={12} /> BattleRoyaleCompleted on BaseScan
+                              </a>
+                            )}
+                            <a
+                              href={`${BASESCAN}/address/${CONTRACT_ADDRESS}#events`}
+                              target="_blank" rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-xs transition-all duration-300 hover:scale-105 shadow-lg"
+                            >
+                              <ExternalLink size={12} /> All contract events
+                            </a>
+                          </div>
+                          
+                          {/* Details (randomSeed) */}
+                          {br.randomSeed && (
+                            <details className="mt-3 text-xs text-gray-300">
+                              <summary className="cursor-pointer text-gray-400">Details (randomSeed)</summary>
+                              <div className="mt-2 font-mono break-all">{br.randomSeed}</div>
+                            </details>
+                          )}
+                        </>
+                      )}
+
                       <div className="mt-3 pt-3 border-t border-gray-700">
                         <div className="text-xs text-gray-400 mb-2">{br.isPending ? 'Share to find opponents:' : 'Share this battle result:'}</div>
                         <ShareButtons 
@@ -927,8 +994,9 @@ export default function UserPage() {
                         </div>
                       </div>
                       
+                      {/* Players info like in duels */}
                       <div className="text-xs text-gray-400 mb-3">
-                        {new Date(d.timestamp * 1000).toLocaleString()}
+                        Battle players • {new Date(d.timestamp * 1000).toLocaleString()}
                       </div>
 
                       {d.isWinner && d.winAmount && (
@@ -940,17 +1008,32 @@ export default function UserPage() {
                         </div>
                       )}
 
-                      {d.txHash && (
-                        <div className="mt-3 pt-3 border-t border-gray-700">
-                          <a 
-                            href={`${BASESCAN}/tx/${d.txHash}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300"
+                      {/* All contract events link */}
+                      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                        {d.txHash && (
+                          <a
+                            href={`${BASESCAN}/tx/${d.txHash}#eventlog`}
+                            target="_blank" rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-xs transition-all duration-300 hover:scale-105 shadow-lg"
                           >
-                            🔎 View transaction <ExternalLink size={12} />
+                            <ExternalLink size={12} /> BattleRoyaleCompleted on BaseScan
                           </a>
-                        </div>
+                        )}
+                        <a
+                          href={`${BASESCAN}/address/${CONTRACT_ADDRESS}#events`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-xs transition-all duration-300 hover:scale-105 shadow-lg"
+                        >
+                          <ExternalLink size={12} /> All contract events
+                        </a>
+                      </div>
+                      
+                      {/* Details (randomSeed) */}
+                      {d.randomSeed && (
+                        <details className="mt-3 text-xs text-gray-300">
+                          <summary className="cursor-pointer text-gray-400">Details (randomSeed)</summary>
+                          <div className="mt-2 font-mono break-all">{d.randomSeed}</div>
+                        </details>
                       )}
                     </div>
                   ))}
