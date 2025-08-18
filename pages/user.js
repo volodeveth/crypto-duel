@@ -791,6 +791,18 @@ export default function UserPage() {
                             🔎 View transaction <ExternalLink size={12} />
                           </a>
                         )}
+
+                        {/* Share buttons for pending Battle Royales */}
+                        {d.isPending && (
+                          <div className="mt-3 pt-3 border-t border-gray-700">
+                            <div className="text-xs text-gray-400 mb-2">Share to find opponents:</div>
+                            <ShareButtons 
+                              message={`Looking for opponents in ${d.mode} battle royale! 🔥⚔️ ${d.playersCount} players needed, ${d.betEth.toFixed(5)} ETH entry. Join me in the arena!`}
+                              url="https://cryptoduel.xyz"
+                              className="flex-wrap"
+                            />
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
