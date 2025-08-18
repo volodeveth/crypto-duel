@@ -20,12 +20,34 @@ const CONTRACT_ABI = [
   "function getWaitingPlayersCount(uint8 mode, uint256 betAmount) external view returns (uint256)"
 ];
 
-const RPC = 'https://base-mainnet.public.blastapi.io';
+// Multiple RPC endpoints for fallback
+const RPC_ENDPOINTS = [
+  'https://mainnet.base.org',
+  'https://base-mainnet.public.blastapi.io',
+  'https://base.gateway.tenderly.co',
+  'https://base-rpc.publicnode.com'
+];
 const BASESCAN = 'https://basescan.org';
 // NEW GameHub V2 contract address with Battle Royale support
 const CONTRACT_ADDRESS = '0xad82ce9aA3c98E0b72B90abc8F6aB15F795E12b6';
 
 const short = (a='') => a ? `${a.slice(0,6)}...${a.slice(-4)}` : '';
+
+// Helper function to create provider with fallback
+async function createProviderWithFallback() {
+  for (const rpcUrl of RPC_ENDPOINTS) {
+    try {
+      const provider = new ethers.JsonRpcProvider(rpcUrl);
+      // Test the connection
+      await provider.getBlockNumber();
+      return provider;
+    } catch (error) {
+      console.warn(`RPC ${rpcUrl} failed, trying next...`);
+      continue;
+    }
+  }
+  throw new Error('All RPC endpoints failed');
+}
 
 export default function UserPage() {
   const [address, setAddress] = useState('');
@@ -108,7 +130,7 @@ export default function UserPage() {
     if (!targetAddress) return alert('Enter your wallet address or connect.');
     setLoading(true);
     try {
-      const provider = new ethers.JsonRpcProvider(RPC);
+      const provider = await createProviderWithFallback();
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
 
       const totalDuels = Number(await contract.totalDuels());
@@ -257,7 +279,7 @@ export default function UserPage() {
     if (!address) return;
     setLoading(true);
     try {
-      const provider = new ethers.JsonRpcProvider(RPC);
+      const provider = await createProviderWithFallback();
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
 
       const totalBattles = Number(await contract.totalBattleRoyales());
@@ -318,7 +340,7 @@ export default function UserPage() {
     if (!targetAddress) return;
     
     try {
-      const provider = new ethers.JsonRpcProvider(RPC);
+      const provider = await createProviderWithFallback();
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
       
       // Use EXACT same logic as app.js
