@@ -5,7 +5,7 @@ import Link from 'next/link';
 import FarcasterInit from '../components/FarcasterInit';
 import ShareButtons from '../components/ShareButtons';
 import { EthWithUsd } from '../lib/ethPrice';
-import { Wallet, Swords, Users, Crown, ExternalLink } from 'lucide-react';
+import { Wallet, Swords, Users, Crown, ExternalLink, Info } from 'lucide-react';
 
 const CONTRACT_ABI = [
   "function joinDuel() external payable",
@@ -496,7 +496,11 @@ export default function DuelApp() {
               Contract: {CONTRACT_ADDRESS.slice(0, 6)}...{CONTRACT_ADDRESS.slice(-4)}
             </div>
 
-            <div className="flex items-center justify-center gap-3 mt-1">
+            <div className="flex items-center justify-center gap-2 mt-1 flex-wrap">
+              <Link href="/how-it-works" className="text-sm text-purple-200 hover:text-purple-100 flex items-center gap-1">
+                <Info size={14} /> How It Works
+              </Link>
+              <span className="opacity-40">•</span>
               <Link href="/leaderboard" className="text-sm text-purple-200 hover:text-purple-100 flex items-center gap-1">
                 <Users size={14} /> Leaderboard
               </Link>
