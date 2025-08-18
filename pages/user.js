@@ -309,8 +309,10 @@ export default function UserPage() {
   }
 
   const hasAny = useMemo(() => duels.length > 0 || battleRoyales.length > 0, [duels, battleRoyales]);
-  const pendingDuels = useMemo(() => duels.filter(d => !d.completed), [duels]);
-  const completedDuels = useMemo(() => duels.filter(d => d.completed), [duels]);
+  const pendingDuels = useMemo(() => duels.filter(d => !d.completed && (d.mode === undefined || d.mode === 0)), [duels]); // Only 1v1 duels
+  const pendingBattleRoyales = useMemo(() => duels.filter(d => !d.completed && d.mode > 0), [duels]); // Battle Royale modes
+  const completedDuels = useMemo(() => duels.filter(d => d.completed && (d.mode === undefined || d.mode === 0)), [duels]); // Only 1v1 duels
+  const completedBattleRoyalesFromDuels = useMemo(() => duels.filter(d => d.completed && d.mode > 0), [duels]); // Completed BR from duels array
 
   return (
     <>
@@ -393,15 +395,15 @@ export default function UserPage() {
           {/* Duels Tab Content */}
           {activeTab === 'duels' && (
             <>
-              {/* Pending duels */}
+              {/* Pending battles */}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden mb-6 shadow-xl">
             <div className="px-4 py-3 bg-black/20 border-b border-white/20 font-semibold">
-              Pending duels {pendingDuels.length > 0 ? `(${pendingDuels.length})` : ''}
+              Pending battles {pendingDuels.length > 0 ? `(${pendingDuels.length})` : ''}
             </div>
 
             {pendingDuels.length === 0 && !loading && (
               <div className="p-6 text-center text-gray-400">
-                No pending duels found.
+                No pending battles found.
               </div>
             )}
 
@@ -445,15 +447,15 @@ export default function UserPage() {
             )}
           </div>
 
-          {/* Completed duels */}
+          {/* Completed battles */}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden shadow-xl">
             <div className="px-4 py-3 bg-black/20 border-b border-white/20 font-semibold">
-              Completed duels {completedDuels.length > 0 ? `(${completedDuels.length})` : ''}
+              Completed battles {completedDuels.length > 0 ? `(${completedDuels.length})` : ''}
             </div>
 
             {completedDuels.length === 0 && !loading && (
               <div className="p-6 text-center text-gray-400">
-                {hasAny ? 'No completed duels found.' : address ? 'Click "Load history" to fetch your duel results.' : 'Enter your wallet address and click "Load history" to see your duels.'}
+                {hasAny ? 'No completed battles found.' : address ? 'Click "Load history" to fetch your battle results.' : 'Enter your wallet address and click "Load history" to see your battles.'}
               </div>
             )}
 
@@ -516,21 +518,82 @@ export default function UserPage() {
 
           {/* Battle Royales Tab Content */}
           {activeTab === 'battles' && (
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden shadow-xl">
-              <div className="px-4 py-3 bg-black/20 border-b border-white/20 font-semibold">
-                Battle Royales {battleRoyales.length > 0 ? `(${battleRoyales.length})` : ''}
+            <>
+              {/* Pending Battle Royales */}
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden mb-6 shadow-xl">
+                <div className="px-4 py-3 bg-black/20 border-b border-white/20 font-semibold">
+                  Pending battles {pendingBattleRoyales.length > 0 ? `(${pendingBattleRoyales.length})` : ''}
+                </div>
+
+                {pendingBattleRoyales.length === 0 && !loading && (
+                  <div className="p-6 text-center text-gray-400">
+                    No pending battles found.
+                  </div>
+                )}
+
+                {pendingBattleRoyales.length > 0 && (
+                  <div className="divide-y divide-gray-700">
+                    {pendingBattleRoyales.map((d) => (
+                      <div key={d.id} className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-sm text-gray-300">
+                            <span className="font-semibold text-white">Battle Royale #{d.id}</span>
+                          </div>
+                          <div className="text-yellow-400 font-semibold">
+                            ⏳ WAITING
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
+                          <div>
+                            <div className="text-gray-400">Bet Amount</div>
+                            <div className="text-white font-semibold">
+                              <EthWithUsd ethAmount={d.betAmount} />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-gray-400">Mode</div>
+                            <div className="text-white font-semibold">{d.modeName || `Mode ${d.mode}`}</div>
+                          </div>
+                        </div>
+                        
+                        <div className="text-xs text-gray-400 mb-3">
+                          {short(d.playerAddress)} • {new Date(d.timestamp * 1000).toLocaleString()} (waiting for players)
+                        </div>
+                        
+                        {d.txHash && (
+                          <a 
+                            href={`${BASESCAN}/tx/${d.txHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300"
+                          >
+                            🔎 View transaction <ExternalLink size={12} />
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {battleRoyales.length === 0 && !loading && (
-                <div className="p-6 text-center text-gray-400">
-                  {address ? 'Click "Load history" to fetch your battle royale results.' : 'Enter your wallet address and click "Load history" to see your battle royales.'}
+              {/* Completed Battle Royales */}
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden shadow-xl">
+                <div className="px-4 py-3 bg-black/20 border-b border-white/20 font-semibold">
+                  Completed battles {(battleRoyales.length + completedBattleRoyalesFromDuels.length) > 0 ? `(${battleRoyales.length + completedBattleRoyalesFromDuels.length})` : ''}
                 </div>
-              )}
 
-              {battleRoyales.length > 0 && (
+                {(battleRoyales.length + completedBattleRoyalesFromDuels.length) === 0 && !loading && (
+                  <div className="p-6 text-center text-gray-400">
+                    {hasAny ? 'No completed battles found.' : address ? 'Click "Load history" to fetch your battle results.' : 'Enter your wallet address and click "Load history" to see your battles.'}
+                  </div>
+                )}
+
+                {(battleRoyales.length > 0 || completedBattleRoyalesFromDuels.length > 0) && (
                 <div className="divide-y divide-gray-700">
+                  {/* Battle Royales from API */}
                   {battleRoyales.map((br) => (
-                    <div key={br.id} className="p-4">
+                    <div key={`br-${br.id}`} className="p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div className="text-sm text-gray-300">
                           <span className="font-semibold text-white">Battle #{br.id}</span> • {br.mode}
@@ -583,9 +646,63 @@ export default function UserPage() {
                       </div>
                     </div>
                   ))}
+                  
+                  {/* Completed Battle Royales from Duels array */}
+                  {completedBattleRoyalesFromDuels.map((d) => (
+                    <div key={`duel-br-${d.id}`} className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-sm text-gray-300">
+                          <span className="font-semibold text-white">Battle Royale #{d.id}</span>
+                        </div>
+                        <div className={`text-lg font-semibold ${d.isWinner ? 'text-green-400' : 'text-red-400'}`}>
+                          {d.isWinner ? '🏆 WON' : '💀 LOST'}
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
+                        <div>
+                          <div className="text-gray-400">Bet Amount</div>
+                          <div className="text-white font-semibold">
+                            <EthWithUsd ethAmount={d.betAmount} />
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-gray-400">Mode</div>
+                          <div className="text-white font-semibold">{d.modeName || `Mode ${d.mode}`}</div>
+                        </div>
+                      </div>
+                      
+                      <div className="text-xs text-gray-400 mb-3">
+                        {new Date(d.timestamp * 1000).toLocaleString()}
+                      </div>
+
+                      {d.isWinner && d.winAmount && (
+                        <div className="bg-green-600/20 rounded-lg p-3 mb-3 border border-green-600/30">
+                          <div className="text-sm text-green-300 mb-1">Prize Won:</div>
+                          <div className="text-lg font-semibold text-green-400">
+                            <EthWithUsd ethAmount={d.winAmount} />
+                          </div>
+                        </div>
+                      )}
+
+                      {d.txHash && (
+                        <div className="mt-3 pt-3 border-t border-gray-700">
+                          <a 
+                            href={`${BASESCAN}/tx/${d.txHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300"
+                          >
+                            🔎 View transaction <ExternalLink size={12} />
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
-            </div>
+              </div>
+            </>
           )}
 
           <div className="text-center mt-6">
