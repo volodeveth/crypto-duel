@@ -204,20 +204,27 @@ export default function HowItWorks() {
                   <Trophy size={24} className="text-green-400" />
                   <h3 className="text-xl font-semibold text-green-400">When You Win</h3>
                 </div>
-                <ul className="space-y-2 text-gray-300">
-                  <li className="flex items-center gap-2">
-                    <DollarSign size={16} className="text-green-400" />
-                    <span><strong>1.8x your bet</strong> paid instantly</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Zap size={16} className="text-green-400" />
-                    <span>Original bet + 80% profit</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Target size={16} className="text-green-400" />
-                    <span>Example: 0.01 ETH → 0.018 ETH</span>
-                  </li>
-                </ul>
+                <div className="space-y-3">
+                  <div className="text-gray-300">
+                    <div className="font-semibold text-blue-300 mb-1">🎯 Duel: <span className="text-green-400">1.8x multiplier</span></div>
+                    <div className="text-sm ml-4">0.01 ETH → 0.018 ETH</div>
+                  </div>
+                  <div className="text-gray-300">
+                    <div className="font-semibold text-green-300 mb-1">⚔️ Battle Royale 5: <span className="text-green-400">4.5x multiplier</span></div>
+                    <div className="text-sm ml-4">0.01 ETH → 0.045 ETH</div>
+                  </div>
+                  <div className="text-gray-300">
+                    <div className="font-semibold text-purple-300 mb-1">👑 Battle Royale 100: <span className="text-green-400">90x multiplier</span></div>
+                    <div className="text-sm ml-4">0.01 ETH → 0.9 ETH</div>
+                  </div>
+                  <div className="text-gray-300">
+                    <div className="font-semibold text-orange-300 mb-1">🔥 Battle Royale 1000: <span className="text-green-400">900x multiplier</span></div>
+                    <div className="text-sm ml-4">0.01 ETH → 9 ETH</div>
+                  </div>
+                  <div className="mt-3 pt-2 border-t border-green-600/30">
+                    <p className="text-sm text-gray-400">All payouts are instant and automatic</p>
+                  </div>
+                </div>
               </div>
 
               {/* Track Performance */}
@@ -229,15 +236,19 @@ export default function HowItWorks() {
                 <ul className="space-y-2 text-gray-300">
                   <li className="flex items-center gap-2">
                     <Users size={16} className="text-blue-400" />
-                    <span>View all duels in "My Duels"</span>
+                    <span>View all battles in "My Duels"</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <TrendingUp size={16} className="text-blue-400" />
-                    <span>Track wins, losses, earnings</span>
+                    <span>Track wins, losses, earnings across all modes</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Trophy size={16} className="text-blue-400" />
                     <span>Climb leaderboard rankings</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Eye size={16} className="text-blue-400" />
+                    <span>Separate stats for Duels and Battle Royale</span>
                   </li>
                 </ul>
               </div>
