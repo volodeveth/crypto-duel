@@ -39,10 +39,8 @@ export default function Home() {
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <div className="mb-8">
-              <div className="mb-4 flex justify-center">
-                <div className="p-4 bg-white/10 rounded-full backdrop-blur-sm border border-white/20">
-                  <Swords size={48} className="text-cyan-400" />
-                </div>
+              <div className="mb-4">
+                <img src="/icon.png" alt="Crypto Duel" className="w-24 h-24 mx-auto" />
               </div>
               <h1 className="text-5xl font-extrabold mb-4 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent tracking-wide">
                 Crypto Duel 2025

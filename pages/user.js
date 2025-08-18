@@ -262,10 +262,8 @@ export default function UserPage() {
         <div className="max-w-3xl mx-auto p-4">
           {/* Header */}
           <div className="text-center mb-6">
-            <div className="mb-2 flex justify-center">
-              <div className="p-3 bg-white/10 rounded-full backdrop-blur-sm border border-white/20">
-                <Swords size={28} className="text-cyan-400" />
-              </div>
+            <div className="mb-2">
+              <img src="/icon.png" alt="Crypto Duel" className="w-14 h-14 mx-auto" />
             </div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">My Duels</h1>
             <div className="mt-2">
