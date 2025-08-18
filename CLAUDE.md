@@ -415,6 +415,15 @@ vercel --prod --token $(cat vercel-token.txt)
   - **Очищення коду**: Прибрано зайвий debug logging з loadWaitingCounts функції
   - **Коміт**: 9fdd582 "fix: RPC endpoint для вирішення 'missing revert data' помилок у My Games"
   - **Деплой**: https://crypto-duel-17t3yznfq-volodeveths-projects.vercel.app
+- **2025-08-18**: 🔄 ВИПРАВЛЕНО ЗНИКНЕННЯ PENDING BATTLE ROYALE: RPC fallback система
+  - **Проблема**: Після зміни RPC endpoint зник pending Battle Royale з My Games
+  - **Причина**: Різні RPC endpoints можуть давати різні результати для пендінг даних
+  - **Рішення**: Реалізовано fallback систему з 4 RPC endpoints
+  - **Логіка**: Спочатку mainnet.base.org (для консистентності), потім blastapi, tenderly, publicnode
+  - **Функції**: createProviderWithFallback() з тестом зв'язку для кожного endpoint
+  - **Результат**: Стабільне завантаження всіх даних + Players Waiting відображення
+  - **Коміт**: 646fd7d "fix: RPC fallback система для стабільного завантаження pending Battle Royale"
+  - **Деплой**: https://crypto-duel-dl4tjsp6l-volodeveths-projects.vercel.app
 
 ---
 - **2025-08-18**: 🚀 **BATTLE ROYALE СИСТЕМА ПОВНІСТЮ РЕАЛІЗОВАНА!**
