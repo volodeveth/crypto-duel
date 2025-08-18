@@ -50,7 +50,7 @@ export default function UserPage() {
             setTimeout(() => {
               loadMyDuelsWithAddress(connectedAddress);
               loadMyBattleRoyales();
-              loadWaitingCounts();
+              setTimeout(() => loadWaitingCounts(), 200); // Delay waiting counts
             }, 100);
           }
         }
@@ -92,7 +92,7 @@ export default function UserPage() {
         if (newAddress) {
           loadMyDuels();
           loadMyBattleRoyales();
-          loadWaitingCounts();
+          setTimeout(() => loadWaitingCounts(), 200); // Delay waiting counts
         }
       }, 500);
     } catch (e) {
@@ -315,7 +315,11 @@ export default function UserPage() {
   }
 
   async function loadWaitingCounts() {
-    if (!address) return;
+    console.log('🚀 loadWaitingCounts called with address:', address);
+    if (!address) {
+      console.log('❌ No address, returning early');
+      return;
+    }
     try {
       const provider = new ethers.JsonRpcProvider(RPC);
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
@@ -339,12 +343,16 @@ export default function UserPage() {
       
       // Get waiting counts for all modes and bet amounts (EXACT copy from app.js)
       for (const mode of gameModes) {
+        console.log(`🔄 Processing mode ${mode.id} (${mode.name})`);
         counts[mode.id] = {};
         for (const bet of betAmounts) {
           try {
+            console.log(`  📞 Calling getWaitingPlayersCount(${mode.id}, ${bet.value})`);
             const count = await contract.getWaitingPlayersCount(mode.id, bet.value);
             counts[mode.id][bet.value] = Number(count);
-          } catch {
+            console.log(`  ✅ Result: ${count} for mode ${mode.id}, bet ${bet.value}`);
+          } catch (error) {
+            console.log(`  ❌ Error for mode ${mode.id}, bet ${bet.value}:`, error.message);
             counts[mode.id][bet.value] = 0;
           }
         }
@@ -408,7 +416,7 @@ export default function UserPage() {
                 <button onClick={connectAddress} className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-sm font-semibold transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center gap-1">
                   <Wallet size={14} /> Connect
                 </button>
-                <button onClick={() => { loadMyDuels(); loadMyBattleRoyales(); loadWaitingCounts(); }} className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-600 hover:to-cyan-600 text-sm font-semibold transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!address || loading}>
+                <button onClick={() => { loadMyDuels(); loadMyBattleRoyales(); setTimeout(() => loadWaitingCounts(), 200); }} className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-600 hover:to-cyan-600 text-sm font-semibold transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!address || loading}>
                   <History size={14} /> {loading ? 'Loading…' : 'Load history'}
                 </button>
               </div>
