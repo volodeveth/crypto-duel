@@ -8,16 +8,21 @@ import { Wallet, Swords, ExternalLink, History, ArrowLeft } from 'lucide-react';
 
 const CONTRACT_ABI = [
   "event DuelCompleted(uint256 indexed duelId, address winner, uint256 prize, uint256 randomSeed)",
-  "event PlayerWaiting(uint256 indexed waitingId, address player, uint256 betAmount)",
+  "event BattleRoyaleCompleted(uint256 indexed battleId, address winner, uint256 prize, uint256 randomSeed)",
+  "event PlayerWaiting(uint256 indexed waitingId, address player, uint256 betAmount, uint8 mode)",
   "event DuelStarted(uint256 indexed duelId, address player1, address player2, uint256 betAmount)",
+  "event BattleRoyaleStarted(uint256 indexed battleId, uint8 mode, uint256 playersCount, uint256 betAmount)",
   "function getDuel(uint256 duelId) external view returns (tuple(uint256 id, address player1, address player2, uint256 betAmount, uint256 timestamp, address winner, bool completed, uint256 randomSeed))",
+  "function getBattleRoyale(uint256 battleId) external view returns (tuple(uint256 id, uint8 mode, address[] players, uint256 betAmount, uint256 startTime, address winner, bool completed, uint256 randomSeed, uint256 requiredPlayers))",
   "function totalDuels() external view returns (uint256)",
-  "function waitingPlayers(uint256 waitingId) external view returns (tuple(address player, uint256 betAmount, uint256 joinTime, bool active))"
+  "function totalBattleRoyales() external view returns (uint256)",
+  "function waitingPlayers(uint256 waitingId) external view returns (tuple(address player, uint256 betAmount, uint8 mode, uint256 joinTime, bool active))"
 ];
 
 const RPC = 'https://mainnet.base.org';
 const BASESCAN = 'https://basescan.org';
-const CONTRACT_ADDRESS = '0x238300D6570Deee3765d72Fa8e2af447612FaE06';
+// NEW GameHub V2 contract address with Battle Royale support
+const CONTRACT_ADDRESS = '0xad82ce9aA3c98E0b72B90abc8F6aB15F795E12b6';
 
 const short = (a='') => a ? `${a.slice(0,6)}...${a.slice(-4)}` : '';
 
@@ -25,7 +30,9 @@ export default function UserPage() {
   const [address, setAddress] = useState('');
   const [loading, setLoading] = useState(false);
   const [duels, setDuels] = useState([]);
+  const [battleRoyales, setBattleRoyales] = useState([]);
   const [pendingLocal, setPendingLocal] = useState(null);
+  const [activeTab, setActiveTab] = useState('duels'); // 'duels' or 'battles'
 
   useEffect(() => {
     // Auto-detect connected wallet on page load
@@ -37,9 +44,10 @@ export default function UserPage() {
           if (accounts.length > 0) {
             const connectedAddress = accounts[0].address;
             setAddress(connectedAddress);
-            // Auto-load duels after detecting wallet
+            // Auto-load games after detecting wallet
             setTimeout(() => {
               loadMyDuelsWithAddress(connectedAddress);
+              loadMyBattleRoyales();
             }, 100);
           }
         }
@@ -76,10 +84,11 @@ export default function UserPage() {
       const signer = await prov.getSigner();
       const newAddress = await signer.getAddress();
       setAddress(newAddress);
-      // Auto-load duels after connecting
+      // Auto-load games after connecting
       setTimeout(() => {
         if (newAddress) {
           loadMyDuels();
+          loadMyBattleRoyales();
         }
       }, 500);
     } catch (e) {
@@ -238,14 +247,75 @@ export default function UserPage() {
     }
   }
 
-  const hasAny = useMemo(() => duels.length > 0, [duels]);
+  async function loadMyBattleRoyales() {
+    if (!address) return;
+    setLoading(true);
+    try {
+      const provider = new ethers.JsonRpcProvider(RPC);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+
+      const totalBattles = Number(await contract.totalBattleRoyales());
+      const max = Math.min(totalBattles, 1000);
+
+      const battles = [];
+
+      // Load all battle royales (similar to duels)
+      for (let i = 1; i <= max; i++) {
+        try {
+          const br = await contract.getBattleRoyale(i);
+          
+          // Skip if battle royale doesn't exist
+          if (!br.players || br.players.length === 0) {
+            continue;
+          }
+          
+          // Check if user is a participant
+          const isParticipant = br.players.some(
+            player => player.toLowerCase() === address.toLowerCase()
+          );
+
+          if (!isParticipant) continue;
+
+          const isWinner = br.winner?.toLowerCase() === address.toLowerCase();
+          const modeNames = { 1: 'BR5', 2: 'BR100', 3: 'BR1000' };
+
+          battles.push({
+            id: br.id?.toString() || String(i),
+            mode: modeNames[Number(br.mode)] || 'Unknown',
+            players: br.players,
+            playersCount: Number(br.requiredPlayers),
+            betEth: Number(ethers.formatEther(br.betAmount || 0)),
+            timestamp: Number(br.startTime || 0) * 1000,
+            winner: br.winner,
+            isWinner,
+            randomSeed: br.randomSeed?.toString() || '',
+            completed: br.completed,
+            totalPrize: Number(ethers.formatEther(br.betAmount || 0)) * Number(br.requiredPlayers)
+          });
+        } catch (error) {
+          console.warn(`Error loading battle royale ${i}:`, error.message);
+          continue;
+        }
+      }
+
+      battles.sort((a, b) => Number(b.id) - Number(a.id));
+      setBattleRoyales(battles);
+    } catch (e) {
+      console.error('Failed to load battle royales:', e);
+      alert('Failed to load battle royales: ' + e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const hasAny = useMemo(() => duels.length > 0 || battleRoyales.length > 0, [duels, battleRoyales]);
   const pendingDuels = useMemo(() => duels.filter(d => !d.completed), [duels]);
   const completedDuels = useMemo(() => duels.filter(d => d.completed), [duels]);
 
   return (
     <>
       <Head>
-        <title>My Duels — Crypto Duel</title>
+        <title>My Games — Crypto Duel</title>
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/icon.png" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -265,7 +335,7 @@ export default function UserPage() {
             <div className="mb-2">
               <img src="/icon.png" alt="Crypto Duel" className="w-14 h-14 mx-auto" />
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">My Duels</h1>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">My Games</h1>
             <div className="mt-2">
               <Link href="/app" className="text-sm text-purple-200 hover:text-purple-100 flex items-center gap-1 justify-center">
                 <ArrowLeft size={14} /> Back to Game
@@ -287,15 +357,43 @@ export default function UserPage() {
                 <button onClick={connectAddress} className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-sm font-semibold transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center gap-1">
                   <Wallet size={14} /> Connect
                 </button>
-                <button onClick={loadMyDuels} className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-600 hover:to-cyan-600 text-sm font-semibold transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!address || loading}>
+                <button onClick={() => { loadMyDuels(); loadMyBattleRoyales(); }} className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-600 hover:to-cyan-600 text-sm font-semibold transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!address || loading}>
                   <History size={14} /> {loading ? 'Loading…' : 'Load history'}
                 </button>
               </div>
             </div>
           </div>
 
+          {/* Game Mode Tabs */}
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 mb-6 shadow-xl">
+            <div className="flex">
+              <button
+                onClick={() => setActiveTab('duels')}
+                className={`flex-1 px-4 py-3 text-sm font-semibold rounded-tl-2xl rounded-bl-2xl border-r border-white/20 transition-all duration-300 ${
+                  activeTab === 'duels' 
+                    ? 'bg-blue-600/50 text-white' 
+                    : 'text-gray-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                🗡️ Duels ({duels.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('battles')}
+                className={`flex-1 px-4 py-3 text-sm font-semibold rounded-tr-2xl rounded-br-2xl transition-all duration-300 ${
+                  activeTab === 'battles' 
+                    ? 'bg-purple-600/50 text-white' 
+                    : 'text-gray-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                👑 Battle Royales ({battleRoyales.length})
+              </button>
+            </div>
+          </div>
 
-          {/* Pending duels */}
+          {/* Duels Tab Content */}
+          {activeTab === 'duels' && (
+            <>
+              {/* Pending duels */}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden mb-6 shadow-xl">
             <div className="px-4 py-3 bg-black/20 border-b border-white/20 font-semibold">
               Pending duels {pendingDuels.length > 0 ? `(${pendingDuels.length})` : ''}
@@ -413,6 +511,82 @@ export default function UserPage() {
               </div>
             )}
           </div>
+            </>
+          )}
+
+          {/* Battle Royales Tab Content */}
+          {activeTab === 'battles' && (
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden shadow-xl">
+              <div className="px-4 py-3 bg-black/20 border-b border-white/20 font-semibold">
+                Battle Royales {battleRoyales.length > 0 ? `(${battleRoyales.length})` : ''}
+              </div>
+
+              {battleRoyales.length === 0 && !loading && (
+                <div className="p-6 text-center text-gray-400">
+                  {address ? 'Click "Load history" to fetch your battle royale results.' : 'Enter your wallet address and click "Load history" to see your battle royales.'}
+                </div>
+              )}
+
+              {battleRoyales.length > 0 && (
+                <div className="divide-y divide-gray-700">
+                  {battleRoyales.map((br) => (
+                    <div key={br.id} className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-sm text-gray-300">
+                          <span className="font-semibold text-white">Battle #{br.id}</span> • {br.mode}
+                        </div>
+                        <div className={`text-lg font-semibold ${br.isWinner ? 'text-green-400' : 'text-red-400'}`}>
+                          {br.isWinner ? '🏆 WON' : '💀 LOST'}
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
+                        <div>
+                          <div className="text-gray-400">Bet Amount</div>
+                          <div className="font-semibold"><EthWithUsd amount={br.betEth} decimals={5} /></div>
+                        </div>
+                        <div>
+                          <div className="text-gray-400">Total Players</div>
+                          <div className="font-semibold">{br.playersCount} players</div>
+                        </div>
+                      </div>
+
+                      {br.timestamp > 0 && (
+                        <div className="text-xs text-gray-400 mb-3">
+                          {new Date(br.timestamp).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </div>
+                      )}
+
+                      {br.isWinner && (
+                        <div className="bg-green-600/20 rounded-lg p-3 mb-3 border border-green-600/30">
+                          <div className="text-sm text-green-300 mb-1">Prize Won:</div>
+                          <div className="text-lg font-semibold text-green-400">
+                            <EthWithUsd amount={br.totalPrize * 0.9} decimals={5} />
+                          </div>
+                          <div className="text-xs text-green-300 mt-1">90% of total pool (10% platform fee)</div>
+                        </div>
+                      )}
+
+                      <div className="mt-3 pt-3 border-t border-gray-700">
+                        <div className="text-xs text-gray-400 mb-2">Share this battle result:</div>
+                        <ShareButtons 
+                          message={`Just ${br.isWinner ? 'WON' : 'fought'} in a ${br.mode} battle royale! 🏆⚔️ ${br.playersCount} players, ${br.betEth.toFixed(5)} ETH each. ${br.isWinner ? 'Champion of the arena!' : 'The battle continues!'}`}
+                          url="https://cryptoduel.xyz"
+                          className="flex-wrap"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="text-center mt-6">
             <Link href="/app" className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 transition-all duration-300 hover:scale-105 shadow-lg font-semibold">
