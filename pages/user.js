@@ -379,7 +379,7 @@ export default function UserPage() {
                     : 'text-gray-300 hover:text-white hover:bg-white/10'
                 }`}
               >
-                🗡️ Duels ({duels.length})
+                🗡️ Duels ({pendingDuels.length + completedDuels.length})
               </button>
               <button
                 onClick={() => setActiveTab('battles')}
@@ -389,7 +389,7 @@ export default function UserPage() {
                     : 'text-gray-300 hover:text-white hover:bg-white/10'
                 }`}
               >
-                👑 Battle Royales ({battleRoyales.length})
+                👑 Battle Royales ({pendingBattleRoyales.length + battleRoyales.length + completedBattleRoyalesFromDuels.length})
               </button>
             </div>
           </div>
@@ -550,17 +550,43 @@ export default function UserPage() {
                           <div>
                             <div className="text-gray-400">Bet Amount</div>
                             <div className="text-white font-semibold">
-                              <EthWithUsd ethAmount={d.betAmount} />
+                              <EthWithUsd amount={d.betEth} decimals={5} />
                             </div>
                           </div>
                           <div>
                             <div className="text-gray-400">Mode</div>
-                            <div className="text-white font-semibold">{d.modeName || `Mode ${d.mode}`}</div>
+                            <div className="text-white font-semibold">
+                              {d.mode === 1 ? 'Battle Royale 5' : 
+                               d.mode === 2 ? 'Battle Royale 100' : 
+                               d.mode === 3 ? 'Battle Royale 1000' : 
+                               `Mode ${d.mode}`}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
+                          <div>
+                            <div className="text-gray-400">Players Needed</div>
+                            <div className="text-white font-semibold">
+                              {d.mode === 1 ? '5 players' : 
+                               d.mode === 2 ? '100 players' : 
+                               d.mode === 3 ? '1000 players' : 
+                               'Unknown'}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-gray-400">Multiplier</div>
+                            <div className="text-green-400 font-semibold">
+                              {d.mode === 1 ? '4.5x' : 
+                               d.mode === 2 ? '90x' : 
+                               d.mode === 3 ? '900x' : 
+                               '1.8x'}
+                            </div>
                           </div>
                         </div>
                         
                         <div className="text-xs text-gray-400 mb-3">
-                          {short(d.playerAddress)} • {new Date(d.timestamp * 1000).toLocaleString()} (waiting for players)
+                          {short(d.player1)} • {new Date(d.timestamp).toLocaleString()} (waiting for players)
                         </div>
                         
                         {d.txHash && (
