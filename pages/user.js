@@ -856,16 +856,17 @@ export default function UserPage() {
                         </div>
                       )}
 
-                      {!br.isPending && (
-                        <div className="mt-3 pt-3 border-t border-gray-700">
-                          <div className="text-xs text-gray-400 mb-2">Share this battle result:</div>
-                          <ShareButtons 
-                            message={`Just ${br.isWinner ? 'WON' : 'fought'} in a ${br.mode} battle royale! 🏆⚔️ ${br.playersCount} players, ${br.betEth.toFixed(5)} ETH each. ${br.isWinner ? 'Champion of the arena!' : 'The battle continues!'}`}
-                            url="https://cryptoduel.xyz"
-                            className="flex-wrap"
-                          />
-                        </div>
-                      )}
+                      <div className="mt-3 pt-3 border-t border-gray-700">
+                        <div className="text-xs text-gray-400 mb-2">{br.isPending ? 'Share to find opponents:' : 'Share this battle result:'}</div>
+                        <ShareButtons 
+                          message={br.isPending 
+                            ? `Looking for opponents in ${br.mode} battle royale! 🔥⚔️ ${br.playersCount} players needed, ${br.betEth.toFixed(5)} ETH entry. Join me in the arena!`
+                            : `Just ${br.isWinner ? 'WON' : 'fought'} in a ${br.mode} battle royale! 🏆⚔️ ${br.playersCount} players, ${br.betEth.toFixed(5)} ETH each. ${br.isWinner ? 'Champion of the arena!' : 'The battle continues!'}`
+                          }
+                          url="https://cryptoduel.xyz"
+                          className="flex-wrap"
+                        />
+                      </div>
                     </div>
                   ))}
                   
