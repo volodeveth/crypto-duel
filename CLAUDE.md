@@ -411,7 +411,7 @@ vercel --prod --token $(cat vercel-token.txt)
 ---
 - **2025-08-18**: 🚀 **BATTLE ROYALE СИСТЕМА ПОВНІСТЮ РЕАЛІЗОВАНА!**
   - **GameHub V2**: Новий upgradeable контракт 0xad82ce9aA3c98E0b72B90abc8F6aB15F795E12b6
-  - **4 режими гри**: Duel (1v1, 1.8x), Battle 5 (4.5x), Battle 100 (90x), Battle 1000 (900x)
+  - **4 режими гри**: Duel (1v1, 1.8x), Battle Royale 5 (4.5x), Battle Royale 100 (90x), Battle Royale 1000 (900x)
   - **Tab UI структура**: Повністю перероблений app.js з вибором режимів
   - **Battle Royale база даних**: battle_royales + br_participants таблиці з індексами
   - **Farcaster нотіфікейшонс**: sendBattleRoyaleResultNotification для всіх режимів
@@ -429,7 +429,7 @@ vercel --prod --token $(cat vercel-token.txt)
 
 **🎮 GAMEHUB V2 BATTLE ROYALE СИСТЕМА** (2025-08-18):
 - 🔥 **НОВИЙ КОНТРАКТ**: 0xad82ce9aA3c98E0b72B90abc8F6aB15F795E12b6 (upgradeable UUPS)
-- 🎯 **4 РЕЖИМИ**: Duel (1v1), Battle 5, Battle 100, Battle 1000
+- 🎯 **4 РЕЖИМИ**: Duel (1v1), Battle Royale 5, Battle Royale 100, Battle Royale 1000
 - 💰 **МНОЖНИКИ**: 1.8x, 4.5x, 90x, 900x відповідно  
 - 🔔 **FARCASTER НОТІФІКЕЙШОНС**: Повна інтеграція для всіх режимів
 - 📱 **TAB UI**: Сучасний інтерфейс з вибором режимів

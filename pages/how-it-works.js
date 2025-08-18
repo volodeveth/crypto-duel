@@ -75,7 +75,7 @@ export default function HowItWorks() {
                     <Users size={20} className="text-green-400" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-green-400">⚔️ Battle 5</h3>
+                    <h3 className="font-bold text-green-400">⚔️ Battle Royale 5</h3>
                     <p className="text-xs text-gray-400">Small Battle Royale</p>
                   </div>
                 </div>
@@ -88,7 +88,7 @@ export default function HowItWorks() {
                     <Trophy size={20} className="text-purple-400" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-purple-400">👑 Battle 100</h3>
+                    <h3 className="font-bold text-purple-400">👑 Battle Royale 100</h3>
                     <p className="text-xs text-gray-400">Mega battles</p>
                   </div>
                 </div>
@@ -101,7 +101,7 @@ export default function HowItWorks() {
                     <Zap size={20} className="text-orange-400" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-orange-400">🔥 Battle 1000</h3>
+                    <h3 className="font-bold text-orange-400">🔥 Battle Royale 1000</h3>
                     <p className="text-xs text-gray-400">Ultimate showdown</p>
                   </div>
                 </div>
@@ -129,7 +129,7 @@ export default function HowItWorks() {
                   </div>
                 </div>
                 <ul className="text-sm text-gray-300 space-y-1">
-                  <li>• Choose: Duel, Battle 5, Battle 100, or Battle 1000</li>
+                  <li>• Choose: Duel, Battle Royale 5, Battle Royale 100, or Battle Royale 1000</li>
                   <li>• Select: 0.00001, 0.0001, 0.001, or 0.01 ETH</li>
                   <li>• See waiting players and multipliers</li>
                 </ul>
@@ -365,7 +365,7 @@ export default function HowItWorks() {
               </div>
               
               <div className="bg-black/30 rounded-xl p-5 border border-white/10">
-                <h3 className="text-lg font-bold text-green-400 mb-3">⚔️ Battle 5 Mode</h3>
+                <h3 className="text-lg font-bold text-green-400 mb-3">⚔️ Battle Royale 5 Mode</h3>
                 <ul className="text-sm text-gray-300 space-y-2">
                   <li>• <span className="text-green-400">20% chance to win</span> (1 in 5)</li>
                   <li>• <span className="text-yellow-400">4.5x multiplier</span> payout</li>
@@ -375,7 +375,7 @@ export default function HowItWorks() {
               </div>
               
               <div className="bg-black/30 rounded-xl p-5 border border-white/10">
-                <h3 className="text-lg font-bold text-purple-400 mb-3">👑 Battle 100 Mode</h3>
+                <h3 className="text-lg font-bold text-purple-400 mb-3">👑 Battle Royale 100 Mode</h3>
                 <ul className="text-sm text-gray-300 space-y-2">
                   <li>• <span className="text-green-400">1% chance to win</span> (1 in 100)</li>
                   <li>• <span className="text-yellow-400">90x multiplier</span> payout</li>
@@ -385,7 +385,7 @@ export default function HowItWorks() {
               </div>
               
               <div className="bg-black/30 rounded-xl p-5 border border-white/10">
-                <h3 className="text-lg font-bold text-orange-400 mb-3">🔥 Battle 1000 Mode</h3>
+                <h3 className="text-lg font-bold text-orange-400 mb-3">🔥 Battle Royale 1000 Mode</h3>
                 <ul className="text-sm text-gray-300 space-y-2">
                   <li>• <span className="text-green-400">0.1% chance to win</span> (1 in 1000)</li>
                   <li>• <span className="text-yellow-400">900x multiplier</span> payout</li>

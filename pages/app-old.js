@@ -58,9 +58,9 @@ export default function DuelApp() {
 
   const gameModes = [
     { id: 0, name: 'Duel', icon: Swords, players: 2, multiplier: '1.8x', color: 'from-blue-500 to-purple-600', desc: 'Classic 1v1 battle' },
-    { id: 1, name: 'Battle 5', icon: Users, players: 5, multiplier: '4.5x', color: 'from-green-500 to-blue-600', desc: '5 players, 1 winner' },
-    { id: 2, name: 'Battle 100', icon: Crown, players: 100, multiplier: '90x', color: 'from-orange-500 to-red-600', desc: '100 players epic battle' },
-    { id: 3, name: 'Battle 1000', icon: Crown, players: 1000, multiplier: '900x', color: 'from-purple-500 to-pink-600', desc: 'Legendary 1000 player war' }
+    { id: 1, name: 'Battle Royale 5', icon: Users, players: 5, multiplier: '4.5x', color: 'from-green-500 to-blue-600', desc: '5 players, 1 winner' },
+    { id: 2, name: 'Battle Royale 100', icon: Crown, players: 100, multiplier: '90x', color: 'from-orange-500 to-red-600', desc: '100 players epic battle' },
+    { id: 3, name: 'Battle Royale 1000', icon: Crown, players: 1000, multiplier: '900x', color: 'from-purple-500 to-pink-600', desc: 'Legendary 1000 player war' }
   ];
 
   // NEW GameHub V2 contract address with Battle Royale support

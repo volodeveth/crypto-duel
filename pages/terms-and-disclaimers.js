@@ -65,15 +65,15 @@ export default function TermsAndDisclaimers() {
                 <p className="text-gray-300 text-sm">Classic head-to-head battles</p>
               </div>
               <div className="bg-green-600/20 rounded-lg p-3 border border-green-600/30">
-                <p className="text-green-300 font-semibold">⚔️ Battle 5 - 4.5x multiplier</p>
+                <p className="text-green-300 font-semibold">⚔️ Battle Royale 5 - 4.5x multiplier</p>
                 <p className="text-gray-300 text-sm">5-player Battle Royale</p>
               </div>
               <div className="bg-purple-600/20 rounded-lg p-3 border border-purple-600/30">
-                <p className="text-purple-300 font-semibold">👑 Battle 100 - 90x multiplier</p>
+                <p className="text-purple-300 font-semibold">👑 Battle Royale 100 - 90x multiplier</p>
                 <p className="text-gray-300 text-sm">100-player mega battles</p>
               </div>
               <div className="bg-orange-600/20 rounded-lg p-3 border border-orange-600/30">
-                <p className="text-orange-300 font-semibold">🔥 Battle 1000 - 900x multiplier</p>
+                <p className="text-orange-300 font-semibold">🔥 Battle Royale 1000 - 900x multiplier</p>
                 <p className="text-gray-300 text-sm">Ultimate 1000-player showdown</p>
               </div>
             </div>
