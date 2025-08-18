@@ -130,7 +130,8 @@ export default function UserPage() {
     if (!targetAddress) return alert('Enter your wallet address or connect.');
     setLoading(true);
     try {
-      const provider = await createProviderWithFallback();
+      // Use primary RPC (same as loadWaitingCounts for consistency)
+      const provider = new ethers.JsonRpcProvider(RPC_ENDPOINTS[0]); // mainnet.base.org  
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
 
       const totalDuels = Number(await contract.totalDuels());
@@ -195,9 +196,11 @@ export default function UserPage() {
 
       // Load waiting players (simplified - just check recent waiting players)
       try {
-        // Only check for waiting players from recent blocks to avoid timeout
+        // Check for waiting players from more recent blocks  
         const recentBlockNumber = await provider.getBlockNumber();
-        const fromBlock = Math.max(0, recentBlockNumber - 10000); // Last ~10000 blocks
+        const fromBlock = Math.max(0, recentBlockNumber - 20000); // Increase to last ~20000 blocks
+        
+        console.log(`Loading waiting players from block ${fromBlock} to ${recentBlockNumber} for address ${targetAddress}`);
 
         const waitingLogs = await provider.getLogs({
           fromBlock: fromBlock,
@@ -205,22 +208,34 @@ export default function UserPage() {
           address: CONTRACT_ADDRESS,
           topics: [playerWaitingTopic]
         });
+        
+        console.log(`Found ${waitingLogs.length} PlayerWaiting logs total`);
 
         for (const log of waitingLogs) {
           try {
             const decoded = iface.parseLog(log);
             const waitingId = Number(decoded.args.waitingId);
+            const player = decoded.args.player.toLowerCase();
+            const mode = Number(decoded.args.mode);
+            const betAmount = decoded.args.betAmount;
+            
+            console.log(`Processing waitingId ${waitingId}: player=${player}, mode=${mode}, betAmount=${ethers.formatEther(betAmount)}`);
             
             // Filter by player address (since it's not indexed)
-            if (decoded.args.player.toLowerCase() !== targetAddress.toLowerCase()) {
+            if (player !== targetAddress.toLowerCase()) {
+              console.log(`Skipping waitingId ${waitingId}: different player`);
               continue;
             }
+            
+            console.log(`Checking if waitingId ${waitingId} is still active...`);
             
             // Check if still active in contract with proper error handling
             try {
               const waitingPlayer = await contract.waitingPlayers(waitingId);
+              console.log(`waitingId ${waitingId}: active=${waitingPlayer.active}`);
+              
               if (waitingPlayer.active) {
-                pendingDuels.push({
+                const pendingGame = {
                   id: `wait-${waitingId}`,
                   player1: decoded.args.player,
                   player2: '0x0000000000000000000000000000000000000000',
@@ -229,7 +244,10 @@ export default function UserPage() {
                   completed: false,
                   isWaiting: true,
                   mode: Number(decoded.args.mode) || 0 // Include mode from PlayerWaiting event
-                });
+                };
+                
+                console.log(`Adding pending game:`, pendingGame);
+                pendingDuels.push(pendingGame);
               }
             } catch (error) {
               console.warn(`Failed to load waitingPlayers(${waitingId}):`, error.message);
