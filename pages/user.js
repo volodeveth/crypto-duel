@@ -320,30 +320,37 @@ export default function UserPage() {
       const provider = new ethers.JsonRpcProvider(RPC);
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
       
+      // Use EXACT same logic as app.js
       const betAmounts = [
-        '10000000000000',     // 0.00001 ETH
-        '100000000000000',    // 0.0001 ETH
-        '1000000000000000',   // 0.001 ETH
-        '10000000000000000'   // 0.01 ETH
+        { value: '10000000000000', label: '0.00001 ETH', eth: 0.00001 },
+        { value: '100000000000000', label: '0.0001 ETH', eth: 0.0001 },
+        { value: '1000000000000000', label: '0.001 ETH', eth: 0.001 },
+        { value: '10000000000000000', label: '0.01 ETH', eth: 0.01 }
+      ];
+
+      const gameModes = [
+        { id: 0, name: 'Duel', icon: 'Swords', players: 2, multiplier: '1.8x', color: 'from-blue-500 to-purple-600', desc: 'Classic 1v1 battle' },
+        { id: 1, name: 'Battle Royale 5', icon: 'Users', players: 5, multiplier: '4.5x', color: 'from-green-500 to-blue-600', desc: '5 players, 1 winner' },
+        { id: 2, name: 'Battle Royale 100', icon: 'Crown', players: 100, multiplier: '90x', color: 'from-orange-500 to-red-600', desc: '100 players epic battle' },
+        { id: 3, name: 'Battle Royale 1000', icon: 'Crown', players: 1000, multiplier: '900x', color: 'from-purple-500 to-pink-600', desc: 'Legendary 1000 player war' }
       ];
       
       const counts = {};
       
-      // Check waiting counts for Battle Royale modes (1, 2, 3)
-      for (let mode = 1; mode <= 3; mode++) {
-        counts[mode] = {};
-        for (const betAmount of betAmounts) {
+      // Get waiting counts for all modes and bet amounts (EXACT copy from app.js)
+      for (const mode of gameModes) {
+        counts[mode.id] = {};
+        for (const bet of betAmounts) {
           try {
-            const count = await contract.getWaitingPlayersCount(mode, betAmount);
-            counts[mode][betAmount] = Number(count);
-          } catch (e) {
-            console.warn(`Error getting waiting count for mode ${mode}, bet ${betAmount}:`, e);
-            counts[mode][betAmount] = 0;
+            const count = await contract.getWaitingPlayersCount(mode.id, bet.value);
+            counts[mode.id][bet.value] = Number(count);
+          } catch {
+            counts[mode.id][bet.value] = 0;
           }
         }
       }
       
-      console.log('📊 Loaded waiting counts:', counts);
+      console.log('📊 Loaded waiting counts (app.js logic):', counts);
       setWaitingCounts(counts);
     } catch (e) {
       console.error('Failed to load waiting counts:', e);
@@ -610,10 +617,11 @@ export default function UserPage() {
                             <div className="text-white font-semibold">
                               {(() => {
                                 const totalNeeded = d.mode === 1 ? 5 : d.mode === 2 ? 100 : d.mode === 3 ? 1000 : 0;
-                                const betAmountWei = ethers.parseEther(d.betEth.toString()).toString();
-                                const currentWaiting = (waitingCounts[d.mode] && waitingCounts[d.mode][betAmountWei]) ? waitingCounts[d.mode][betAmountWei] : 0;
-                                console.log(`🔍 Looking for mode ${d.mode}, betAmount ${betAmountWei}, betEth ${d.betEth}, found waiting: ${currentWaiting}`);
-                                return `${currentWaiting}/${totalNeeded}`;
+                                // Use EXACT same logic as app.js Choose Your Bet
+                                const betValue = ethers.parseEther(d.betEth.toString()).toString();
+                                const waitingForMode = waitingCounts[d.mode] && waitingCounts[d.mode][betValue] ? waitingCounts[d.mode][betValue] : 0;
+                                console.log(`🔍 Mode ${d.mode}, betValue ${betValue}, betEth ${d.betEth}, waitingForMode: ${waitingForMode}, waitingCounts:`, waitingCounts);
+                                return `${waitingForMode}/${totalNeeded}`;
                               })()}
                             </div>
                           </div>
