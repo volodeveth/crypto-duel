@@ -1,7 +1,30 @@
 import Head from 'next/head';
-import { Swords, Play } from 'lucide-react';
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { Swords, Play, AlertTriangle } from 'lucide-react';
 
 export default function Home() {
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
+  // Load terms acceptance from localStorage on mount
+  useEffect(() => {
+    try {
+      const accepted = localStorage.getItem('cd_terms_accepted');
+      setTermsAccepted(accepted === 'true');
+    } catch (error) {
+      // Ignore localStorage errors
+    }
+  }, []);
+
+  // Save terms acceptance to localStorage
+  const handleTermsChange = (accepted) => {
+    setTermsAccepted(accepted);
+    try {
+      localStorage.setItem('cd_terms_accepted', accepted.toString());
+    } catch (error) {
+      // Ignore localStorage errors
+    }
+  };
   const baseUrl = 'https://cryptoduel.xyz';
   
   const embedData = {
@@ -77,14 +100,56 @@ export default function Home() {
                 </p>
               </div>
               
+              {/* Terms & Conditions Checkbox */}
+              <div className="mt-6 p-4 bg-red-500/10 backdrop-blur-sm rounded-xl border border-red-500/30">
+                <div className="flex items-start gap-3 mb-4">
+                  <AlertTriangle size={20} className="text-red-400 mt-1 flex-shrink-0" />
+                  <div className="text-left">
+                    <p className="text-sm text-red-200 mb-2">
+                      <strong>Legal Requirement:</strong> You must acknowledge the risks and terms before playing.
+                    </p>
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={termsAccepted}
+                        onChange={(e) => handleTermsChange(e.target.checked)}
+                        className="mt-1 w-4 h-4 text-green-600 bg-gray-900 border-gray-600 rounded focus:ring-green-500 focus:ring-2"
+                      />
+                      <span className="text-sm text-gray-200">
+                        <span className="text-red-400">*</span> I have read and agree to the{' '}
+                        <Link 
+                          href="/terms-and-disclaimers" 
+                          className="text-cyan-400 hover:text-cyan-300 underline font-medium"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Terms of Service & Risk Disclaimer
+                        </Link>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
               <div className="mt-6">
                 <a 
                   href="/app"
-                  className="inline-flex items-center justify-center w-full bg-gradient-to-r from-green-400 to-cyan-500 hover:from-green-500 hover:to-cyan-600 text-white font-bold py-4 px-8 rounded-2xl text-center text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  className={`inline-flex items-center justify-center w-full font-bold py-4 px-8 rounded-2xl text-center text-lg transition-all duration-300 shadow-lg ${
+                    termsAccepted 
+                      ? 'bg-gradient-to-r from-green-400 to-cyan-500 hover:from-green-500 hover:to-cyan-600 text-white transform hover:scale-105 hover:shadow-xl' 
+                      : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
+                  }`}
+                  onClick={termsAccepted ? undefined : (e) => e.preventDefault()}
                 >
                   <Play size={24} className="mr-2" />
                   Start Playing Now
                 </a>
+                
+                {!termsAccepted && (
+                  <p className="text-xs text-red-400 mt-2 text-center">
+                    Please accept the terms and conditions to continue
+                  </p>
+                )}
               </div>
             </div>
           </div>
