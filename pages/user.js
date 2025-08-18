@@ -34,7 +34,7 @@ export default function UserPage() {
   const [battleRoyales, setBattleRoyales] = useState([]);
   const [pendingLocal, setPendingLocal] = useState(null);
   const [activeTab, setActiveTab] = useState('duels'); // 'duels' or 'battles'
-  const [waitingCounts, setWaitingCounts] = useState({}); // {mode_betAmount: count}
+  const [waitingCounts, setWaitingCounts] = useState({}); // {mode: {betAmount: count}}
 
   useEffect(() => {
     // Auto-detect connected wallet on page load
@@ -331,18 +331,19 @@ export default function UserPage() {
       
       // Check waiting counts for Battle Royale modes (1, 2, 3)
       for (let mode = 1; mode <= 3; mode++) {
+        counts[mode] = {};
         for (const betAmount of betAmounts) {
           try {
             const count = await contract.getWaitingPlayersCount(mode, betAmount);
-            const key = `${mode}_${betAmount}`;
-            counts[key] = Number(count);
+            counts[mode][betAmount] = Number(count);
           } catch (e) {
             console.warn(`Error getting waiting count for mode ${mode}, bet ${betAmount}:`, e);
-            counts[`${mode}_${betAmount}`] = 0;
+            counts[mode][betAmount] = 0;
           }
         }
       }
       
+      console.log('📊 Loaded waiting counts:', counts);
       setWaitingCounts(counts);
     } catch (e) {
       console.error('Failed to load waiting counts:', e);
@@ -610,8 +611,8 @@ export default function UserPage() {
                               {(() => {
                                 const totalNeeded = d.mode === 1 ? 5 : d.mode === 2 ? 100 : d.mode === 3 ? 1000 : 0;
                                 const betAmountWei = ethers.parseEther(d.betEth.toString()).toString();
-                                const waitingKey = `${d.mode}_${betAmountWei}`;
-                                const currentWaiting = waitingCounts[waitingKey] || 0;
+                                const currentWaiting = (waitingCounts[d.mode] && waitingCounts[d.mode][betAmountWei]) ? waitingCounts[d.mode][betAmountWei] : 0;
+                                console.log(`🔍 Looking for mode ${d.mode}, betAmount ${betAmountWei}, betEth ${d.betEth}, found waiting: ${currentWaiting}`);
                                 return `${currentWaiting}/${totalNeeded}`;
                               })()}
                             </div>
