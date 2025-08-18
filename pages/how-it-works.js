@@ -236,7 +236,7 @@ export default function HowItWorks() {
                 <ul className="space-y-2 text-gray-300">
                   <li className="flex items-center gap-2">
                     <Users size={16} className="text-blue-400" />
-                    <span>View all battles in "My Duels"</span>
+                    <span>View all battles in "My Games"</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <TrendingUp size={16} className="text-blue-400" />
@@ -271,7 +271,7 @@ export default function HowItWorks() {
                 <ul className="text-sm text-gray-300 space-y-1">
                   <li>Random outcomes on-chain</li>
                   <li>Verifiable random seed</li>
-                  <li>Pure 50/50 probability</li>
+                  <li>Equal probability for all players in each mode</li>
                 </ul>
               </div>
 

@@ -221,7 +221,7 @@ export default function GameHubApp() {
   return (
     <>
       <Head>
-        <title>Crypto Duel - GameHub V2</title>
+        <title>Crypto Duel - Battle Royale Game</title>
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/icon.png" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -247,7 +247,7 @@ export default function GameHubApp() {
             <div className="mb-2">
               <img src="/icon.png" alt="Crypto Duel" className="w-16 h-16 mx-auto" />
             </div>
-            <h1 className="text-2xl font-bold mb-1 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">GameHub V2</h1>
+            <h1 className="text-2xl font-bold mb-1 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Crypto Duel</h1>
             <div className="text-xs text-gray-400 font-mono">
               Contract: {CONTRACT_ADDRESS.slice(0, 6)}...{CONTRACT_ADDRESS.slice(-4)}
             </div>
@@ -339,7 +339,7 @@ export default function GameHubApp() {
               <div className="mb-6 text-center">
                 <div className="text-sm text-gray-300 mb-3">Share the game with friends:</div>
                 <ShareButtons 
-                  message="Try the new GameHub V2! 🎮⚡️ Duels + Battle Royale modes. Ready for the challenge?"
+                  message="Try Crypto Duel! 🎮⚡️ Duels + Battle Royale modes. Ready for the challenge?"
                   className="justify-center"
                 />
               </div>
