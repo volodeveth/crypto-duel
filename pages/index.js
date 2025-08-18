@@ -43,7 +43,7 @@ export default function Home() {
                 <img src="/icon.png" alt="Crypto Duel" className="w-24 h-24 mx-auto" />
               </div>
               <h1 className="text-5xl font-extrabold mb-4 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent tracking-wide">
-                Crypto Duel 2025
+                Crypto Duel
               </h1>
               <p className="text-xl mb-8 text-gray-300">
                 Challenge players worldwide & win ETH in provably fair duels

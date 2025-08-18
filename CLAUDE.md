@@ -362,9 +362,12 @@ vercel --prod --token $(cat vercel-token.txt)
   - **Smooth анімації**: hover:scale-105 з duration-300 для всіх інтерактивних елементів
   - **Нова палітра**: cyan-400, green-400, yellow-400 акценти з градієнтними кнопками
   - **Bet карточки**: Покращено з hover scale ефектами та backdrop-blur
+  - **Виправлення**: Повернуто оригінальні /icon.png логотипи на всіх сторінках замість Lucide іконок у header'ах
   - **Зберігається**: Вся функціональність (Farcaster нотіфікейшонс, USD відображення, мобільна оптимізація)
-  - **Деплой**: https://crypto-duel-a6ammy898-volodeveths-projects.vercel.app
+  - **UX Fix**: Відцентровано кнопку Disconnect в Connected Wallet секції
+  - **Деплой**: https://crypto-duel-n57cw49ft-volodeveths-projects.vercel.app
   - **Коміт**: b6c60d7 "feat: візуальний редизайн з технологічним glassmorphism стилем"
+  - **Hotfix**: 63ff505 "fix: повернуто оригінальні логотипи та виправлено центрування кнопки disconnect"
 
 ---
 **Останнє оновлення**: 2025-08-18 через Claude Code  

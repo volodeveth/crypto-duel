@@ -485,7 +485,7 @@ export default function DuelApp() {
             <div className="mb-2">
               <img src="/icon.png" alt="Crypto Duel" className="w-16 h-16 mx-auto" />
             </div>
-            <h1 className="text-2xl font-bold mb-1 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Duel Arena</h1>
+            <h1 className="text-2xl font-bold mb-1 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Crypto Duel</h1>
             <div className="text-xs text-gray-400 font-mono">
               Contract: {CONTRACT_ADDRESS.slice(0, 6)}...{CONTRACT_ADDRESS.slice(-4)}
             </div>
@@ -509,7 +509,7 @@ export default function DuelApp() {
               <div className="mt-3 bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
                 <p className="text-xs text-gray-400 mb-1">Connected Wallet:</p>
                 <p className="text-sm font-mono text-green-400 break-all mb-2">{userAddress}</p>
-                <div className="text-center">
+                <div className="flex justify-center">
                   <button
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); try { localStorage.removeItem('cd_currentWaiting'); } catch {}; disconnectWallet(); }}
                     className="bg-red-500/80 hover:bg-red-500 px-3 py-2 rounded-lg text-xs text-white transition-all duration-200 hover:scale-105 flex items-center gap-1"
