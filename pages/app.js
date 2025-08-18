@@ -21,6 +21,7 @@ const CONTRACT_ABI = [
   "function totalBattleRoyales() external view returns (uint256)",
   "function getRequiredPlayers(uint8 mode) external pure returns (uint256)",
   "function getMultiplier(uint8 mode) external pure returns (uint256)",
+  "function waitingPlayers(uint256 waitingId) external view returns (address player, uint256 betAmount, uint8 mode, uint256 joinTime, bool active)",
   "event PlayerWaiting(uint256 indexed waitingId, address player, uint256 betAmount, uint8 mode)",
   "event DuelCompleted(uint256 indexed duelId, address winner, uint256 prize, uint256 randomSeed)",
   "event BattleRoyaleCompleted(uint256 indexed battleId, address winner, uint256 prize, uint256 randomSeed)"

@@ -16,7 +16,7 @@ const CONTRACT_ABI = [
   "function getBattleRoyale(uint256 battleId) external view returns (tuple(uint256 id, uint8 mode, address[] players, uint256 betAmount, uint256 startTime, address winner, bool completed, uint256 randomSeed, uint256 requiredPlayers))",
   "function totalDuels() external view returns (uint256)",
   "function totalBattleRoyales() external view returns (uint256)",
-  "function waitingPlayers(uint256 waitingId) external view returns (tuple(address player, uint256 betAmount, uint8 mode, uint256 joinTime, bool active))",
+  "function waitingPlayers(uint256 waitingId) external view returns (address player, uint256 betAmount, uint8 mode, uint256 joinTime, bool active)",
   "function getWaitingPlayersCount(uint8 mode, uint256 betAmount) external view returns (uint256)"
 ];
 
@@ -216,19 +216,25 @@ export default function UserPage() {
               continue;
             }
             
-            // Check if still active in contract
-            const waitingPlayer = await contract.waitingPlayers(waitingId);
-            if (waitingPlayer.active) {
-              pendingDuels.push({
-                id: `wait-${waitingId}`,
-                player1: decoded.args.player,
-                player2: '0x0000000000000000000000000000000000000000',
-                betEth: Number(ethers.formatEther(decoded.args.betAmount)),
-                timestamp: Date.now(), // Use current time as approximation
-                completed: false,
-                isWaiting: true,
-                mode: Number(decoded.args.mode) || 0 // Include mode from PlayerWaiting event
-              });
+            // Check if still active in contract with proper error handling
+            try {
+              const waitingPlayer = await contract.waitingPlayers(waitingId);
+              if (waitingPlayer.active) {
+                pendingDuels.push({
+                  id: `wait-${waitingId}`,
+                  player1: decoded.args.player,
+                  player2: '0x0000000000000000000000000000000000000000',
+                  betEth: Number(ethers.formatEther(decoded.args.betAmount)),
+                  timestamp: Date.now(), // Use current time as approximation
+                  completed: false,
+                  isWaiting: true,
+                  mode: Number(decoded.args.mode) || 0 // Include mode from PlayerWaiting event
+                });
+              }
+            } catch (error) {
+              console.warn(`Failed to load waitingPlayers(${waitingId}):`, error.message);
+              // Skip this waiting player and continue with the next one
+              continue;
             }
           } catch (e) {
             console.warn('Error processing waiting log:', e);
