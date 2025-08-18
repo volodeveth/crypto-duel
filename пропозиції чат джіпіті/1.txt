@@ -1,5 +1,0 @@
-pages/app.js (updated — English, waiting notice, eventlog link, “My Duels”, local pending save)
-
-pages/user.js (new — English dashboard: pending + history with BaseScan links)
-
-pages/duel/[id].js (new — dedicated duel details with BaseScan event link)

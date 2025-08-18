@@ -3,6 +3,7 @@ import { ethers } from 'ethers';
 import Head from 'next/head';
 import Link from 'next/link';
 import { EthWithUsd } from '../lib/ethPrice';
+import { Trophy, Crown, Medal, Swords, ArrowLeft, Users } from 'lucide-react';
 
 const CONTRACT_ABI = [
   "function getPlayerStats(address player) external view returns (uint256 totalGames, uint256 wins, uint256 totalWinnings)",
@@ -34,31 +35,9 @@ export default function Leaderboard() {
     setLoading(true);
 
     try {
-      // Connect to contract - try multiple RPC providers
-      let provider, contract;
-      const rpcUrls = [
-        'https://mainnet.base.org',
-        'https://base-mainnet.public.blastapi.io',
-        'https://base.gateway.tenderly.co',
-        'https://base-rpc.publicnode.com'
-      ];
-      
-      for (const rpcUrl of rpcUrls) {
-        try {
-          provider = new ethers.JsonRpcProvider(rpcUrl);
-          contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-          
-          // Test connection by calling nextDuelId
-          await contract.nextDuelId();
-          break;
-        } catch (error) {
-          continue;
-        }
-      }
-      
-      if (!contract) {
-        throw new Error('All RPC providers failed');
-      }
+      // Connect to contract using stable BlastAPI provider
+      const provider = new ethers.JsonRpcProvider('https://base-mainnet.public.blastapi.io');
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
 
       // Get next duel ID to include all created duels (completed and pending)
       const nextId = await contract.nextDuelId();
@@ -94,11 +73,10 @@ export default function Leaderboard() {
 
       const uniquePlayers = Array.from(playersMap.keys());
 
-      // Get stats for each player
+      // Get stats for each player using contract method
       const playersStats = [];
       for (const playerAddress of uniquePlayers) {
         try {
-          // Try contract getPlayerStats first
           const [totalGames, wins, totalWinnings] = await contract.getPlayerStats(playerAddress);
           
           if (Number(totalGames) > 0) { // Only include players who have played
@@ -114,50 +92,8 @@ export default function Leaderboard() {
             });
           }
         } catch (error) {
-          
-          // Fallback: calculate stats manually from duels
-          try {
-            let totalGames = 0;
-            let wins = 0;
-            let totalWinnings = ethers.parseEther("0");
-            
-            for (let i = 1; i < maxDuels + 1; i++) {
-              try {
-                const duel = await contract.getDuel(i);
-                
-                if (duel.player1 === playerAddress || duel.player2 === playerAddress) {
-                  if (duel.completed) {
-                    totalGames++;
-                    if (duel.winner === playerAddress) {
-                      wins++;
-                      // Calculate winnings: total pool - owner fee
-                      const totalPool = duel.betAmount * 2n;
-                      const ownerFee = (totalPool * 10n) / 100n; // 10% fee
-                      const winnerPrize = totalPool - ownerFee;
-                      totalWinnings += winnerPrize;
-                    }
-                  }
-                }
-              } catch (duelError) {
-                continue;
-              }
-            }
-            
-            if (totalGames > 0) {
-              const winRate = totalGames > 0 ? (wins / totalGames * 100) : 0;
-              
-              playersStats.push({
-                address: playerAddress,
-                totalGames: totalGames,
-                wins: wins,
-                losses: totalGames - wins,
-                totalWinnings: ethers.formatEther(totalWinnings),
-                winRate: winRate
-              });
-            }
-          } catch (fallbackError) {
-            continue;
-          }
+          // Skip players with errors - keep it simple
+          continue;
         }
       }
 
@@ -211,35 +147,37 @@ export default function Leaderboard() {
         <meta name="twitter:image" content="https://cryptoduel.xyz/image.png" />
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-blue-900 to-purple-900 text-white">
         <div className="max-w-4xl mx-auto p-4">
           
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="mb-2">
-              <img src="/icon.png" alt="Crypto Duel" className="w-16 h-16 mx-auto" />
+            <div className="mb-2 flex justify-center">
+              <div className="p-3 bg-white/10 rounded-full backdrop-blur-sm border border-white/20">
+                <Trophy size={32} className="text-yellow-400" />
+              </div>
             </div>
-            <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">Leaderboard</h1>
+            <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent">Leaderboard</h1>
             <p className="text-gray-300 mb-4">Top players in Crypto Duel Arena</p>
             
             <div className="flex items-center justify-center gap-3">
               <Link 
                 href="/app"
-                className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg font-semibold transition-colors"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:scale-105 shadow-lg"
               >
-                🎮 Back to Game
+                <ArrowLeft size={16} /> Back to Game
               </Link>
               
               <button
                 onClick={loadLeaderboard}
                 disabled={loading}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors ${
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:scale-105 shadow-lg ${
                   loading 
                     ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-600 hover:to-cyan-600 text-white'
                 }`}
               >
-                {loading ? '🔄' : '🔄'} {loading ? 'Loading...' : 'Refresh'}
+                <Users size={16} /> {loading ? 'Loading...' : 'Refresh'}
               </button>
             </div>
           </div>
@@ -248,113 +186,165 @@ export default function Leaderboard() {
           <div className="flex flex-wrap justify-center gap-2 mb-6">
             <button
               onClick={() => setSortBy('wins')}
-              className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+              className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:scale-105 shadow-lg flex items-center gap-2 ${
                 sortBy === 'wins' 
-                  ? 'bg-green-600 text-white' 
-                  : 'bg-gray-700 hover:bg-gray-600 text-gray-200'
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' 
+                  : 'bg-white/10 hover:bg-white/20 text-gray-200 backdrop-blur-sm'
               }`}
             >
-              🏆 Most Wins
+              <Trophy size={16} /> Most Wins
             </button>
             <button
               onClick={() => setSortBy('games')}
-              className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+              className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:scale-105 shadow-lg flex items-center gap-2 ${
                 sortBy === 'games' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-700 hover:bg-gray-600 text-gray-200'
+                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' 
+                  : 'bg-white/10 hover:bg-white/20 text-gray-200 backdrop-blur-sm'
               }`}
             >
-              🎮 Most Games
+              <Swords size={16} /> Most Games
             </button>
             <button
               onClick={() => setSortBy('winnings')}
-              className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+              className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:scale-105 shadow-lg flex items-center gap-2 ${
                 sortBy === 'winnings' 
-                  ? 'bg-yellow-600 text-white' 
-                  : 'bg-gray-700 hover:bg-gray-600 text-gray-200'
+                  ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white' 
+                  : 'bg-white/10 hover:bg-white/20 text-gray-200 backdrop-blur-sm'
               }`}
             >
-              💰 Most Winnings
+              <Crown size={16} /> Most Winnings
             </button>
             <button
               onClick={() => setSortBy('winRate')}
-              className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+              className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:scale-105 shadow-lg flex items-center gap-2 ${
                 sortBy === 'winRate' 
-                  ? 'bg-purple-600 text-white' 
-                  : 'bg-gray-700 hover:bg-gray-600 text-gray-200'
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' 
+                  : 'bg-white/10 hover:bg-white/20 text-gray-200 backdrop-blur-sm'
               }`}
             >
-              📈 Best Win Rate
+              <Medal size={16} /> Best Win Rate
             </button>
           </div>
 
           {/* Loading State */}
           {loading && (
             <div className="text-center py-12">
-              <div className="animate-spin mb-4">
-                <img src="/icon.png" alt="Loading" className="w-16 h-16 mx-auto" />
+              <div className="animate-spin mb-4 flex justify-center">
+                <div className="p-3 bg-white/10 rounded-full backdrop-blur-sm border border-white/20">
+                  <Trophy size={32} className="text-cyan-400" />
+                </div>
               </div>
               <p className="text-lg">Loading leaderboard...</p>
               <p className="text-sm text-gray-400">This may take a moment</p>
             </div>
           )}
 
-          {/* Leaderboard Table */}
+          {/* Leaderboard */}
           {!loading && (
-            <div className="bg-gray-800/50 rounded-lg border border-gray-700 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-900/50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-300">Rank</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-300">Player</th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold text-gray-300">Games</th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold text-gray-300">Wins</th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold text-gray-300">Losses</th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold text-gray-300">Win Rate</th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold text-gray-300">Total Winnings</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-700">
-                    {sortedData.map((player, index) => (
-                      <tr key={player.address} className="hover:bg-gray-700/30 transition-colors">
-                        <td className="px-4 py-3">
-                          <span className="text-lg">{getRankEmoji(index)}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="font-mono text-sm">
-                            {formatAddress(player.address)}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <div className="text-blue-400 font-semibold">{player.totalGames}</div>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <div className="text-green-400 font-semibold">{player.wins}</div>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <div className="text-red-400 font-semibold">{player.losses}</div>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <div className="text-purple-400 font-semibold">
-                            {player.winRate.toFixed(1)}%
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <div className="text-yellow-400 font-semibold">
-                            <EthWithUsd 
-                              amount={player.totalWinnings} 
-                              decimals={5} 
-                              vertical={true}
-                              className="text-yellow-400 font-semibold"
-                              usdClassName="text-xs text-gray-400"
-                            />
-                          </div>
-                        </td>
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden shadow-xl">
+              
+              {/* Mobile Cards View */}
+              <div className="block sm:hidden divide-y divide-gray-700">
+                {sortedData.map((player, index) => (
+                  <div key={player.address} className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="text-center">
+                          <div className="text-xl">{getRankEmoji(index)}</div>
+                          <div className="text-xs text-gray-400">#{index + 1}</div>
+                        </div>
+                        <div className="font-mono text-sm text-gray-300">
+                          {formatAddress(player.address)}
+                        </div>
+                      </div>
+                      <div className="text-yellow-400 font-semibold text-right">
+                        <EthWithUsd 
+                          amount={player.totalWinnings} 
+                          decimals={5} 
+                          vertical={true}
+                          className="text-yellow-400 font-semibold text-sm"
+                          usdClassName="text-xs text-gray-400"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2 text-center text-sm">
+                      <div>
+                        <div className="text-blue-400 font-semibold text-lg">{player.totalGames}</div>
+                        <div className="text-xs text-gray-400">Games</div>
+                      </div>
+                      <div>
+                        <div className="text-green-400 font-semibold text-lg">{player.wins}</div>
+                        <div className="text-xs text-gray-400">Wins</div>
+                      </div>
+                      <div>
+                        <div className="text-red-400 font-semibold text-lg">{player.losses}</div>
+                        <div className="text-xs text-gray-400">Losses</div>
+                      </div>
+                      <div>
+                        <div className="text-purple-400 font-semibold text-lg">{player.winRate.toFixed(1)}%</div>
+                        <div className="text-xs text-gray-400">Win Rate</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden sm:block">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-900/50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-300">Rank</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-300">Player</th>
+                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-300">Games</th>
+                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-300">Wins</th>
+                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-300">Losses</th>
+                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-300">Win Rate</th>
+                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-300">Total Winnings</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-700">
+                      {sortedData.map((player, index) => (
+                        <tr key={player.address} className="hover:bg-gray-700/30 transition-colors">
+                          <td className="px-4 py-3">
+                            <span className="text-lg">{getRankEmoji(index)}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="font-mono text-sm">
+                              {formatAddress(player.address)}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <div className="text-blue-400 font-semibold">{player.totalGames}</div>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <div className="text-green-400 font-semibold">{player.wins}</div>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <div className="text-red-400 font-semibold">{player.losses}</div>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <div className="text-purple-400 font-semibold">
+                              {player.winRate.toFixed(1)}%
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <div className="text-yellow-400 font-semibold">
+                              <EthWithUsd 
+                                amount={player.totalWinnings} 
+                                decimals={5} 
+                                vertical={true}
+                                className="text-yellow-400 font-semibold"
+                                usdClassName="text-xs text-gray-400"
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               {sortedData.length === 0 && !loading && (

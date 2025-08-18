@@ -5,6 +5,7 @@ import Link from 'next/link';
 import FarcasterInit from '../components/FarcasterInit';
 import ShareButtons from '../components/ShareButtons';
 import { EthWithUsd } from '../lib/ethPrice';
+import { Wallet, Swords, Users, Crown, ExternalLink } from 'lucide-react';
 
 const CONTRACT_ABI = [
   "function joinDuel() external payable",
@@ -476,23 +477,29 @@ export default function DuelApp() {
 
       <FarcasterInit />
 
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-blue-900 to-purple-900 text-white">
         <div className="max-w-md mx-auto p-4">
 
           {/* Header */}
           <div className="text-center mb-6">
-            <div className="mb-2">
-              <img src="/icon.png" alt="Crypto Duel" className="w-16 h-16 mx-auto" />
+            <div className="mb-2 flex justify-center">
+              <div className="p-2 bg-white/10 rounded-full backdrop-blur-sm border border-white/20">
+                <Swords size={32} className="text-cyan-400" />
+              </div>
             </div>
-            <h1 className="text-2xl font-bold mb-1 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">Duel Arena</h1>
+            <h1 className="text-2xl font-bold mb-1 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Duel Arena</h1>
             <div className="text-xs text-gray-400 font-mono">
               Contract: {CONTRACT_ADDRESS.slice(0, 6)}...{CONTRACT_ADDRESS.slice(-4)}
             </div>
 
             <div className="flex items-center justify-center gap-3 mt-1">
-              <Link href="/leaderboard" className="text-sm text-purple-200 hover:text-purple-100">🏆 Leaderboard</Link>
+              <Link href="/leaderboard" className="text-sm text-purple-200 hover:text-purple-100 flex items-center gap-1">
+                <Users size={14} /> Leaderboard
+              </Link>
               <span className="opacity-40">•</span>
-              <Link href="/user" className="text-sm text-purple-200 hover:text-purple-100">👤 My Duels</Link>
+              <Link href="/user" className="text-sm text-purple-200 hover:text-purple-100 flex items-center gap-1">
+                <Wallet size={14} /> My Duels
+              </Link>
             </div>
 
             {user && (
@@ -501,15 +508,15 @@ export default function DuelApp() {
               </p>
             )}
             {userAddress && (
-              <div className="mt-3 bg-gray-800/30 rounded-lg p-3">
+              <div className="mt-3 bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
                 <p className="text-xs text-gray-400 mb-1">Connected Wallet:</p>
                 <p className="text-sm font-mono text-green-400 break-all mb-2">{userAddress}</p>
                 <button
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); try { localStorage.removeItem('cd_currentWaiting'); } catch {}; disconnectWallet(); }}
-                  className="bg-red-600/80 hover:bg-red-600 px-3 py-1 rounded text-xs text-white transition-colors"
+                  className="bg-red-500/80 hover:bg-red-500 px-3 py-2 rounded-lg text-xs text-white transition-all duration-200 hover:scale-105 flex items-center gap-1"
                   type="button"
                 >
-                  🔌 Disconnect
+                  <ExternalLink size={12} /> Disconnect
                 </button>
               </div>
             )}
@@ -517,7 +524,7 @@ export default function DuelApp() {
 
           {/* User Stats */}
           {userStats.totalGames > 0 && (
-            <div className="bg-gray-800/50 rounded-lg p-4 mb-6 border border-gray-700">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 mb-6 border border-white/20 shadow-xl">
               <div className="grid grid-cols-4 gap-3 text-center">
                 <div><div className="text-xl font-bold text-blue-400">{userStats.totalGames}</div><div className="text-xs text-gray-400">Games</div></div>
                 <div><div className="text-xl font-bold text-green-400">{userStats.wins}</div><div className="text-xs text-gray-400">Wins</div></div>
@@ -538,30 +545,30 @@ export default function DuelApp() {
 
           {/* Admin Analytics Panel */}
           {isAdmin && (
-            <div className="bg-gradient-to-r from-purple-800/50 to-blue-800/50 rounded-lg p-4 mb-6 border border-purple-500/50">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 mb-6 border border-purple-400/30 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
-                <span className="text-xl">👑</span>
+                <Crown size={20} className="text-yellow-400" />
                 <h3 className="text-lg font-semibold text-purple-200">Admin Analytics</h3>
               </div>
               
               <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="bg-black/20 rounded-lg p-3">
+                <div className="bg-black/30 rounded-xl p-3 border border-white/10">
                   <div className="text-sm text-gray-300">Total Duels</div>
                   <div className="text-2xl font-bold text-blue-400">{adminAnalytics.totalDuels}</div>
                 </div>
-                <div className="bg-black/20 rounded-lg p-3">
+                <div className="bg-black/30 rounded-xl p-3 border border-white/10">
                   <div className="text-sm text-gray-300">Total Volume</div>
                   <div className="text-2xl font-bold text-green-400">
                     <EthWithUsd amount={adminAnalytics.totalVolume} decimals={4} />
                   </div>
                 </div>
-                <div className="bg-black/20 rounded-lg p-3">
+                <div className="bg-black/30 rounded-xl p-3 border border-white/10">
                   <div className="text-sm text-gray-300">Total Commissions</div>
                   <div className="text-2xl font-bold text-yellow-400">
                     <EthWithUsd amount={adminAnalytics.totalCommissions} decimals={4} />
                   </div>
                 </div>
-                <div className="bg-black/20 rounded-lg p-3">
+                <div className="bg-black/30 rounded-xl p-3 border border-white/10">
                   <div className="text-sm text-gray-300">Popular Bet</div>
                   <div className="text-lg font-bold text-purple-400">{adminAnalytics.mostPopularBet}</div>
                 </div>
@@ -571,7 +578,7 @@ export default function DuelApp() {
                 <h4 className="text-sm font-semibold text-purple-200 mb-2">Duels by Bet Amount:</h4>
                 <div className="space-y-2">
                   {Object.entries(adminAnalytics.duelsByBet).map(([betValue, data]) => (
-                    <div key={betValue} className="flex justify-between items-center bg-black/10 rounded p-2">
+                    <div key={betValue} className="flex justify-between items-center bg-black/20 rounded-lg p-2 border border-white/10">
                       <div className="text-sm text-gray-300">{data.label}</div>
                       <div className="text-right">
                         <div className="text-sm font-semibold text-white">{data.count} duels</div>
@@ -589,13 +596,13 @@ export default function DuelApp() {
           {/* Connect state */}
           {gameState === 'disconnected' && (
             <div className="text-center py-8">
-              <div className="card p-6">
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl">
                 <h2 className="text-xl font-semibold mb-4">Choose Wallet Type</h2>
                 <p className="text-gray-300 mb-6">Select how you want to connect your wallet</p>
                 <div className="space-y-4">
                   <button onClick={() => connectFarcasterWallet().catch(e => alert(e.message))}
                           style={{backgroundColor: '#815CC3'}} 
-                          className="w-full hover:opacity-90 px-6 py-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-3">
+                          className="w-full hover:opacity-90 px-6 py-4 rounded-xl font-semibold transition-all duration-300 hover:scale-105 flex items-center justify-center gap-3 shadow-lg">
                     <img src="/farcaster.png" alt="Farcaster" className="w-6 h-6" />
                     <div className="text-left">
                       <div className="font-semibold">Farcaster Wallet</div>
@@ -603,8 +610,8 @@ export default function DuelApp() {
                     </div>
                   </button>
                   <button onClick={() => connectExternalWallet().catch(e => alert(e.message))}
-                          className="w-full bg-orange-600 hover:bg-orange-700 px-6 py-4 rounded-lg font-semibold transition-colors flex items-center justify-center gap-3">
-                    <span className="text-2xl">💳</span>
+                          className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 px-6 py-4 rounded-xl font-semibold transition-all duration-300 hover:scale-105 flex items-center justify-center gap-3 shadow-lg">
+                    <Wallet size={24} className="text-white" />
                     <div className="text-left">
                       <div className="font-semibold">External Wallet</div>
                       <div className="text-sm text-orange-200">MetaMask, WalletConnect, etc.</div>
@@ -630,7 +637,7 @@ export default function DuelApp() {
               <div className="space-y-3">
                 {betAmounts.map((bet, idx) => (
                   <button key={idx} onClick={() => joinDuel(bet.value, bet.eth)}
-                          className="w-full bg-gray-800/50 hover:bg-gray-700/50 p-4 rounded-lg border border-gray-600 transition-all duration-200 hover:border-purple-500">
+                          className="w-full bg-white/10 hover:bg-white/20 p-4 rounded-xl border border-white/20 transition-all duration-300 hover:border-cyan-400 hover:scale-105 backdrop-blur-sm shadow-lg">
                     <div className="flex justify-between items-center">
                       <div className="text-left">
                         <div className="font-semibold text-white"><EthWithUsd amount={bet.eth} decimals={5} /></div>
@@ -644,7 +651,7 @@ export default function DuelApp() {
                   </button>
                 ))}
               </div>
-              <div className="mt-6 p-4 bg-blue-600/20 rounded-lg border border-blue-600/30 text-center text-sm text-blue-200">
+              <div className="mt-6 p-4 bg-cyan-400/10 rounded-xl border border-cyan-400/30 text-center text-sm text-cyan-200 backdrop-blur-sm">
                 <strong>Fair Play:</strong> Winner determined by on-chain randomness
               </div>
             </div>
@@ -653,8 +660,10 @@ export default function DuelApp() {
           {/* Waiting state */}
           {gameState === 'waiting' && selectedBet && (
             <div className="text-center py-8">
-              <div className="animate-pulse-slow mb-6">
-                <img src="/icon.png" alt="Finding opponent" className="w-24 h-24 mx-auto" />
+              <div className="animate-pulse-slow mb-6 flex justify-center">
+                <div className="p-4 bg-white/10 rounded-full backdrop-blur-sm border border-white/20">
+                  <Swords size={48} className="text-cyan-400" />
+                </div>
               </div>
               <h2 className="text-2xl font-semibold mb-2">Waiting for the second player…</h2>
               <p className="text-gray-300 mb-2">Bet: {selectedBet.eth} ETH</p>

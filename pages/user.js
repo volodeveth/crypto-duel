@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ethers } from 'ethers';
 import ShareButtons from '../components/ShareButtons';
 import { EthWithUsd } from '../lib/ethPrice';
+import { Wallet, Swords, ExternalLink, History, ArrowLeft } from 'lucide-react';
 
 const CONTRACT_ABI = [
   "event DuelCompleted(uint256 indexed duelId, address winner, uint256 prize, uint256 randomSeed)",
@@ -201,20 +202,34 @@ export default function UserPage() {
         console.warn('Error loading waiting players:', e);
       }
 
-      completedDuels.sort((a, b) => Number(b.id) - Number(a.id));
-      pendingDuels.sort((a, b) => Number(b.id) - Number(a.id));
-      setDuels([...pendingDuels, ...completedDuels]);
-      
-      // Clear pendingLocal if we found any duels for this address
-      if (pendingLocal && (pendingDuels.length > 0 || completedDuels.length > 0)) {
-        const foundMatchingDuel = [...pendingDuels, ...completedDuels].some(d => 
+      // Add pendingLocal as a pending duel if it exists and no matching duel found
+      if (pendingLocal && pendingLocal.address?.toLowerCase() === targetAddress.toLowerCase()) {
+        const hasMatchingDuel = [...pendingDuels, ...completedDuels].some(d => 
           d.player1.toLowerCase() === targetAddress.toLowerCase()
         );
-        if (foundMatchingDuel) {
+        
+        if (!hasMatchingDuel) {
+          // Add pendingLocal as a pending duel
+          pendingDuels.push({
+            id: `local-waiting`,
+            player1: targetAddress,
+            player2: '0x0000000000000000000000000000000000000000',
+            betEth: pendingLocal.betEth,
+            timestamp: pendingLocal.startedAt || Date.now(),
+            completed: false,
+            isWaiting: true,
+            txHash: pendingLocal.txHash // Include txHash for View transaction button
+          });
+        } else {
+          // Clear if we found matching blockchain duel
           setPendingLocal(null);
           localStorage.removeItem('cd_currentWaiting');
         }
       }
+
+      completedDuels.sort((a, b) => Number(b.id) - Number(a.id));
+      pendingDuels.sort((a, b) => Number(b.id) - Number(a.id));
+      setDuels([...pendingDuels, ...completedDuels]);
     } catch (e) {
       console.error(e);
       alert('Failed to load duels: ' + e.message);
@@ -243,68 +258,48 @@ export default function UserPage() {
         <meta name="twitter:image" content="https://cryptoduel.xyz/image.png" />
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-blue-900 to-purple-900 text-white">
         <div className="max-w-3xl mx-auto p-4">
           {/* Header */}
           <div className="text-center mb-6">
-            <div className="mb-2">
-              <img src="/icon.png" alt="Crypto Duel" className="w-14 h-14 mx-auto" />
+            <div className="mb-2 flex justify-center">
+              <div className="p-3 bg-white/10 rounded-full backdrop-blur-sm border border-white/20">
+                <Swords size={28} className="text-cyan-400" />
+              </div>
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">My Duels</h1>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">My Duels</h1>
             <div className="mt-2">
-              <Link href="/app" className="text-sm text-purple-200 hover:text-purple-100">🎮 Back to Game</Link>
+              <Link href="/app" className="text-sm text-purple-200 hover:text-purple-100 flex items-center gap-1 justify-center">
+                <ArrowLeft size={14} /> Back to Game
+              </Link>
             </div>
           </div>
 
           {/* Address input / connect */}
-          <div className="bg-gray-800/50 rounded-lg p-4 mb-6 border border-gray-700">
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 mb-6 border border-white/20 shadow-xl">
             <label className="block text-sm text-gray-300 mb-2">Wallet address</label>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 value={address}
                 onChange={(e) => setAddress(e.target.value.trim())}
                 placeholder="0x..."
                 className="flex-1 px-3 py-2 rounded bg-gray-900 border border-gray-700 text-white text-sm outline-none"
               />
-              <button onClick={connectAddress} className="px-4 py-2 rounded bg-orange-600 hover:bg-orange-700 text-sm font-semibold">
-                Connect
-              </button>
-              <button onClick={loadMyDuels} className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-sm font-semibold" disabled={!address || loading}>
-                {loading ? 'Loading…' : 'Load history'}
-              </button>
+              <div className="flex gap-2 sm:gap-2">
+                <button onClick={connectAddress} className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-sm font-semibold transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center gap-1">
+                  <Wallet size={14} /> Connect
+                </button>
+                <button onClick={loadMyDuels} className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-600 hover:to-cyan-600 text-sm font-semibold transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!address || loading}>
+                  <History size={14} /> {loading ? 'Loading…' : 'Load history'}
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Pending (local) */}
-          {pendingLocal && (
-            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-6">
-              <div className="text-yellow-300 font-semibold mb-1">Waiting for opponent</div>
-              <div className="text-sm text-gray-200">
-                Bet: <span className="font-semibold">{pendingLocal.betEth} ETH</span>
-              </div>
-              {pendingLocal.txHash && (
-                <div className="mt-2 text-xs">
-                  TX: <span className="font-mono break-all">{pendingLocal.txHash}</span>
-                </div>
-              )}
-              <div className="mt-3 flex gap-3">
-                {pendingLocal.txHash && (
-                  <a className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-sm"
-                     href={`${BASESCAN}/tx/${pendingLocal.txHash}`}
-                     target="_blank" rel="noopener noreferrer">
-                    🔎 View transaction
-                  </a>
-                )}
-                <Link href="/app" className="px-3 py-2 rounded bg-gray-700 hover:bg-gray-600 text-sm">
-                  Back to game
-                </Link>
-              </div>
-            </div>
-          )}
 
           {/* Pending duels */}
-          <div className="bg-gray-800/50 rounded-lg border border-gray-700 overflow-hidden mb-6">
-            <div className="px-4 py-3 bg-gray-900/40 border-b border-gray-700 font-semibold">
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden mb-6 shadow-xl">
+            <div className="px-4 py-3 bg-black/20 border-b border-white/20 font-semibold">
               Pending duels {pendingDuels.length > 0 ? `(${pendingDuels.length})` : ''}
             </div>
 
@@ -320,16 +315,34 @@ export default function UserPage() {
                   <div key={d.id} className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="text-sm text-gray-300">
-                        <Link href={`/duel/${d.id}`} className="underline decoration-dotted hover:text-white">
-                          Duel #{d.id}
-                        </Link>{' '}
-                        <span className="text-yellow-400">Waiting for opponent</span>
+                        {d.id.startsWith('local-') || d.id.startsWith('wait-') ? (
+                          <span className="text-gray-400">Waiting for opponent</span>
+                        ) : (
+                          <>
+                            <Link href={`/duel/${d.id}`} className="underline decoration-dotted hover:text-white">
+                              Duel #{d.id}
+                            </Link>{' '}
+                            <span className="text-yellow-400">Waiting for opponent</span>
+                          </>
+                        )}
                       </div>
                       <div className="text-sm text-yellow-400 font-semibold"><EthWithUsd amount={d.betEth} decimals={5} /></div>
                     </div>
                     <div className="mt-1 text-xs text-gray-400">
                       {short(d.player1)} vs {d.player2 === '0x0000000000000000000000000000000000000000' ? 'waiting...' : short(d.player2)} • {d.timestamp ? new Date(d.timestamp).toLocaleString() : ''} {d.isWaiting ? '(waiting for opponent)' : ''}
                     </div>
+                    {d.txHash && (
+                      <div className="mt-3">
+                        <div className="text-xs text-gray-400 mb-2">
+                          TX: <span className="font-mono break-all">{d.txHash}</span>
+                        </div>
+                        <a className="inline-flex items-center gap-2 px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-sm text-white transition-colors"
+                           href={`${BASESCAN}/tx/${d.txHash}`}
+                           target="_blank" rel="noopener noreferrer">
+                          🔎 View transaction
+                        </a>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -337,8 +350,8 @@ export default function UserPage() {
           </div>
 
           {/* Completed duels */}
-          <div className="bg-gray-800/50 rounded-lg border border-gray-700 overflow-hidden">
-            <div className="px-4 py-3 bg-gray-900/40 border-b border-gray-700 font-semibold">
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden shadow-xl">
+            <div className="px-4 py-3 bg-black/20 border-b border-white/20 font-semibold">
               Completed duels {completedDuels.length > 0 ? `(${completedDuels.length})` : ''}
             </div>
 
@@ -371,17 +384,17 @@ export default function UserPage() {
                         <a
                           href={`${BASESCAN}/tx/${d.txHash}#eventlog`}
                           target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-xs"
+                          className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-xs transition-all duration-300 hover:scale-105 shadow-lg"
                         >
-                          🔍 DuelCompleted on BaseScan
+                          <ExternalLink size={12} /> DuelCompleted on BaseScan
                         </a>
                       )}
                       <a
                         href={`${BASESCAN}/address/${CONTRACT_ADDRESS}#events`}
                         target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded bg-gray-700 hover:bg-gray-600 text-xs"
+                        className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-xs transition-all duration-300 hover:scale-105 shadow-lg"
                       >
-                        📜 All contract events
+                        <ExternalLink size={12} /> All contract events
                       </a>
                     </div>
                     <details className="mt-3 text-xs text-gray-300">
@@ -404,8 +417,8 @@ export default function UserPage() {
           </div>
 
           <div className="text-center mt-6">
-            <Link href="/app" className="inline-block px-4 py-2 rounded bg-purple-600 hover:bg-purple-700">
-              🎮 Back to Game
+            <Link href="/app" className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 transition-all duration-300 hover:scale-105 shadow-lg font-semibold">
+              <ArrowLeft size={16} /> Back to Game
             </Link>
           </div>
         </div>

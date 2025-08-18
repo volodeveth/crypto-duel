@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import { Swords, Play } from 'lucide-react';
 
 export default function Home() {
   const baseUrl = 'https://cryptoduel.xyz';
@@ -34,23 +35,25 @@ export default function Home() {
         <meta name="twitter:image" content={`${baseUrl}/image.png`} />
       </Head>
       
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-blue-900 to-purple-900 text-white">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <div className="mb-8">
-              <div className="mb-4">
-                <img src="/icon.png" alt="Crypto Duel" className="w-24 h-24 mx-auto" />
+              <div className="mb-4 flex justify-center">
+                <div className="p-4 bg-white/10 rounded-full backdrop-blur-sm border border-white/20">
+                  <Swords size={48} className="text-cyan-400" />
+                </div>
               </div>
-              <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                Crypto Duel
+              <h1 className="text-5xl font-extrabold mb-4 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent tracking-wide">
+                Crypto Duel 2025
               </h1>
-              <p className="text-xl mb-8 text-gray-200">
-                Challenge other users and win ETH in fair duels!
+              <p className="text-xl mb-8 text-gray-300">
+                Challenge players worldwide & win ETH in provably fair duels
               </p>
             </div>
             
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 max-w-lg mx-auto border border-gray-700">
-              <h2 className="text-2xl font-semibold mb-6 text-yellow-400">How to Play:</h2>
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 max-w-lg mx-auto border border-white/20 shadow-2xl">
+              <h2 className="text-2xl font-semibold mb-6 text-cyan-300">How to Play</h2>
               <ul className="text-left space-y-3 text-gray-200">
                 <li className="flex items-center">
                   <span className="text-green-400 mr-3">1.</span>
@@ -70,18 +73,19 @@ export default function Home() {
                 </li>
               </ul>
               
-              <div className="mt-6 p-4 bg-yellow-400/10 rounded-lg border border-yellow-400/20">
-                <p className="text-sm text-yellow-200">
-                  <strong>Fair & Transparent:</strong> Uses blockchain randomness for fair results. Each player has exactly 50% chance to win!
+              <div className="mt-6 p-4 bg-cyan-400/10 rounded-xl border border-cyan-400/20">
+                <p className="text-sm text-cyan-200">
+                  <strong>Fair & Transparent:</strong> Powered by blockchain randomness. Each player has exactly 50% chance to win!
                 </p>
               </div>
               
               <div className="mt-6">
                 <a 
                   href="/app"
-                  className="block w-full bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-xl text-center text-lg transition-all duration-200 transform hover:scale-105"
+                  className="inline-flex items-center justify-center w-full bg-gradient-to-r from-green-400 to-cyan-500 hover:from-green-500 hover:to-cyan-600 text-white font-bold py-4 px-8 rounded-2xl text-center text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                 >
-                  🎮 Start Playing Now!
+                  <Play size={24} className="mr-2" />
+                  Start Playing Now
                 </a>
               </div>
             </div>
