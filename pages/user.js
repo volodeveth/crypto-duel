@@ -200,7 +200,8 @@ export default function UserPage() {
                 betEth: Number(ethers.formatEther(decoded.args.betAmount)),
                 timestamp: Date.now(), // Use current time as approximation
                 completed: false,
-                isWaiting: true
+                isWaiting: true,
+                mode: Number(decoded.args.mode) || 0 // Include mode from PlayerWaiting event
               });
             }
           } catch (e) {
@@ -218,7 +219,7 @@ export default function UserPage() {
         );
         
         if (!hasMatchingDuel) {
-          // Add pendingLocal as a pending duel
+          // Add pendingLocal as a pending game (could be duel or battle royale)
           pendingDuels.push({
             id: `local-waiting`,
             player1: targetAddress,
@@ -227,6 +228,7 @@ export default function UserPage() {
             timestamp: pendingLocal.startedAt || Date.now(),
             completed: false,
             isWaiting: true,
+            mode: pendingLocal.mode || 0, // Include mode from localStorage
             txHash: pendingLocal.txHash // Include txHash for View transaction button
           });
         } else {
