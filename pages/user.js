@@ -130,8 +130,8 @@ export default function UserPage() {
     if (!targetAddress) return alert('Enter your wallet address or connect.');
     setLoading(true);
     try {
-      // Use primary RPC (same as loadWaitingCounts for consistency)
-      const provider = new ethers.JsonRpcProvider(RPC_ENDPOINTS[0]); // mainnet.base.org  
+      // Use fallback provider system
+      const provider = await createProviderWithFallback();
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
 
       const totalDuels = Number(await contract.totalDuels());
@@ -219,15 +219,12 @@ export default function UserPage() {
             const mode = Number(decoded.args.mode);
             const betAmount = decoded.args.betAmount;
             
-            console.log(`Processing waitingId ${waitingId}: player=${player}, mode=${mode}, betAmount=${ethers.formatEther(betAmount)}`);
-            
             // Filter by player address (since it's not indexed)
             if (player !== targetAddress.toLowerCase()) {
-              console.log(`Skipping waitingId ${waitingId}: different player`);
               continue;
             }
             
-            console.log(`Checking if waitingId ${waitingId} is still active...`);
+            console.log(`Found user's waitingId ${waitingId}: mode=${mode}, betAmount=${ethers.formatEther(betAmount)}`);
             
             // Check if still active in contract with proper error handling
             try {
@@ -366,8 +363,8 @@ export default function UserPage() {
     if (!targetAddress) return;
     
     try {
-      // Use primary RPC first (same as app.js logic) 
-      const provider = new ethers.JsonRpcProvider(RPC_ENDPOINTS[0]); // mainnet.base.org
+      // Use fallback provider system
+      const provider = await createProviderWithFallback();
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
       
       // EXACT same arrays as app.js
