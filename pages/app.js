@@ -233,57 +233,185 @@ export default function GameHubApp() {
   }
 
   async function updateWaitingCounts() {
-    if (!contract) return;
+    if (!userAddress) return;
+    console.log('🔄 Updating waiting counts...');
+    
     const counts = {};
     
-    // Get waiting counts for all modes and bet amounts
-    for (const mode of gameModes) {
-      counts[mode.id] = {};
-      for (const bet of betAmounts) {
+    // Always use RPC provider for read-only operations (Farcaster Wallet doesn't support eth_call)
+    try {
+      const RPC_ENDPOINTS = [
+        'https://base-mainnet.public.blastapi.io',
+        'https://mainnet.base.org',
+        'https://base.gateway.tenderly.co',
+        'https://base-rpc.publicnode.com'
+      ];
+      
+      let readOnlyContract = null;
+      for (const rpcUrl of RPC_ENDPOINTS) {
         try {
-          const count = await contract.getWaitingPlayersCount(mode.id, bet.value);
-          counts[mode.id][bet.value] = Number(count);
-        } catch {
-          counts[mode.id][bet.value] = 0;
+          const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
+          readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, rpcProvider);
+          // Test the connection
+          await rpcProvider.getBlockNumber();
+          console.log(`✅ Using RPC for read operations: ${rpcUrl}`);
+          break;
+        } catch (error) {
+          console.warn(`❌ RPC ${rpcUrl} failed:`, error.message);
+          continue;
         }
       }
+      
+      if (!readOnlyContract) {
+        console.error('❌ All RPC endpoints failed for read operations');
+        return;
+      }
+      
+      // Get waiting counts for all modes and bet amounts
+      for (const mode of gameModes) {
+        counts[mode.id] = {};
+        for (const bet of betAmounts) {
+          try {
+            const count = await readOnlyContract.getWaitingPlayersCount(mode.id, bet.value);
+            counts[mode.id][bet.value] = Number(count);
+          } catch {
+            counts[mode.id][bet.value] = 0;
+          }
+        }
+      }
+      
+      console.log('✅ Waiting counts loaded via RPC:', counts);
+      setWaitingCount(counts);
+    } catch (error) {
+      console.error('❌ Error updating waiting counts:', error);
     }
-    setWaitingCount(counts);
   }
 
   async function loadUserStats() {
-    if (!contract || !userAddress) return;
+    if (!userAddress) return;
+    console.log('🔄 Loading user stats...');
+    
+    // Always use RPC provider for read-only operations (Farcaster Wallet doesn't support eth_call)
     try {
-      const [totalGames, wins, totalWinnings] = await contract.getPlayerStats(userAddress);
+      const RPC_ENDPOINTS = [
+        'https://base-mainnet.public.blastapi.io',
+        'https://mainnet.base.org',
+        'https://base.gateway.tenderly.co',
+        'https://base-rpc.publicnode.com'
+      ];
+      
+      let readOnlyContract = null;
+      for (const rpcUrl of RPC_ENDPOINTS) {
+        try {
+          const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
+          readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, rpcProvider);
+          // Test the connection
+          await rpcProvider.getBlockNumber();
+          console.log(`✅ Using RPC for user stats: ${rpcUrl}`);
+          break;
+        } catch (error) {
+          console.warn(`❌ RPC ${rpcUrl} failed:`, error.message);
+          continue;
+        }
+      }
+      
+      if (!readOnlyContract) {
+        console.error('❌ All RPC endpoints failed for user stats');
+        return;
+      }
+      
+      const [totalGames, wins, totalWinnings] = await readOnlyContract.getPlayerStats(userAddress);
       setUserStats({
         totalGames: Number(totalGames),
         wins: Number(wins),
         totalWinnings: ethers.formatEther(totalWinnings)
       });
+      console.log('✅ User stats loaded via RPC');
     } catch (error) {
-      console.error('Error loading user stats:', error);
+      console.error('❌ Error loading user stats:', error);
     }
   }
 
   async function checkAdminStatus() {
-    if (!contract || !userAddress) return;
+    if (!userAddress) return;
+    console.log('🔄 Checking admin status...');
+    
+    // Always use RPC provider for read-only operations (Farcaster Wallet doesn't support eth_call)
     try {
-      const owner = await contract.owner();
+      const RPC_ENDPOINTS = [
+        'https://base-mainnet.public.blastapi.io',
+        'https://mainnet.base.org',
+        'https://base.gateway.tenderly.co',
+        'https://base-rpc.publicnode.com'
+      ];
+      
+      let readOnlyContract = null;
+      for (const rpcUrl of RPC_ENDPOINTS) {
+        try {
+          const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
+          readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, rpcProvider);
+          // Test the connection
+          await rpcProvider.getBlockNumber();
+          console.log(`✅ Using RPC for admin check: ${rpcUrl}`);
+          break;
+        } catch (error) {
+          console.warn(`❌ RPC ${rpcUrl} failed:`, error.message);
+          continue;
+        }
+      }
+      
+      if (!readOnlyContract) {
+        console.error('❌ All RPC endpoints failed for admin check');
+        return;
+      }
+      
+      const owner = await readOnlyContract.owner();
       const isOwner = userAddress.toLowerCase() === owner.toLowerCase();
       setIsAdmin(isOwner);
       if (isOwner) {
         console.log('🔥 User is admin! Loading admin analytics...');
         await loadAdminAnalytics();
       }
-    } catch {}
+      console.log('✅ Admin status checked via RPC');
+    } catch (error) {
+      console.error('❌ Error checking admin status:', error);
+    }
   }
 
   async function loadAdminAnalytics() {
-    if (!contract) return;
+    console.log('🔄 Loading admin analytics...');
     
+    // Always use RPC provider for read-only operations (Farcaster Wallet doesn't support eth_call)
     try {
-      const totalDuels = await contract.totalDuels();
-      const totalBattleRoyales = await contract.totalBattleRoyales();
+      const RPC_ENDPOINTS = [
+        'https://base-mainnet.public.blastapi.io',
+        'https://mainnet.base.org',
+        'https://base.gateway.tenderly.co',
+        'https://base-rpc.publicnode.com'
+      ];
+      
+      let readOnlyContract = null;
+      for (const rpcUrl of RPC_ENDPOINTS) {
+        try {
+          const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
+          readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, rpcProvider);
+          // Test the connection
+          await rpcProvider.getBlockNumber();
+          console.log(`✅ Using RPC for admin analytics: ${rpcUrl}`);
+          break;
+        } catch (error) {
+          console.warn(`❌ RPC ${rpcUrl} failed:`, error.message);
+          continue;
+        }
+      }
+      
+      if (!readOnlyContract) {
+        console.error('❌ All RPC endpoints failed for admin analytics');
+        return;
+      }
+      
+      const totalDuels = await readOnlyContract.totalDuels();
+      const totalBattleRoyales = await readOnlyContract.totalBattleRoyales();
       
       const analytics = {
         totalGames: Number(totalDuels) + Number(totalBattleRoyales),
@@ -308,7 +436,7 @@ export default function GameHubApp() {
       
       for (let i = 1; i <= maxDuels; i++) {
         try {
-          const duel = await contract.getDuel(i);
+          const duel = await readOnlyContract.getDuel(i);
           
           // Skip if duel doesn't exist (empty data)
           if (!duel.player1 || duel.player1 === '0x0000000000000000000000000000000000000000') {
@@ -340,7 +468,7 @@ export default function GameHubApp() {
       
       for (let i = 1; i <= maxBattleRoyales; i++) {
         try {
-          const battleRoyale = await contract.getBattleRoyale(i);
+          const battleRoyale = await readOnlyContract.getBattleRoyale(i);
           
           // Skip if battle royale doesn't exist
           if (!battleRoyale.id || Number(battleRoyale.id) === 0) {
