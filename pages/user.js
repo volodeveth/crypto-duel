@@ -72,16 +72,33 @@ async function safeContractCall(methodName, ...args) {
 async function cancelBet() {
   try {
     console.log('🔄 Cancelling bet...');
+    console.log('🌍 Environment:', {
+      isMobile: /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+      isFrame: window.parent !== window,
+      hasEthereum: !!window.ethereum,
+      userAgent: navigator.userAgent
+    });
+    
     let contract = null;
+    let walletType = null;
     
     // Try Farcaster wallet first
     try {
       const { sdk } = await import('@farcaster/miniapp-sdk');
+      console.log('📱 Checking Farcaster SDK:', {
+        sdkAvailable: !!sdk,
+        walletAvailable: !!(sdk && sdk.wallet),
+        hasGetEthereumProvider: !!(sdk && sdk.wallet && sdk.wallet.getEthereumProvider),
+        hasGetEvmProvider: !!(sdk && sdk.wallet && sdk.wallet.getEvmProvider)
+      });
+      
       if (sdk && sdk.wallet) {
         let farcasterProvider = null;
         if (sdk.wallet.getEthereumProvider) {
+          console.log('🔄 Trying getEthereumProvider...');
           farcasterProvider = await sdk.wallet.getEthereumProvider();
         } else if (sdk.wallet.getEvmProvider) {
+          console.log('🔄 Trying getEvmProvider...');
           farcasterProvider = await sdk.wallet.getEvmProvider();
         }
         
@@ -90,14 +107,21 @@ async function cancelBet() {
           const ethersProvider = new ethers.BrowserProvider(farcasterProvider);
           const signer = await ethersProvider.getSigner();
           contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+          walletType = 'farcaster';
+        } else {
+          console.log('⚠️ Farcaster provider not available');
         }
       }
-    } catch {}
+    } catch (farcasterError) {
+      console.log('⚠️ Farcaster wallet error:', farcasterError.message);
+    }
     
     // Fallback to external wallet
     if (!contract) {
       if (!window.ethereum) {
-        alert('Please connect your wallet first');
+        const errorMsg = 'No wallet available. Please connect your wallet first or use the mobile app for Farcaster wallet.';
+        console.error('❌', errorMsg);
+        alert(errorMsg);
         return;
       }
       
@@ -105,28 +129,65 @@ async function cancelBet() {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+      walletType = 'external';
     }
+    
+    console.log(`🔗 Using ${walletType} wallet for transaction`);
     
     // Manual gas limit for Farcaster Wallet compatibility
     const gasLimit = 200000; // Safe gas limit for cancelWaiting
     console.log(`⛽ Using manual gas limit: ${gasLimit}`);
     
+    // Submit transaction
+    console.log('📝 Submitting cancelWaiting transaction...');
     const tx = await contract.cancelWaiting({ gasLimit: gasLimit });
     
-    console.log('Transaction submitted:', tx.hash);
-    alert(`Cancel transaction submitted: ${tx.hash}`);
+    console.log('✅ Transaction submitted:', tx.hash);
+    console.log('🔗 Transaction URL:', `https://basescan.org/tx/${tx.hash}`);
     
-    await tx.wait();
-    console.log('Cancel confirmed!');
-    alert('Bet cancelled successfully! Your ETH has been refunded.');
+    // Show user-friendly message
+    const txMessage = `Cancel transaction submitted!\n\nTransaction: ${tx.hash}\n\nConfirming on blockchain...`;
+    alert(txMessage);
+    
+    // Wait for confirmation
+    console.log('⏳ Waiting for transaction confirmation...');
+    const receipt = await tx.wait();
+    
+    console.log('🎉 Transaction confirmed!', {
+      blockNumber: receipt.blockNumber,
+      gasUsed: receipt.gasUsed.toString(),
+      status: receipt.status
+    });
     
     // Clear pendingLocal if it exists
     localStorage.removeItem('cd_currentWaiting');
     
+    // Success message
+    alert('🎉 Bet cancelled successfully!\n\nYour ETH has been refunded to your wallet.');
+    
     return tx;
   } catch (error) {
-    console.error('Cancel failed:', error);
-    alert('Cancel failed: ' + error.message);
+    console.error('❌ Cancel transaction failed:', {
+      message: error.message,
+      code: error.code,
+      reason: error.reason,
+      stack: error.stack
+    });
+    
+    // Better error messages for common issues
+    let userMessage = 'Cancel failed: ' + error.message;
+    
+    if (error.message.includes('user rejected')) {
+      userMessage = 'Transaction was cancelled by user.';
+    } else if (error.message.includes('insufficient funds')) {
+      userMessage = 'Insufficient funds for gas fees.';
+    } else if (error.message.includes('nonce')) {
+      userMessage = 'Transaction nonce error. Please try again.';
+    } else if (error.code === 'CALL_EXCEPTION') {
+      userMessage = 'Smart contract call failed. You might not have an active bet to cancel.';
+    }
+    
+    alert('❌ ' + userMessage);
     throw error;
   }
 }
@@ -797,18 +858,32 @@ export default function UserPage() {
                     <div className="mt-3 pt-3 border-t border-gray-700">
                       <div className="text-xs text-gray-400 mb-2">Don't want to wait?</div>
                       <button 
-                        onClick={async () => {
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          
+                          console.log('🔴 Cancel button clicked (Duels)');
+                          
                           if (confirm('Are you sure you want to cancel your bet? Your ETH will be refunded.')) {
                             try {
+                              console.log('✅ User confirmed cancel');
                               await cancelBet();
+                              
+                              console.log('🔄 Reloading data after successful cancel...');
                               // Reload games after cancel
                               setTimeout(() => {
-                                loadMyDuelsWithAddress(address);
-                                loadMyBattleRoyalesWithAddress(address);
+                                if (address) {
+                                  loadMyDuelsWithAddress(address);
+                                  loadMyBattleRoyalesWithAddress(address);
+                                  loadWaitingCounts(address);
+                                }
                               }, 2000);
                             } catch (error) {
-                              console.error('Cancel failed:', error);
+                              console.error('❌ Cancel operation failed:', error);
+                              // Error is already shown in cancelBet function
                             }
+                          } else {
+                            console.log('❌ User cancelled the cancel operation');
                           }
                         }}
                         className="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-semibold transition-all duration-300 hover:scale-105 shadow-lg"
@@ -1009,18 +1084,32 @@ export default function UserPage() {
                           <div className="mt-3 pt-3 border-t border-gray-700">
                             <div className="text-xs text-gray-400 mb-2">Don't want to wait?</div>
                             <button 
-                              onClick={async () => {
+                              onClick={async (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                
+                                console.log('🔴 Cancel button clicked (Battle Royale)');
+                                
                                 if (confirm(`Are you sure you want to cancel your ${d.mode} battle royale bet? Your ETH will be refunded.`)) {
                                   try {
+                                    console.log('✅ User confirmed cancel');
                                     await cancelBet();
+                                    
+                                    console.log('🔄 Reloading data after successful cancel...');
                                     // Reload games after cancel
                                     setTimeout(() => {
-                                      loadMyDuelsWithAddress(address);
-                                      loadMyBattleRoyalesWithAddress(address);
+                                      if (address) {
+                                        loadMyDuelsWithAddress(address);
+                                        loadMyBattleRoyalesWithAddress(address);
+                                        loadWaitingCounts(address);
+                                      }
                                     }, 2000);
                                   } catch (error) {
-                                    console.error('Cancel failed:', error);
+                                    console.error('❌ Cancel operation failed:', error);
+                                    // Error is already shown in cancelBet function
                                   }
+                                } else {
+                                  console.log('❌ User cancelled the cancel operation');
                                 }
                               }}
                               className="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-semibold transition-all duration-300 hover:scale-105 shadow-lg"
