@@ -9,7 +9,7 @@ const CONTRACT_ABI = [
   "function getPlayerStats(address player) external view returns (uint256 totalGames, uint256 wins, uint256 totalWinnings)",
   "function getDuel(uint256 duelId) external view returns (tuple(uint256 id, address player1, address player2, uint256 betAmount, uint256 timestamp, address winner, bool completed, uint256 randomSeed))",
   "function totalDuels() external view returns (uint256)",
-  "function nextDuelId() external view returns (uint256)"
+  "function nextDuelId() external view returns (uint256)" // Public variable as function
 ];
 
 export default function Leaderboard() {
@@ -18,7 +18,7 @@ export default function Leaderboard() {
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('wins'); // wins, games, winnings, winRate
 
-  const CONTRACT_ADDRESS = '0x238300D6570Deee3765d72Fa8e2af447612FaE06';
+  const CONTRACT_ADDRESS = '0xad82ce9aA3c98E0b72B90abc8F6aB15F795E12b6'; // GameHub V2
 
   useEffect(() => {
     loadLeaderboard();
