@@ -225,10 +225,11 @@ export default function Leaderboard() {
           
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="mb-2">
-              <img src="/icon2.png" alt="Crypto Duel" className="w-16 h-16 mx-auto" />
+            {/* Logo and title in same row */}
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <img src="/icon2.png" alt="Crypto Duel" className="w-12 h-12" />
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent">Leaderboard</h1>
             </div>
-            <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent">Leaderboard</h1>
             <p className="text-gray-300 mb-4">Top players in Crypto Duel Arena</p>
             
             <div className="flex items-center justify-center gap-3">

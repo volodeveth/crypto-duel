@@ -134,6 +134,17 @@ export default function GameHubApp() {
               if (context && context.user && context.user.username) {
                 setFarcasterUsername(context.user.username);
                 console.log(`✅ Restored Farcaster username from SDK: @${context.user.username}`);
+                
+                // Also store in localStorage for future use
+                try {
+                  localStorage.setItem('farcaster_user_data', JSON.stringify({
+                    fid: context.user.fid || 0,
+                    username: context.user.username
+                  }));
+                  console.log(`💾 Stored Farcaster user data in autoReconnectWallet: @${context.user.username}`);
+                } catch (storageError) {
+                  console.warn('⚠️ Failed to store Farcaster data:', storageError);
+                }
               } else {
                 // Fallback to localStorage
                 const storedFarcasterData = localStorage.getItem('farcaster_user_data');
@@ -143,6 +154,8 @@ export default function GameHubApp() {
                     setFarcasterUsername(farcasterData.username);
                     console.log(`✅ Restored Farcaster username from localStorage: @${farcasterData.username}`);
                   }
+                } else {
+                  console.log('ℹ️ No Farcaster username found in SDK context or localStorage');
                 }
               }
             } catch (error) {
@@ -1016,10 +1029,11 @@ export default function GameHubApp() {
 
           {/* Header */}
           <div className="text-center mb-6">
-            <div className="mb-2">
-              <img src="/icon2.png" alt="Crypto Duel" className="w-16 h-16 mx-auto" />
+            {/* Logo and title in same row */}
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <img src="/icon2.png" alt="Crypto Duel" className="w-12 h-12" />
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Crypto Duel</h1>
             </div>
-            <h1 className="text-2xl font-bold mb-1 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Crypto Duel</h1>
             <div className="text-xs text-gray-400 font-mono">
               Contract: {CONTRACT_ADDRESS.slice(0, 6)}...{CONTRACT_ADDRESS.slice(-4)}
             </div>
