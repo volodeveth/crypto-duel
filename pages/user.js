@@ -113,23 +113,68 @@ export default function UserPage() {
   useEffect(() => {
     // Auto-detect connected wallet on page load
     async function autoDetectWallet() {
+      console.log('🔍 My Duels: Auto-detecting wallet...');
+      
       try {
+        // First, try to detect Farcaster wallet
+        try {
+          const { sdk } = await import('@farcaster/miniapp-sdk');
+          if (sdk && sdk.wallet) {
+            console.log('🎯 Checking Farcaster wallet...');
+            
+            let farcasterProvider = null;
+            if (sdk.wallet.getEthereumProvider) {
+              farcasterProvider = await sdk.wallet.getEthereumProvider();
+            } else if (sdk.wallet.getEvmProvider) {
+              farcasterProvider = await sdk.wallet.getEvmProvider();
+            }
+            
+            if (farcasterProvider) {
+              console.log('✅ Farcaster wallet provider found');
+              const ethersProvider = new ethers.BrowserProvider(farcasterProvider);
+              const signer = await ethersProvider.getSigner();
+              const connectedAddress = await signer.getAddress();
+              
+              console.log('✅ Farcaster wallet address:', connectedAddress);
+              setAddress(connectedAddress);
+              
+              // Auto-load games after detecting Farcaster wallet
+              setTimeout(() => {
+                loadMyDuelsWithAddress(connectedAddress);
+                loadMyBattleRoyalesWithAddress(connectedAddress);
+                setTimeout(() => loadWaitingCounts(connectedAddress), 200); // Delay waiting counts
+              }, 100);
+              return; // Exit early if Farcaster wallet found
+            }
+          }
+        } catch (farcasterError) {
+          console.log('ℹ️ Farcaster wallet not available:', farcasterError.message);
+        }
+        
+        // Fallback to external wallet (MetaMask, etc.)
+        console.log('🔍 Checking external wallet (MetaMask)...');
         if (window.ethereum) {
           const provider = new ethers.BrowserProvider(window.ethereum);
           const accounts = await provider.listAccounts();
           if (accounts.length > 0) {
             const connectedAddress = accounts[0].address;
+            console.log('✅ External wallet address:', connectedAddress);
             setAddress(connectedAddress);
-            // Auto-load games after detecting wallet
+            
+            // Auto-load games after detecting external wallet
             setTimeout(() => {
               loadMyDuelsWithAddress(connectedAddress);
               loadMyBattleRoyalesWithAddress(connectedAddress);
               setTimeout(() => loadWaitingCounts(connectedAddress), 200); // Delay waiting counts
             }, 100);
+          } else {
+            console.log('ℹ️ No external wallet accounts found');
           }
+        } else {
+          console.log('ℹ️ No external wallet provider found');
         }
       } catch (error) {
-        console.warn('Failed to auto-detect wallet:', error.message);
+        console.warn('❌ Failed to auto-detect wallet:', error.message);
       }
     }
 
@@ -473,10 +518,53 @@ export default function UserPage() {
   async function loadWaitingCounts(targetAddress = address) {
     if (!targetAddress) return;
     
+    console.log('🔍 My Duels: Loading waiting counts...');
+    
     try {
-      // Use fallback provider system
-      const provider = await createProviderWithFallback();
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+      // Try to use the same provider/contract approach as app.js
+      let contractToUse = null;
+      
+      // First, try to detect and use user's wallet provider (same as app.js)
+      try {
+        console.log('🎯 Trying to use user wallet provider...');
+        
+        // Check Farcaster wallet first
+        try {
+          const { sdk } = await import('@farcaster/miniapp-sdk');
+          if (sdk && sdk.wallet) {
+            let farcasterProvider = null;
+            if (sdk.wallet.getEthereumProvider) {
+              farcasterProvider = await sdk.wallet.getEthereumProvider();
+            } else if (sdk.wallet.getEvmProvider) {
+              farcasterProvider = await sdk.wallet.getEvmProvider();
+            }
+            
+            if (farcasterProvider) {
+              console.log('✅ Using Farcaster wallet provider for waiting counts');
+              const ethersProvider = new ethers.BrowserProvider(farcasterProvider);
+              const signer = await ethersProvider.getSigner();
+              contractToUse = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+            }
+          }
+        } catch {}
+        
+        // Fallback to external wallet if Farcaster not available
+        if (!contractToUse && window.ethereum) {
+          console.log('✅ Using external wallet provider for waiting counts');
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          const signer = await provider.getSigner();
+          contractToUse = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+        }
+      } catch (walletError) {
+        console.log('ℹ️ Wallet provider not available:', walletError.message);
+      }
+      
+      // Final fallback to RPC provider if no wallet available
+      if (!contractToUse) {
+        console.log('🔄 Fallback: Using RPC provider for waiting counts');
+        const provider = await createProviderWithFallback();
+        contractToUse = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+      }
       
       // EXACT same arrays as app.js
       const betAmounts = [
@@ -496,21 +584,25 @@ export default function UserPage() {
       const counts = {};
       
       // EXACT same logic as app.js updateWaitingCounts
+      console.log('🔄 Loading waiting counts from contract...');
       for (const mode of gameModes) {
         counts[mode.id] = {};
         for (const bet of betAmounts) {
           try {
-            const count = await safeContractCall('getWaitingPlayersCount', mode.id, bet.value);
+            // Use direct contract call instead of safeContractCall for consistency with app.js
+            const count = await contractToUse.getWaitingPlayersCount(mode.id, bet.value);
             counts[mode.id][bet.value] = Number(count);
+            console.log(`Mode ${mode.id}, bet ${bet.eth} ETH: ${Number(count)} waiting`);
           } catch {
             counts[mode.id][bet.value] = 0;
           }
         }
       }
       
+      console.log('✅ Waiting counts loaded:', counts);
       setWaitingCounts(counts);
     } catch (e) {
-      console.error('Failed to load waiting counts:', e);
+      console.error('❌ Failed to load waiting counts:', e);
     }
   }
 
