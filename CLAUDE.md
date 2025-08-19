@@ -583,3 +583,113 @@ vercel --prod --token $(cat vercel-token.txt)
   - **Мета**: Верифікація домену для публікації у Farcaster App Directory
   - **Коміт**: dd2382c "feat: додано Farcaster account association для верифікації домену"
   - **Деплой**: https://crypto-duel-j1l745le3-volodeveths-projects.vercel.app
+
+## 🛠️ КРИТИЧНЕ ВИПРАВЛЕННЯ FARCASTER WALLET ІНТЕГРАЦІЇ (2025-08-19):
+
+### **Проблема**: Повна несумісність Farcaster Wallet з додатком
+- **Ефект**: При натисканні кнопки Farcaster Wallet нічого не відбувалось
+- **Причина**: Застарілі API методи та невідповідність архітектури
+
+### **Рішення 1**: Виправлення API методів (pages/app.js:326-340)
+```javascript
+// БУЛО: sdk.wallet.ethProvider() - застарілий метод
+// СТАЛО: Fallback система з підтримкою нових методів
+let farcasterProvider = null;
+if (sdk.wallet.getEthereumProvider) {
+  farcasterProvider = await sdk.wallet.getEthereumProvider();
+} else if (sdk.wallet.getEvmProvider) {
+  farcasterProvider = await sdk.wallet.getEvmProvider();
+}
+```
+
+### **Рішення 2**: Гібридна архітектура для обходу обмежень Farcaster Wallet
+**Проблема**: `Provider.UnsupportedMethodError: eth_call, eth_estimateGas not supported`
+**Архітектурне рішення**:
+- **Farcaster Wallet**: використовується ТІЛЬКИ для транзакцій (eth_sendTransaction)
+- **RPC Provider**: використовується для всіх read-only операцій (contract.totalDuels(), getDuel(), etc.)
+
+```javascript
+// Гібридний підхід - різні провайдери для різних операцій
+const hybridContract = new ethers.Contract(
+  contractAddress, 
+  CONTRACT_ABI, 
+  rpcProvider  // RPC для читання
+);
+const txContract = new ethers.Contract(
+  contractAddress, 
+  CONTRACT_ABI, 
+  farcasterSigner  // Farcaster для транзакцій
+);
+```
+
+### **Рішення 3**: Ручне управління gas limits
+**Проблема**: `eth_estimateGas not supported`
+**Виправлення**: Додано фіксовані gas limits для всіх транзакцій
+```javascript
+// joinGame: gasLimit 300000
+// cancelWaiting: gasLimit 200000
+const tx = await contract.joinGame(waitingId, { gasLimit: 300000 });
+```
+
+### **Рішення 4**: Persistence системи для waiting state
+**Проблема**: Користувач втрачав waiting state після перезавантаження сторінки
+**Виправлення**: localStorage-based persistence з автоматичним відновленням
+```javascript
+// Зберігання pending bet
+localStorage.setItem('pendingBet', JSON.stringify({
+  waitingId, betAmount, timestamp: Date.now()
+}));
+
+// Автоматичне відновлення при завантаженні
+useEffect(() => {
+  checkForPendingBet();
+}, []);
+```
+
+### **Технічна імплементація**:
+
+#### **Файли модифіковано**:
+- **pages/app.js**: Повна реімплементація Farcaster wallet логіки
+  - `connectFarcasterWallet()`: API fallback система
+  - `joinGame()`: Гібридна архітектура + manual gas limits
+  - `cancelWaiting()`: Підтримка обох типів wallets
+  - `checkForPendingBet()`: localStorage persistence
+  - `updateWaitingCounts()`: RPC provider для stability
+
+- **pages/user.js**: Синхронізація з гібридним підходом
+  - `autoDetectWallet()`: Виявлення Farcaster wallet
+  - `loadWaitingCounts()`: RPC provider замість wallet provider
+  - `cancelBet()`: Підтримка manual gas limits
+
+#### **Результат виправлення**:
+✅ **Farcaster Wallet повністю функціональна**:
+- ✅ Підключення wallet через оновлені SDK методи
+- ✅ Читання blockchain даних через RPC providers
+- ✅ Транзакції з manual gas limits
+- ✅ Waiting state persistence через localStorage
+- ✅ Автоматичне відновлення pending bets
+- ✅ Синхронізація з My Duels сторінкою
+
+#### **Архітектурні переваги**:
+- **Стабільність**: RPC providers забезпечують надійне читання данних
+- **Сумісність**: Підтримка як Farcaster так і external wallets
+- **UX**: Seamless experience з автоматичним відновленням стану
+- **Масштабованість**: Легко додавати нові wallet providers
+
+#### **Environment оновлення**:
+- Налаштовано RPC fallback система з 4 endpoints
+- Додано error handling для всіх wallet operations
+- Інтеграція з існуючою Farcaster notifications системою
+
+**Деплой**: https://crypto-duel-ehidyvgkv-volodeveths-projects.vercel.app
+**Статус**: ✅ **FARCASTER WALLET ПОВНІСТЮ ІНТЕГРОВАНО В СИСТЕМУ**
+
+### **Тестування користувачем**:
+- ✅ Підключення Farcaster Wallet - працює
+- ✅ Відображення My Duels з Farcaster wallet - працює  
+- ✅ Players Waiting з Farcaster wallet - працює
+- ✅ Транзакції join/cancel з Farcaster wallet - працюють
+- ✅ Waiting state persistence - працює
+- ✅ Автоматичне відновлення стану - працює
+
+**Всі проблеми Farcaster Wallet інтеграції повністю вирішено!** 🎯

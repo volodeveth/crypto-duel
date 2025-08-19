@@ -100,17 +100,26 @@ export default function GameHubApp() {
         // Only show if it's for the current contract and recent (within 1 hour)
         const oneHourAgo = Date.now() - (60 * 60 * 1000);
         if (pendingBet.contractAddress === CONTRACT_ADDRESS && pendingBet.timestamp > oneHourAgo) {
-          console.log('✅ Restoring waiting state for pending bet');
+          console.log('🔍 Verifying if bet is still valid on blockchain...');
           
-          // Restore the bet selection
-          setSelectedMode(pendingBet.mode);
-          const matchingBet = betAmounts.find(bet => bet.value === pendingBet.betAmount);
-          if (matchingBet) {
-            setSelectedBet(matchingBet);
+          // Verify the bet is still waiting on blockchain before restoring
+          const isStillWaiting = await verifyBetStillWaiting(pendingBet);
+          if (isStillWaiting) {
+            console.log('✅ Bet verified on blockchain, restoring waiting state');
+            
+            // Restore the bet selection
+            setSelectedMode(pendingBet.mode);
+            const matchingBet = betAmounts.find(bet => bet.value === pendingBet.betAmount);
+            if (matchingBet) {
+              setSelectedBet(matchingBet);
+            }
+            
+            setGameState('waiting');
+            console.log(`⏳ Restored waiting state for tx: ${pendingBet.txHash}`);
+          } else {
+            console.log('⚠️ Bet no longer waiting on blockchain, clearing localStorage');
+            localStorage.removeItem('cd_currentWaiting');
           }
-          
-          setGameState('waiting');
-          console.log(`⏳ Restored waiting state for tx: ${pendingBet.txHash}`);
         } else {
           console.log('⚠️ Pending bet expired or for different contract, clearing...');
           localStorage.removeItem('cd_currentWaiting');
@@ -119,6 +128,48 @@ export default function GameHubApp() {
     } catch (error) {
       console.warn('Failed to check for pending bet:', error);
       localStorage.removeItem('cd_currentWaiting');
+    }
+  }
+
+  async function verifyBetStillWaiting(pendingBet) {
+    try {
+      // Use stable RPC endpoints for verification
+      const RPC_ENDPOINTS = [
+        'https://base-mainnet.public.blastapi.io',
+        'https://base.gateway.tenderly.co',
+        'https://base-rpc.publicnode.com',
+        'https://mainnet.base.org'
+      ];
+      
+      let readOnlyContract = null;
+      for (const rpcUrl of RPC_ENDPOINTS) {
+        try {
+          const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
+          readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, rpcProvider);
+          // Test the connection
+          await rpcProvider.getBlockNumber();
+          console.log(`✅ Using RPC for bet verification: ${rpcUrl}`);
+          break;
+        } catch (error) {
+          console.warn(`❌ RPC ${rpcUrl} failed for verification:`, error.message);
+          continue;
+        }
+      }
+      
+      if (!readOnlyContract) {
+        console.error('❌ All RPC endpoints failed for bet verification');
+        return false; // If can't verify, assume bet is no longer valid
+      }
+      
+      // Check if there are still waiting players for this mode/bet combination
+      const waitingCount = await readOnlyContract.getWaitingPlayersCount(pendingBet.mode, pendingBet.betAmount);
+      console.log(`🔍 Waiting count for mode ${pendingBet.mode}, bet ${ethers.formatEther(pendingBet.betAmount)}: ${Number(waitingCount)}`);
+      
+      // If there are no waiting players, the bet is no longer waiting
+      return Number(waitingCount) > 0;
+    } catch (error) {
+      console.error('❌ Error verifying bet status:', error);
+      return false; // If verification fails, assume bet is no longer valid
     }
   }
 
@@ -137,34 +188,55 @@ export default function GameHubApp() {
   
   async function checkGameResult() {
     try {
-      const pendingBet = localStorage.getItem('cd_currentWaiting');
-      if (!pendingBet) return;
+      const raw = localStorage.getItem('cd_currentWaiting');
+      if (!raw) return;
       
-      console.log('🔍 Checking if game started or completed...');
+      const pendingBet = JSON.parse(raw);
+      console.log('🔍 Starting game result monitoring for pending bet...');
       
       // Check every 5 seconds for game result
       const intervalId = setInterval(async () => {
         try {
-          // Get current waiting counts to see if we're still waiting
-          await updateWaitingCounts();
+          console.log('⏰ Checking game status...');
           
           // If we're no longer in waiting state due to external actions, clear the interval
           if (gameState !== 'waiting') {
+            console.log('🛑 No longer in waiting state, stopping monitoring');
             clearInterval(intervalId);
             return;
           }
+          
+          // Check if bet is still waiting on blockchain
+          const isStillWaiting = await verifyBetStillWaiting(pendingBet);
+          if (!isStillWaiting) {
+            console.log('🎉 Game completed or cancelled, clearing localStorage');
+            localStorage.removeItem('cd_currentWaiting');
+            
+            // Update waiting counts and stats
+            await updateWaitingCounts();
+            await loadUserStats();
+            
+            // Return to selecting state
+            setGameState('selecting');
+            clearInterval(intervalId);
+            return;
+          }
+          
+          console.log('⌛ Still waiting for opponent...');
+          
         } catch (error) {
-          console.warn('Error checking game result:', error);
+          console.warn('⚠️ Error checking game result:', error);
         }
       }, 5000);
       
       // Clear interval after 10 minutes (game should start or we should cancel)
       setTimeout(() => {
+        console.log('⏰ Game result monitoring timeout after 10 minutes');
         clearInterval(intervalId);
       }, 10 * 60 * 1000);
       
     } catch (error) {
-      console.error('Error setting up game result check:', error);
+      console.error('❌ Error setting up game result check:', error);
     }
   }
 
@@ -315,9 +387,9 @@ export default function GameHubApp() {
     try {
       const RPC_ENDPOINTS = [
         'https://base-mainnet.public.blastapi.io',
-        'https://mainnet.base.org',
         'https://base.gateway.tenderly.co',
-        'https://base-rpc.publicnode.com'
+        'https://base-rpc.publicnode.com',
+        'https://mainnet.base.org'
       ];
       
       let readOnlyContract = null;
@@ -723,6 +795,10 @@ export default function GameHubApp() {
       averageBet: '0',
       mostPopularBet: 'None'
     });
+    
+    // Clear any pending waiting bets from localStorage
+    localStorage.removeItem('cd_currentWaiting');
+    console.log('🧹 Cleared pending waiting bet on disconnect');
   }
 
   return (
@@ -997,6 +1073,17 @@ export default function GameHubApp() {
                 </Link>
                 <button onClick={cancelWaitingBet} className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg font-semibold transition-colors">
                   ❌ Cancel Waiting
+                </button>
+                <button 
+                  onClick={() => {
+                    localStorage.removeItem('cd_currentWaiting');
+                    setGameState('selecting');
+                    console.log('🔄 Refresh Status: localStorage cleared, returning to selecting');
+                  }}
+                  className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  title="Refresh if stuck in waiting - no blockchain transaction needed"
+                >
+                  🔄 Refresh Status
                 </button>
               </div>
             </div>
