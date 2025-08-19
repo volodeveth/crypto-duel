@@ -155,6 +155,19 @@ export default function FarcasterInit() {
             addLog(`👤 User FID: ${context.user.fid || 'N/A'}`);
             addLog(`👤 User username: ${context.user.username || 'N/A'}`);
             
+            // Store user data in localStorage for wallet connection
+            if (context.user.fid && context.user.username) {
+              try {
+                localStorage.setItem('farcaster_user_data', JSON.stringify({
+                  fid: context.user.fid,
+                  username: context.user.username
+                }));
+                addLog(`💾 Stored Farcaster user data: @${context.user.username}`);
+              } catch (error) {
+                addLog(`❌ Failed to store user data: ${error.message}`, 'error');
+              }
+            }
+            
             // Subscribe user to notifications if we have wallet address
             if (context.user.fid && typeof window !== 'undefined') {
               addLog('🔔 Attempting to subscribe user to notifications...');

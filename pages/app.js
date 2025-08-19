@@ -343,6 +343,7 @@ export default function GameHubApp() {
       console.log('🔄 Step 6: Getting Farcaster user context...');
       let farcasterUser = null;
       try {
+        // Try to get from SDK context first
         if (sdk.context) {
           let context;
           if (typeof sdk.context === 'function') {
@@ -353,10 +354,24 @@ export default function GameHubApp() {
           
           if (context && context.user && context.user.username) {
             farcasterUser = context.user.username;
-            console.log(`✅ Farcaster username obtained: @${farcasterUser}`);
-          } else {
-            console.log('ℹ️ No Farcaster username available in context');
+            console.log(`✅ Farcaster username obtained from SDK: @${farcasterUser}`);
           }
+        }
+        
+        // If SDK context doesn't work, try localStorage (set by FarcasterInit)
+        if (!farcasterUser && typeof window !== 'undefined') {
+          const storedFarcasterData = localStorage.getItem('farcaster_user_data');
+          if (storedFarcasterData) {
+            const userData = JSON.parse(storedFarcasterData);
+            if (userData.username) {
+              farcasterUser = userData.username;
+              console.log(`✅ Farcaster username obtained from localStorage: @${farcasterUser}`);
+            }
+          }
+        }
+        
+        if (!farcasterUser) {
+          console.log('ℹ️ No Farcaster username available from SDK or localStorage');
         }
       } catch (error) {
         console.warn('⚠️ Could not get Farcaster context:', error.message);
@@ -822,9 +837,10 @@ export default function GameHubApp() {
       mostPopularBet: 'None'
     });
     
-    // Clear any pending waiting bets from localStorage
+    // Clear any pending waiting bets and Farcaster data from localStorage
     localStorage.removeItem('cd_currentWaiting');
-    console.log('🧹 Cleared pending waiting bet on disconnect');
+    localStorage.removeItem('farcaster_user_data');
+    console.log('🧹 Cleared pending waiting bet and Farcaster data on disconnect');
   }
 
   return (
