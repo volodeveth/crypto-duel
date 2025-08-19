@@ -41,6 +41,15 @@ export default function GameHubApp() {
   const [lastResult, setLastResult] = useState(null);
   const [manuallyDisconnected, setManuallyDisconnected] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminAnalytics, setAdminAnalytics] = useState({
+    totalGames: 0,
+    totalVolume: '0',
+    totalCommissions: '0',
+    gamesByBet: {},
+    gamesByMode: { duels: 0, br5: 0, br100: 0, br1000: 0 },
+    averageBet: '0',
+    mostPopularBet: 'None'
+  });
 
   const betAmounts = [
     { value: '10000000000000', label: '0.00001 ETH', eth: 0.00001 },
@@ -157,8 +166,150 @@ export default function GameHubApp() {
     if (!contract || !userAddress) return;
     try {
       const owner = await contract.owner();
-      setIsAdmin(userAddress.toLowerCase() === owner.toLowerCase());
+      const isOwner = userAddress.toLowerCase() === owner.toLowerCase();
+      setIsAdmin(isOwner);
+      if (isOwner) {
+        console.log('🔥 User is admin! Loading admin analytics...');
+        await loadAdminAnalytics();
+      }
     } catch {}
+  }
+
+  async function loadAdminAnalytics() {
+    if (!contract) return;
+    
+    try {
+      const totalDuels = await contract.totalDuels();
+      const totalBattleRoyales = await contract.totalBattleRoyales();
+      
+      const analytics = {
+        totalGames: Number(totalDuels) + Number(totalBattleRoyales),
+        totalVolume: 0n, // BigInt
+        totalCommissions: 0n, // BigInt
+        gamesByBet: {},
+        gamesByMode: {
+          duels: 0,
+          br5: 0,
+          br100: 0,
+          br1000: 0
+        },
+        completedGamesCount: 0
+      };
+
+      betAmounts.forEach(bet => {
+        analytics.gamesByBet[bet.value] = { count: 0, volume: 0n, label: bet.label }; // BigInt
+      });
+
+      // Load Duels
+      const maxDuels = Math.min(Number(totalDuels), 1000);
+      
+      for (let i = 1; i <= maxDuels; i++) {
+        try {
+          const duel = await contract.getDuel(i);
+          
+          // Skip if duel doesn't exist (empty data)
+          if (!duel.player1 || duel.player1 === '0x0000000000000000000000000000000000000000') {
+            continue;
+          }
+          
+          if (duel.completed) {
+            const betAmount = duel.betAmount.toString();
+            const totalPool = duel.betAmount * 2n; // BigInt арифметика
+            const commission = (totalPool * 10n) / 100n; // 10% комісії в BigInt
+
+            analytics.totalVolume += totalPool;
+            analytics.totalCommissions += commission;
+            analytics.completedGamesCount++;
+            analytics.gamesByMode.duels++;
+
+            if (analytics.gamesByBet[betAmount]) {
+              analytics.gamesByBet[betAmount].count++;
+              analytics.gamesByBet[betAmount].volume += totalPool;
+            }
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+
+      // Load Battle Royales
+      const maxBattleRoyales = Math.min(Number(totalBattleRoyales), 1000);
+      
+      for (let i = 1; i <= maxBattleRoyales; i++) {
+        try {
+          const battleRoyale = await contract.getBattleRoyale(i);
+          
+          // Skip if battle royale doesn't exist
+          if (!battleRoyale.id || Number(battleRoyale.id) === 0) {
+            continue;
+          }
+          
+          if (battleRoyale.completed) {
+            const betAmount = battleRoyale.betAmount.toString();
+            const totalPool = battleRoyale.betAmount * BigInt(battleRoyale.players.length);
+            const commission = (totalPool * 10n) / 100n; // 10% комісії в BigInt
+
+            analytics.totalVolume += totalPool;
+            analytics.totalCommissions += commission;
+            analytics.completedGamesCount++;
+
+            // Count by mode: 1=BR5, 2=BR100, 3=BR1000
+            if (Number(battleRoyale.mode) === 1) analytics.gamesByMode.br5++;
+            else if (Number(battleRoyale.mode) === 2) analytics.gamesByMode.br100++;
+            else if (Number(battleRoyale.mode) === 3) analytics.gamesByMode.br1000++;
+
+            if (analytics.gamesByBet[betAmount]) {
+              analytics.gamesByBet[betAmount].count++;
+              analytics.gamesByBet[betAmount].volume += totalPool;
+            }
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+
+      // Конвертуємо BigInt в рядки для ethers.formatEther
+      const gamesByBetFormatted = {};
+      Object.keys(analytics.gamesByBet).forEach(key => {
+        gamesByBetFormatted[key] = {
+          ...analytics.gamesByBet[key],
+          volume: analytics.gamesByBet[key].volume.toString() // BigInt to string
+        };
+      });
+
+      setAdminAnalytics({
+        totalGames: analytics.totalGames,
+        totalVolume: ethers.formatEther(analytics.totalVolume.toString()),
+        totalCommissions: ethers.formatEther(analytics.totalCommissions.toString()),
+        gamesByBet: gamesByBetFormatted,
+        gamesByMode: analytics.gamesByMode,
+        averageBet: analytics.completedGamesCount > 0
+          ? ethers.formatEther((analytics.totalVolume / BigInt(analytics.completedGamesCount)).toString())
+          : '0',
+        mostPopularBet: Object.values(analytics.gamesByBet).reduce((acc, v) => v.count > (acc.count || 0) ? v : acc, {}).label || 'None'
+      });
+      
+    } catch (error) {
+      console.error('❌ Failed to load admin analytics:', error);
+      
+      // Set default analytics even if loading fails
+      const defaultAnalytics = {
+        totalGames: 0,
+        totalVolume: '0',
+        totalCommissions: '0',
+        gamesByBet: {},
+        gamesByMode: { duels: 0, br5: 0, br100: 0, br1000: 0 },
+        averageBet: '0',
+        mostPopularBet: 'None'
+      };
+      
+      betAmounts.forEach(bet => {
+        defaultAnalytics.gamesByBet[bet.value] = { count: 0, volume: 0, label: bet.label };
+      });
+      
+      setAdminAnalytics(defaultAnalytics);
+      console.log('📊 Set default admin analytics due to error');
+    }
   }
 
   function selectBet(betValue, betEth) {
@@ -217,6 +368,15 @@ export default function GameHubApp() {
     setWaitingCount({});
     setLastResult(null);
     setIsAdmin(false);
+    setAdminAnalytics({
+      totalGames: 0,
+      totalVolume: '0',
+      totalCommissions: '0',
+      gamesByBet: {},
+      gamesByMode: { duels: 0, br5: 0, br100: 0, br1000: 0 },
+      averageBet: '0',
+      mostPopularBet: 'None'
+    });
   }
 
   return (
@@ -492,6 +652,78 @@ export default function GameHubApp() {
                 <button onClick={() => setGameState('selecting')} className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg font-semibold transition-colors">
                   ❌ Cancel & Back
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* Admin Analytics Panel */}
+          {isAdmin && (
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 mb-6 border border-purple-400/30 shadow-xl">
+              <div className="flex items-center gap-2 mb-4">
+                <Crown size={20} className="text-yellow-400" />
+                <h3 className="text-lg font-semibold text-purple-200">Admin Analytics</h3>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="bg-black/30 rounded-xl p-3 border border-white/10">
+                  <div className="text-sm text-gray-300">Total Games</div>
+                  <div className="text-2xl font-bold text-blue-400">{adminAnalytics.totalGames}</div>
+                </div>
+                <div className="bg-black/30 rounded-xl p-3 border border-white/10">
+                  <div className="text-sm text-gray-300">Total Volume</div>
+                  <div className="text-2xl font-bold text-green-400">
+                    <EthWithUsd amount={adminAnalytics.totalVolume} decimals={4} />
+                  </div>
+                </div>
+                <div className="bg-black/30 rounded-xl p-3 border border-white/10">
+                  <div className="text-sm text-gray-300">Total Commissions</div>
+                  <div className="text-2xl font-bold text-yellow-400">
+                    <EthWithUsd amount={adminAnalytics.totalCommissions} decimals={4} />
+                  </div>
+                </div>
+                <div className="bg-black/30 rounded-xl p-3 border border-white/10">
+                  <div className="text-sm text-gray-300">Popular Bet</div>
+                  <div className="text-lg font-bold text-purple-400">{adminAnalytics.mostPopularBet}</div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-purple-200 mb-2">Games by Mode:</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-black/20 rounded-lg p-2 border border-white/10">
+                    <div className="text-xs text-gray-400">🎯 Duels</div>
+                    <div className="text-lg font-bold text-green-400">{adminAnalytics.gamesByMode.duels}</div>
+                  </div>
+                  <div className="bg-black/20 rounded-lg p-2 border border-white/10">
+                    <div className="text-xs text-gray-400">⚔️ BR5</div>
+                    <div className="text-lg font-bold text-purple-400">{adminAnalytics.gamesByMode.br5}</div>
+                  </div>
+                  <div className="bg-black/20 rounded-lg p-2 border border-white/10">
+                    <div className="text-xs text-gray-400">🔥 BR100</div>
+                    <div className="text-lg font-bold text-orange-400">{adminAnalytics.gamesByMode.br100}</div>
+                  </div>
+                  <div className="bg-black/20 rounded-lg p-2 border border-white/10">
+                    <div className="text-xs text-gray-400">💥 BR1000</div>
+                    <div className="text-lg font-bold text-red-400">{adminAnalytics.gamesByMode.br1000}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-semibold text-purple-200 mb-2">Games by Bet Amount:</h4>
+                <div className="space-y-2">
+                  {Object.entries(adminAnalytics.gamesByBet).map(([betValue, data]) => (
+                    <div key={betValue} className="flex justify-between items-center bg-black/20 rounded-lg p-2 border border-white/10">
+                      <div className="text-sm text-gray-300">{data.label}</div>
+                      <div className="text-right">
+                        <div className="text-sm font-semibold text-white">{data.count} games</div>
+                        <div className="text-xs text-gray-400">
+                          <EthWithUsd amount={ethers.formatEther(data.volume.toString())} decimals={4} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
