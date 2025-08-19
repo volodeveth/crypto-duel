@@ -1078,12 +1078,12 @@ export default function GameHubApp() {
                   onClick={() => {
                     localStorage.removeItem('cd_currentWaiting');
                     setGameState('selecting');
-                    console.log('🔄 Refresh Status: localStorage cleared, returning to selecting');
+                    console.log('🔄 Refresh & Back to Menu: localStorage cleared, returning to selecting');
                   }}
                   className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                   title="Refresh if stuck in waiting - no blockchain transaction needed"
                 >
-                  🔄 Refresh Status
+                  🔄 Refresh & Back to Menu
                 </button>
               </div>
             </div>
