@@ -8,7 +8,9 @@ import { Trophy, Crown, Medal, Swords, ArrowLeft, Users } from 'lucide-react';
 const CONTRACT_ABI = [
   "function getPlayerStats(address player) external view returns (uint256 totalGames, uint256 wins, uint256 totalWinnings)",
   "function getDuel(uint256 duelId) external view returns (tuple(uint256 id, address player1, address player2, uint256 betAmount, uint256 timestamp, address winner, bool completed, uint256 randomSeed))",
+  "function getBattleRoyale(uint256 battleId) external view returns (tuple(uint256 id, uint8 mode, address[] players, uint256 betAmount, uint256 startTime, address winner, bool completed, uint256 randomSeed, uint256 requiredPlayers))",
   "function totalDuels() external view returns (uint256)",
+  "function totalBattleRoyales() external view returns (uint256)",
   "function nextDuelId() external view returns (uint256)" // Public variable as function
 ];
 
@@ -64,6 +66,32 @@ export default function Leaderboard() {
           if (duel.player2 && duel.player2 !== '0x0000000000000000000000000000000000000000') {
             if (!playersMap.has(duel.player2)) {
               playersMap.set(duel.player2, true);
+            }
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+
+      // Load Battle Royale participants
+      const totalBattleRoyales = await contract.totalBattleRoyales();
+      const maxBattleRoyales = Math.min(Number(totalBattleRoyales), 2000);
+
+      for (let i = 1; i <= maxBattleRoyales; i++) {
+        try {
+          const battleRoyale = await contract.getBattleRoyale(i);
+          
+          // Skip if battle royale doesn't exist
+          if (!battleRoyale.id || Number(battleRoyale.id) === 0) {
+            continue;
+          }
+          
+          // Add all players from this Battle Royale to our map
+          for (const player of battleRoyale.players) {
+            if (player && player !== '0x0000000000000000000000000000000000000000') {
+              if (!playersMap.has(player)) {
+                playersMap.set(player, true);
+              }
             }
           }
         } catch (error) {
