@@ -382,7 +382,7 @@ export default function GameHubApp() {
   return (
     <>
       <Head>
-        <title>Crypto Duel - Battle Royale Game</title>
+        <title>Crypto Duel - Play & Win ETH | Duels & Battle Royale</title>
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/icon.png" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
