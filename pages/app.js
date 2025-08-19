@@ -85,15 +85,88 @@ export default function GameHubApp() {
         localStorage.setItem('cd_contract_version', CONTRACT_ADDRESS);
       }
     } catch {}
+    
+    // Check for pending waiting bet
+    checkForPendingBet();
   }, []);
+  
+  async function checkForPendingBet() {
+    try {
+      const raw = localStorage.getItem('cd_currentWaiting');
+      if (raw) {
+        const pendingBet = JSON.parse(raw);
+        console.log('🔍 Found pending bet:', pendingBet);
+        
+        // Only show if it's for the current contract and recent (within 1 hour)
+        const oneHourAgo = Date.now() - (60 * 60 * 1000);
+        if (pendingBet.contractAddress === CONTRACT_ADDRESS && pendingBet.timestamp > oneHourAgo) {
+          console.log('✅ Restoring waiting state for pending bet');
+          
+          // Restore the bet selection
+          setSelectedMode(pendingBet.mode);
+          const matchingBet = betAmounts.find(bet => bet.value === pendingBet.betAmount);
+          if (matchingBet) {
+            setSelectedBet(matchingBet);
+          }
+          
+          setGameState('waiting');
+          console.log(`⏳ Restored waiting state for tx: ${pendingBet.txHash}`);
+        } else {
+          console.log('⚠️ Pending bet expired or for different contract, clearing...');
+          localStorage.removeItem('cd_currentWaiting');
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to check for pending bet:', error);
+      localStorage.removeItem('cd_currentWaiting');
+    }
+  }
 
   useEffect(() => {
     if (contract && userAddress) {
       updateWaitingCounts();
       loadUserStats();
       checkAdminStatus();
+      
+      // Start checking for game results if in waiting state
+      if (gameState === 'waiting') {
+        checkGameResult();
+      }
     }
-  }, [contract, userAddress]);
+  }, [contract, userAddress, gameState]);
+  
+  async function checkGameResult() {
+    try {
+      const pendingBet = localStorage.getItem('cd_currentWaiting');
+      if (!pendingBet) return;
+      
+      console.log('🔍 Checking if game started or completed...');
+      
+      // Check every 5 seconds for game result
+      const intervalId = setInterval(async () => {
+        try {
+          // Get current waiting counts to see if we're still waiting
+          await updateWaitingCounts();
+          
+          // If we're no longer in waiting state due to external actions, clear the interval
+          if (gameState !== 'waiting') {
+            clearInterval(intervalId);
+            return;
+          }
+        } catch (error) {
+          console.warn('Error checking game result:', error);
+        }
+      }, 5000);
+      
+      // Clear interval after 10 minutes (game should start or we should cancel)
+      setTimeout(() => {
+        clearInterval(intervalId);
+      }, 10 * 60 * 1000);
+      
+    } catch (error) {
+      console.error('Error setting up game result check:', error);
+    }
+  }
 
   async function connectFarcasterWallet() {
     console.log('🎯 === FARCASTER WALLET CONNECTION DEBUG START ===');
@@ -597,6 +670,39 @@ export default function GameHubApp() {
     return modeInfo ? modeInfo.players : 2;
   }
 
+  async function cancelWaitingBet() {
+    if (!contract) return;
+    
+    try {
+      console.log('🔄 Cancelling waiting bet...');
+      
+      // Manual gas limit for Farcaster Wallet compatibility
+      const gasLimit = 200000; // Safe gas limit for cancelWaiting
+      console.log(`⛽ Using manual gas limit: ${gasLimit}`);
+      
+      const tx = await contract.cancelWaiting({ gasLimit: gasLimit });
+      
+      console.log('🔄 Cancel transaction submitted:', tx.hash);
+      
+      // Clear localStorage immediately
+      localStorage.removeItem('cd_currentWaiting');
+      
+      // Reset to selecting state
+      setGameState('selecting');
+      
+      // Wait for transaction to complete
+      await tx.wait();
+      console.log('✅ Cancel confirmed!');
+      
+      // Update waiting counts
+      updateWaitingCounts();
+      
+    } catch (error) {
+      console.error('❌ Cancel failed:', error);
+      alert('Cancel failed: ' + error.message);
+    }
+  }
+
   function disconnectWallet() {
     setManuallyDisconnected(true);
     setProvider(null);
@@ -889,8 +995,8 @@ export default function GameHubApp() {
                 <Link href="/user" className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold transition-colors">
                   👤 Go to My Games
                 </Link>
-                <button onClick={() => setGameState('selecting')} className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg font-semibold transition-colors">
-                  ❌ Cancel & Back
+                <button onClick={cancelWaitingBet} className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg font-semibold transition-colors">
+                  ❌ Cancel Waiting
                 </button>
               </div>
             </div>
