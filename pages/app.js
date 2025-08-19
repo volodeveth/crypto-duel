@@ -370,6 +370,23 @@ export default function GameHubApp() {
           }
         }
         
+        // If still no username, try to get it from Farcaster API by wallet address
+        if (!farcasterUser) {
+          try {
+            console.log('🔍 Trying to get username from Farcaster API by wallet address...');
+            const farcasterApiResponse = await fetch(`/api/get-farcaster-username?address=${address}`);
+            if (farcasterApiResponse.ok) {
+              const data = await farcasterApiResponse.json();
+              if (data.username) {
+                farcasterUser = data.username;
+                console.log(`✅ Farcaster username obtained from API: @${farcasterUser}`);
+              }
+            }
+          } catch (error) {
+            console.warn('⚠️ Could not get username from API:', error.message);
+          }
+        }
+        
         if (!farcasterUser) {
           console.log('ℹ️ No Farcaster username available from SDK or localStorage');
         }
