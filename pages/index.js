@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { Swords, Play, AlertTriangle } from 'lucide-react';
+import { Swords, Users, Crown, AlertTriangle } from 'lucide-react';
 import FarcasterInit from '../components/FarcasterInit';
 
 export default function Home() {
@@ -74,30 +74,32 @@ export default function Home() {
               </p>
             </div>
             
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 max-w-lg mx-auto border border-white/20 shadow-2xl">
-              <h2 className="text-2xl font-semibold mb-6 text-cyan-300">Game Modes</h2>
-              <ul className="text-left space-y-3 text-gray-200">
-                <li className="flex items-center">
-                  <span className="text-green-400 mr-3">🎯</span>
-                  <strong>Duels (1v1):</strong> 1.8x multiplier, instant matches
-                </li>
-                <li className="flex items-center">
-                  <span className="text-purple-400 mr-3">⚔️</span>
-                  <strong>Battle Royale 5:</strong> 4.5x multiplier, 5 players
-                </li>
-                <li className="flex items-center">
-                  <span className="text-orange-400 mr-3">🔥</span>
-                  <strong>Battle Royale 100:</strong> 90x multiplier, 100 players
-                </li>
-                <li className="flex items-center">
-                  <span className="text-red-400 mr-3">💥</span>
-                  <strong>Battle Royale 1000:</strong> 900x multiplier, 1000 players
-                </li>
-              </ul>
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 max-w-lg mx-auto border border-white/20 shadow-2xl">
+              <h2 className="text-xl font-semibold mb-4 text-cyan-300 text-center">Game Modes</h2>
               
-              <div className="mt-6 p-4 bg-cyan-400/10 rounded-xl border border-cyan-400/20">
-                <p className="text-sm text-cyan-200">
-                  <strong>Fair & Transparent:</strong> Powered by blockchain randomness. All players have equal winning chances!
+              {/* Game modes in 2x2 grid */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-black/20 rounded-xl p-3 border border-white/10 text-center">
+                  <Swords size={24} className="text-green-400 mx-auto mb-2" />
+                  <div className="text-sm font-semibold text-white">Duels (1v1)</div>
+                </div>
+                <div className="bg-black/20 rounded-xl p-3 border border-white/10 text-center">
+                  <Users size={24} className="text-purple-400 mx-auto mb-2" />
+                  <div className="text-sm font-semibold text-white">Battle Royale 5</div>
+                </div>
+                <div className="bg-black/20 rounded-xl p-3 border border-white/10 text-center">
+                  <Crown size={24} className="text-orange-400 mx-auto mb-2" />
+                  <div className="text-sm font-semibold text-white">Battle Royale 100</div>
+                </div>
+                <div className="bg-black/20 rounded-xl p-3 border border-white/10 text-center">
+                  <Crown size={24} className="text-red-400 mx-auto mb-2" />
+                  <div className="text-sm font-semibold text-white">Battle Royale 1000</div>
+                </div>
+              </div>
+              
+              <div className="p-3 bg-cyan-400/10 rounded-xl border border-cyan-400/20">
+                <p className="text-xs text-cyan-200 text-center">
+                  <strong>Fair & Transparent:</strong> Blockchain randomness, equal winning chances!
                 </p>
               </div>
               
@@ -142,8 +144,8 @@ export default function Home() {
                   }`}
                   onClick={termsAccepted ? undefined : (e) => e.preventDefault()}
                 >
-                  <Play size={24} className="mr-2" />
-                  Start Playing Now
+                  <Swords size={24} className="mr-2" />
+                  Explore
                 </a>
                 
                 {!termsAccepted && (
