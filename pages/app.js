@@ -33,6 +33,7 @@ export default function GameHubApp() {
   const [provider, setProvider] = useState(null);
   const [contract, setContract] = useState(null);
   const [userAddress, setUserAddress] = useState(null);
+  const [farcasterUsername, setFarcasterUsername] = useState(null);
   const [gameState, setGameState] = useState('loading'); // loading, disconnected, selecting, confirming, waiting, result
   const [waitingCount, setWaitingCount] = useState({});
   const [selectedMode, setSelectedMode] = useState(0); // 0=Duel, 1=BR5, 2=BR100, 3=BR1000
@@ -339,11 +340,34 @@ export default function GameHubApp() {
       const contractInstance = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
       console.log('✅ Contract instance created');
 
-      console.log('🔄 Step 6: Setting state...');
+      console.log('🔄 Step 6: Getting Farcaster user context...');
+      let farcasterUser = null;
+      try {
+        if (sdk.context) {
+          let context;
+          if (typeof sdk.context === 'function') {
+            context = sdk.context();
+          } else if (typeof sdk.context === 'object') {
+            context = sdk.context;
+          }
+          
+          if (context && context.user && context.user.username) {
+            farcasterUser = context.user.username;
+            console.log(`✅ Farcaster username obtained: @${farcasterUser}`);
+          } else {
+            console.log('ℹ️ No Farcaster username available in context');
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ Could not get Farcaster context:', error.message);
+      }
+
+      console.log('🔄 Step 7: Setting state...');
       setManuallyDisconnected(false);
       setProvider(walletProvider);
       setContract(contractInstance);
       setUserAddress(address);
+      setFarcasterUsername(farcasterUser);
       setGameState('selecting');
       
       console.log('✅ === FARCASTER WALLET CONNECTION SUCCESS ===');
@@ -374,6 +398,7 @@ export default function GameHubApp() {
     setProvider(walletProvider);
     setContract(contractInstance);
     setUserAddress(address);
+    setFarcasterUsername(null); // Clear Farcaster username for external wallet
     setGameState('selecting');
   }
 
@@ -780,6 +805,7 @@ export default function GameHubApp() {
     setProvider(null);
     setContract(null);
     setUserAddress(null);
+    setFarcasterUsername(null);
     setUser(null);
     setGameState('disconnected');
     setUserStats({ totalGames: 0, wins: 0, totalWinnings: 0 });
@@ -852,7 +878,10 @@ export default function GameHubApp() {
             {userAddress && (
               <div className="mt-3 bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
                 <p className="text-xs text-gray-400 mb-1">Connected Wallet:</p>
-                <p className="text-sm font-mono text-green-400 break-all mb-2">{userAddress}</p>
+                <p className="text-sm font-mono text-green-400 break-all mb-2">
+                  {userAddress}
+                  {farcasterUsername && <span className="text-purple-300 ml-1">(@{farcasterUsername})</span>}
+                </p>
                 <div className="flex justify-center">
                   <button
                     onClick={disconnectWallet}
