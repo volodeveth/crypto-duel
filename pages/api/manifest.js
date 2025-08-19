@@ -13,26 +13,22 @@ export default function handler(req, res) {
     name: "Crypto Duel",
     iconUrl: `${baseUrl}/icon.png`,
     homeUrl: `${baseUrl}`,
-    imageUrl: `${baseUrl}/icon.png`,
-    buttonTitle: "🎮 Duel Now",
+    imageUrl: `${baseUrl}/image.png`,
+    buttonTitle: "Start Dueling",
     splashImageUrl: `${baseUrl}/splash.png`,
-    splashBackgroundColor: "#8B5CF6",
-    description: "ETH gaming platform with 4 modes: Duels (1v1), Battle Royale 5/100/1000 players. Fair blockchain randomness!",
+    splashBackgroundColor: "#4338CA",
+    description: "Enter the ultimate crypto arena! Compete in 1v1 duels or massive Battle Royale tournaments with real ETH stakes.",
     webhookUrl: `${baseUrl}/api/farcaster-webhook`,
-    subtitle: "ETH dueling game",
+    subtitle: "Blockchain dueling & battle royale game",
     screenshotUrls: [
-      `${baseUrl}/screenshot1.jpg`,
-      `${baseUrl}/screenshot2.jpg`,
-      `${baseUrl}/screenshot3.jpg`
+      `${baseUrl}/screenshot1.jpg`
     ],
     primaryCategory: "games",
-    tags: ["crypto", "game", "duel", "battle-royale", "eth", "blockchain", "gaming"],
+    tags: ["crypto", "gaming", "gambling", "eth", "base"],
     heroImageUrl: `${baseUrl}/hero.png`,
-    tagline: "4 game modes, fair blockchain randomness!",
-    ogTitle: "Crypto Duel - Battle Royale ETH Gaming",
-    ogDescription: "ETH gaming platform with Duels (1v1) and Battle Royale (5/100/1000 players). Fair blockchain randomness!",
-    ogImageUrl: `${baseUrl}/image.png`,
-    castShareUrl: "https://warpcast.com/~/compose?text=Check+out+Crypto+Duel+🎮+4+game+modes%3A+Duels+%26+Battle+Royale!+Win+ETH+with+fair+blockchain+randomness!&embeds[]=https://cryptoduel.xyz",
+    tagline: "Duel. Win. Rise to the Top.",
+    ogTitle: "Crypto Duel – Onchain Arena",
+    ogDescription: "Challenge players in crypto duels or join massive Battle Royales! Real ETH stakes, fair blockchain results, up to 900x multipliers.",
     // Keep nested structure for compatibility
     miniapp: {
       version: "1",
@@ -40,11 +36,11 @@ export default function handler(req, res) {
       iconUrl: `${baseUrl}/icon.png`,
       homeUrl: `${baseUrl}`,
       imageUrl: `${baseUrl}/image.png`,
-      buttonTitle: "🎮 Duel Now",
+      buttonTitle: "Start Dueling",
       splashImageUrl: `${baseUrl}/splash.png`,
-      splashBackgroundColor: "#8B5CF6",
-      description: "ETH gaming platform with 4 modes: Duels (1v1), Battle Royale 5/100/1000 players. Fair blockchain randomness!",
-      subtitle: "ETH dueling game"
+      splashBackgroundColor: "#4338CA",
+      description: "Enter the ultimate crypto arena! Compete in 1v1 duels or massive Battle Royale tournaments with real ETH stakes.",
+      subtitle: "Blockchain dueling & battle royale game"
     },
     // Keep frame for backward compatibility
     frame: {
@@ -53,9 +49,21 @@ export default function handler(req, res) {
       iconUrl: `${baseUrl}/icon.png`,
       homeUrl: `${baseUrl}`,
       imageUrl: `${baseUrl}/image.png`,
-      buttonTitle: "🎮 Duel Now",
+      buttonTitle: "Start Dueling",
       splashImageUrl: `${baseUrl}/splash.png`,
-      splashBackgroundColor: "#8B5CF6"
+      splashBackgroundColor: "#4338CA",
+      description: "Enter the ultimate crypto arena! Compete in 1v1 duels or massive Battle Royale tournaments with real ETH stakes.",
+      subtitle: "Blockchain dueling & battle royale game",
+      webhookUrl: `${baseUrl}/api/farcaster-webhook`,
+      screenshotUrls: [
+        `${baseUrl}/screenshot1.jpg`
+      ],
+      primaryCategory: "games",
+      tags: ["crypto", "gaming", "gambling", "eth", "base"],
+      heroImageUrl: `${baseUrl}/hero.png`,
+      tagline: "Duel. Win. Rise to the Top.",
+      ogTitle: "Crypto Duel – Onchain Arena",
+      ogDescription: "Challenge players in crypto duels or join massive Battle Royales! Real ETH stakes, fair blockchain results, up to 900x multipliers."
     }
   };
 
