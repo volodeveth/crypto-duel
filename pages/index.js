@@ -62,54 +62,54 @@ export default function Home() {
       <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-blue-900 to-purple-900 text-white">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
-            <div className="mb-8">
-              <div className="mb-4">
-                <img src="/icon.png" alt="Crypto Duel" className="w-24 h-24 mx-auto" />
+            <div className="mb-6">
+              <div className="mb-3">
+                <img src="/icon.png" alt="Crypto Duel" className="w-16 h-16 mx-auto" />
               </div>
-              <h1 className="text-5xl font-extrabold mb-4 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent tracking-wide leading-tight pb-2">
+              <h1 className="text-3xl font-extrabold mb-2 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent tracking-wide leading-tight pb-1">
                 Crypto Duel
               </h1>
-              <p className="text-xl mb-8 text-gray-300">
-                4 game modes: Duels & Battle Royales with fair blockchain randomness
+              <p className="text-sm mb-4 text-gray-300">
+                4 game modes with fair blockchain randomness
               </p>
             </div>
             
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 max-w-lg mx-auto border border-white/20 shadow-2xl">
-              <h2 className="text-xl font-semibold mb-4 text-cyan-300 text-center">Game Modes</h2>
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 max-w-lg mx-auto border border-white/20 shadow-2xl">
+              <h2 className="text-lg font-semibold mb-3 text-cyan-300 text-center">Game Modes</h2>
               
               {/* Game modes in 2x2 grid */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-black/20 rounded-xl p-3 border border-white/10 text-center">
-                  <Swords size={24} className="text-green-400 mx-auto mb-2" />
-                  <div className="text-sm font-semibold text-white">Duels (1v1)</div>
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="bg-black/20 rounded-xl p-2 border border-white/10 text-center">
+                  <Swords size={18} className="text-green-400 mx-auto mb-1" />
+                  <div className="text-xs font-semibold text-white">Duels (1v1)</div>
                 </div>
-                <div className="bg-black/20 rounded-xl p-3 border border-white/10 text-center">
-                  <Users size={24} className="text-purple-400 mx-auto mb-2" />
-                  <div className="text-sm font-semibold text-white">Battle Royale 5</div>
+                <div className="bg-black/20 rounded-xl p-2 border border-white/10 text-center">
+                  <Users size={18} className="text-purple-400 mx-auto mb-1" />
+                  <div className="text-xs font-semibold text-white">Battle Royale 5</div>
                 </div>
-                <div className="bg-black/20 rounded-xl p-3 border border-white/10 text-center">
-                  <Crown size={24} className="text-orange-400 mx-auto mb-2" />
-                  <div className="text-sm font-semibold text-white">Battle Royale 100</div>
+                <div className="bg-black/20 rounded-xl p-2 border border-white/10 text-center">
+                  <Crown size={18} className="text-orange-400 mx-auto mb-1" />
+                  <div className="text-xs font-semibold text-white">Battle Royale 100</div>
                 </div>
-                <div className="bg-black/20 rounded-xl p-3 border border-white/10 text-center">
-                  <Crown size={24} className="text-red-400 mx-auto mb-2" />
-                  <div className="text-sm font-semibold text-white">Battle Royale 1000</div>
+                <div className="bg-black/20 rounded-xl p-2 border border-white/10 text-center">
+                  <Crown size={18} className="text-red-400 mx-auto mb-1" />
+                  <div className="text-xs font-semibold text-white">Battle Royale 1000</div>
                 </div>
               </div>
               
-              <div className="p-3 bg-cyan-400/10 rounded-xl border border-cyan-400/20">
+              <div className="p-2 bg-cyan-400/10 rounded-xl border border-cyan-400/20">
                 <p className="text-xs text-cyan-200 text-center">
-                  <strong>Fair & Transparent:</strong> Blockchain randomness, equal winning chances!
+                  <strong>Fair & Transparent:</strong> Blockchain randomness!
                 </p>
               </div>
               
               {/* Terms & Conditions Checkbox */}
-              <div className="mt-6 p-4 bg-red-500/10 backdrop-blur-sm rounded-xl border border-red-500/30">
-                <div className="flex items-start gap-3 mb-4">
-                  <AlertTriangle size={20} className="text-red-400 mt-1 flex-shrink-0" />
+              <div className="mt-4 p-3 bg-red-500/10 backdrop-blur-sm rounded-xl border border-red-500/30">
+                <div className="flex items-start gap-2 mb-3">
+                  <AlertTriangle size={16} className="text-red-400 mt-1 flex-shrink-0" />
                   <div className="text-left">
-                    <p className="text-sm text-red-200 mb-2">
-                      <strong>Legal Requirement:</strong> You must acknowledge the risks and terms before playing.
+                    <p className="text-xs text-red-200 mb-2">
+                      <strong>Legal Requirement:</strong> You must acknowledge risks before playing.
                     </p>
                     <label className="flex items-start gap-3 cursor-pointer">
                       <input
@@ -134,17 +134,17 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="mt-6">
+              <div className="mt-4">
                 <a 
                   href="/app"
-                  className={`inline-flex items-center justify-center w-full font-bold py-4 px-8 rounded-2xl text-center text-lg transition-all duration-300 shadow-lg ${
+                  className={`inline-flex items-center justify-center w-full font-bold py-3 px-6 rounded-2xl text-center text-base transition-all duration-300 shadow-lg ${
                     termsAccepted 
                       ? 'bg-gradient-to-r from-green-400 to-cyan-500 hover:from-green-500 hover:to-cyan-600 text-white transform hover:scale-105 hover:shadow-xl' 
                       : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
                   }`}
                   onClick={termsAccepted ? undefined : (e) => e.preventDefault()}
                 >
-                  <Swords size={24} className="mr-2" />
+                  <Swords size={20} className="mr-2" />
                   Explore
                 </a>
                 
