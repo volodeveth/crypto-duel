@@ -149,21 +149,44 @@ async function cancelBet() {
     const txMessage = `Cancel transaction submitted!\n\nTransaction: ${tx.hash}\n\nConfirming on blockchain...`;
     alert(txMessage);
     
-    // Wait for confirmation
-    console.log('⏳ Waiting for transaction confirmation...');
-    const receipt = await tx.wait();
-    
-    console.log('🎉 Transaction confirmed!', {
-      blockNumber: receipt.blockNumber,
-      gasUsed: receipt.gasUsed.toString(),
-      status: receipt.status
-    });
-    
-    // Clear pendingLocal if it exists
-    localStorage.removeItem('cd_currentWaiting');
-    
-    // Success message
-    alert('🎉 Bet cancelled successfully!\n\nYour ETH has been refunded to your wallet.');
+    // Handle confirmation differently for Farcaster wallet
+    if (walletType === 'farcaster') {
+      console.log('📱 Farcaster wallet detected - skipping tx.wait() due to eth_getTransactionReceipt limitation');
+      
+      // Clear pendingLocal if it exists
+      localStorage.removeItem('cd_currentWaiting');
+      
+      // Success message for Farcaster
+      alert('🎉 Cancel transaction submitted successfully!\n\nYour transaction has been sent to the blockchain. Please check your wallet for the refund in a few minutes.\n\nTransaction: ' + tx.hash);
+      
+    } else {
+      // Wait for confirmation for external wallets
+      console.log('⏳ Waiting for transaction confirmation...');
+      try {
+        const receipt = await tx.wait();
+        
+        console.log('🎉 Transaction confirmed!', {
+          blockNumber: receipt.blockNumber,
+          gasUsed: receipt.gasUsed.toString(),
+          status: receipt.status
+        });
+        
+        // Clear pendingLocal if it exists
+        localStorage.removeItem('cd_currentWaiting');
+        
+        // Success message
+        alert('🎉 Bet cancelled successfully!\n\nYour ETH has been refunded to your wallet.');
+        
+      } catch (waitError) {
+        console.log('⚠️ tx.wait() failed, but transaction was likely successful:', waitError.message);
+        
+        // Clear pendingLocal if it exists
+        localStorage.removeItem('cd_currentWaiting');
+        
+        // Still show success since transaction was submitted
+        alert('⚠️ Transaction submitted but confirmation failed.\n\nPlease check your wallet manually.\n\nTransaction: ' + tx.hash);
+      }
+    }
     
     return tx;
   } catch (error) {

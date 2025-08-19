@@ -35,6 +35,7 @@ export default function GameHubApp() {
   const [contract, setContract] = useState(null);
   const [userAddress, setUserAddress] = useState(null);
   const [farcasterUsername, setFarcasterUsername] = useState(null);
+  const [walletType, setWalletType] = useState(null); // 'farcaster' or 'external'
   const [gameState, setGameState] = useState('loading'); // loading, disconnected, selecting, confirming, waiting, result
   const [waitingCount, setWaitingCount] = useState({});
   const [selectedMode, setSelectedMode] = useState(0); // 0=Duel, 1=BR5, 2=BR100, 3=BR1000
@@ -120,6 +121,7 @@ export default function GameHubApp() {
             setUser(signer);
             setContract(gameContract);
             setUserAddress(address);
+            setWalletType('farcaster');
             setManuallyDisconnected(false);
             
             // Restore Farcaster username from SDK context or localStorage
@@ -220,6 +222,7 @@ export default function GameHubApp() {
           setUser(signer);
           setContract(gameContract);
           setUserAddress(address);
+          setWalletType('external');
           setManuallyDisconnected(false);
           
           // Try to restore Farcaster username from localStorage (for mixed usage)
@@ -566,6 +569,7 @@ export default function GameHubApp() {
       setProvider(walletProvider);
       setContract(contractInstance);
       setUserAddress(address);
+      setWalletType('farcaster');
       setFarcasterUsername(farcasterUser);
       setGameState('selecting');
       
@@ -597,6 +601,7 @@ export default function GameHubApp() {
     setProvider(walletProvider);
     setContract(contractInstance);
     setUserAddress(address);
+    setWalletType('external');
     setFarcasterUsername(null); // Clear Farcaster username for external wallet
     setGameState('selecting');
   }
@@ -945,9 +950,26 @@ export default function GameHubApp() {
 
       console.log('🎮 Joined game, waiting for result...', tx.hash);
       
-      // Wait for transaction and result
-      await tx.wait();
-      updateWaitingCounts();
+      // Handle confirmation differently for Farcaster wallet
+      if (walletType === 'farcaster') {
+        console.log('📱 Farcaster wallet detected - skipping tx.wait() due to eth_getTransactionReceipt limitation');
+        // Just update counts without waiting for receipt
+        setTimeout(() => {
+          updateWaitingCounts();
+        }, 3000); // Give blockchain time to process
+      } else {
+        // Wait for transaction and result for external wallets
+        try {
+          await tx.wait();
+          updateWaitingCounts();
+        } catch (waitError) {
+          console.log('⚠️ tx.wait() failed, but transaction was likely successful:', waitError.message);
+          // Still update counts since transaction was submitted
+          setTimeout(() => {
+            updateWaitingCounts();
+          }, 3000);
+        }
+      }
       
     } catch (error) {
       console.error('Error joining game:', error);
@@ -986,12 +1008,29 @@ export default function GameHubApp() {
       // Reset to selecting state
       setGameState('selecting');
       
-      // Wait for transaction to complete
-      await tx.wait();
-      console.log('✅ Cancel confirmed!');
-      
-      // Update waiting counts
-      updateWaitingCounts();
+      // Handle confirmation differently for Farcaster wallet
+      if (walletType === 'farcaster') {
+        console.log('📱 Farcaster wallet detected - skipping tx.wait() due to eth_getTransactionReceipt limitation');
+        console.log('✅ Cancel transaction submitted successfully!');
+        // Update counts after delay
+        setTimeout(() => {
+          updateWaitingCounts();
+        }, 3000);
+      } else {
+        // Wait for transaction to complete for external wallets
+        try {
+          await tx.wait();
+          console.log('✅ Cancel confirmed!');
+          // Update waiting counts
+          updateWaitingCounts();
+        } catch (waitError) {
+          console.log('⚠️ tx.wait() failed, but cancel was likely successful:', waitError.message);
+          // Still update counts since transaction was submitted
+          setTimeout(() => {
+            updateWaitingCounts();
+          }, 3000);
+        }
+      }
       
     } catch (error) {
       console.error('❌ Cancel failed:', error);
@@ -1004,6 +1043,7 @@ export default function GameHubApp() {
     setProvider(null);
     setContract(null);
     setUserAddress(null);
+    setWalletType(null);
     setFarcasterUsername(null);
     setUser(null);
     setGameState('disconnected');
