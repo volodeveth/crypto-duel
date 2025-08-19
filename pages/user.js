@@ -71,17 +71,47 @@ async function safeContractCall(methodName, ...args) {
 // Cancel waiting bet function
 async function cancelBet() {
   try {
-    if (!window.ethereum) {
-      alert('Please connect your wallet first');
-      return;
+    console.log('🔄 Cancelling bet...');
+    let contract = null;
+    
+    // Try Farcaster wallet first
+    try {
+      const { sdk } = await import('@farcaster/miniapp-sdk');
+      if (sdk && sdk.wallet) {
+        let farcasterProvider = null;
+        if (sdk.wallet.getEthereumProvider) {
+          farcasterProvider = await sdk.wallet.getEthereumProvider();
+        } else if (sdk.wallet.getEvmProvider) {
+          farcasterProvider = await sdk.wallet.getEvmProvider();
+        }
+        
+        if (farcasterProvider) {
+          console.log('✅ Using Farcaster wallet for cancel');
+          const ethersProvider = new ethers.BrowserProvider(farcasterProvider);
+          const signer = await ethersProvider.getSigner();
+          contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+        }
+      }
+    } catch {}
+    
+    // Fallback to external wallet
+    if (!contract) {
+      if (!window.ethereum) {
+        alert('Please connect your wallet first');
+        return;
+      }
+      
+      console.log('✅ Using external wallet for cancel');
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
     }
     
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-    const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+    // Manual gas limit for Farcaster Wallet compatibility
+    const gasLimit = 200000; // Safe gas limit for cancelWaiting
+    console.log(`⛽ Using manual gas limit: ${gasLimit}`);
     
-    console.log('Cancelling bet...');
-    const tx = await contract.cancelWaiting();
+    const tx = await contract.cancelWaiting({ gasLimit: gasLimit });
     
     console.log('Transaction submitted:', tx.hash);
     alert(`Cancel transaction submitted: ${tx.hash}`);
@@ -521,49 +551,26 @@ export default function UserPage() {
     console.log('🔍 My Duels: Loading waiting counts...');
     
     try {
-      // Try to use the same provider/contract approach as app.js
-      let contractToUse = null;
-      
-      // First, try to detect and use user's wallet provider (same as app.js)
-      try {
-        console.log('🎯 Trying to use user wallet provider...');
-        
-        // Check Farcaster wallet first
+      // Always use RPC provider for read-only operations (same as app.js hybrid approach)
+      // Farcaster Wallet doesn't support eth_call, so we need RPC provider
+      let readOnlyContract = null;
+      for (const rpcUrl of RPC_ENDPOINTS) {
         try {
-          const { sdk } = await import('@farcaster/miniapp-sdk');
-          if (sdk && sdk.wallet) {
-            let farcasterProvider = null;
-            if (sdk.wallet.getEthereumProvider) {
-              farcasterProvider = await sdk.wallet.getEthereumProvider();
-            } else if (sdk.wallet.getEvmProvider) {
-              farcasterProvider = await sdk.wallet.getEvmProvider();
-            }
-            
-            if (farcasterProvider) {
-              console.log('✅ Using Farcaster wallet provider for waiting counts');
-              const ethersProvider = new ethers.BrowserProvider(farcasterProvider);
-              const signer = await ethersProvider.getSigner();
-              contractToUse = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-            }
-          }
-        } catch {}
-        
-        // Fallback to external wallet if Farcaster not available
-        if (!contractToUse && window.ethereum) {
-          console.log('✅ Using external wallet provider for waiting counts');
-          const provider = new ethers.BrowserProvider(window.ethereum);
-          const signer = await provider.getSigner();
-          contractToUse = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+          const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
+          readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, rpcProvider);
+          // Test the connection
+          await rpcProvider.getBlockNumber();
+          console.log(`✅ Using RPC for waiting counts: ${rpcUrl}`);
+          break;
+        } catch (error) {
+          console.warn(`❌ RPC ${rpcUrl} failed:`, error.message);
+          continue;
         }
-      } catch (walletError) {
-        console.log('ℹ️ Wallet provider not available:', walletError.message);
       }
       
-      // Final fallback to RPC provider if no wallet available
-      if (!contractToUse) {
-        console.log('🔄 Fallback: Using RPC provider for waiting counts');
-        const provider = await createProviderWithFallback();
-        contractToUse = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+      if (!readOnlyContract) {
+        console.error('❌ All RPC endpoints failed for waiting counts');
+        return;
       }
       
       // EXACT same arrays as app.js
@@ -590,7 +597,7 @@ export default function UserPage() {
         for (const bet of betAmounts) {
           try {
             // Use direct contract call instead of safeContractCall for consistency with app.js
-            const count = await contractToUse.getWaitingPlayersCount(mode.id, bet.value);
+            const count = await readOnlyContract.getWaitingPlayersCount(mode.id, bet.value);
             counts[mode.id][bet.value] = Number(count);
             console.log(`Mode ${mode.id}, bet ${bet.eth} ETH: ${Number(count)} waiting`);
           } catch {

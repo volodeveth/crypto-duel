@@ -553,7 +553,16 @@ export default function GameHubApp() {
     
     try {
       setGameState('waiting');
-      const tx = await contract.joinGame(selectedMode, { value: selectedBet.value });
+      console.log('🔄 Sending joinGame transaction...');
+      
+      // Manual gas limit for Farcaster Wallet (doesn't support eth_estimateGas)
+      const gasLimit = 300000; // Safe gas limit for joinGame
+      console.log(`⛽ Using manual gas limit: ${gasLimit}`);
+      
+      const tx = await contract.joinGame(selectedMode, { 
+        value: selectedBet.value,
+        gasLimit: gasLimit
+      });
       
       // Save current waiting info to localStorage
       localStorage.setItem('cd_currentWaiting', JSON.stringify({
