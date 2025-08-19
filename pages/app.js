@@ -96,21 +96,87 @@ export default function GameHubApp() {
   }, [contract, userAddress]);
 
   async function connectFarcasterWallet() {
-    const { sdk } = await import('@farcaster/miniapp-sdk');
-    if (!sdk.wallet) throw new Error('Farcaster wallet not available');
-    const prov = await sdk.wallet.ethProvider();
-    if (!prov) throw new Error('Could not get Farcaster wallet provider');
+    console.log('🎯 === FARCASTER WALLET CONNECTION DEBUG START ===');
+    
+    try {
+      console.log('📱 Step 1: Checking Farcaster context...');
+      console.log(`🌍 Environment: ${typeof window !== 'undefined' ? 'Browser' : 'Server'}`);
+      console.log(`🔗 URL: ${typeof window !== 'undefined' ? window.location.href : 'N/A'}`);
+      console.log(`📱 Is in iframe: ${typeof window !== 'undefined' && window.parent !== window}`);
+      console.log(`🎯 Window parent exists: ${typeof window !== 'undefined' && !!window.parent}`);
+      
+      console.log('📦 Step 2: Importing Farcaster SDK...');
+      const { sdk } = await import('@farcaster/miniapp-sdk');
+      console.log(`✅ SDK imported successfully: ${!!sdk}`);
+      console.log(`🔧 SDK.wallet available: ${!!sdk.wallet}`);
+      console.log(`🔧 SDK.context available: ${!!sdk.context}`);
+      console.log(`🔧 SDK.actions available: ${!!sdk.actions}`);
+      
+      if (!sdk.wallet) {
+        console.error('❌ SDK wallet is not available!');
+        console.log('🔍 Checking if we are in Farcaster context...');
+        
+        // Check if we're in Farcaster context
+        const isInIframe = typeof window !== 'undefined' && window.parent !== window;
+        const hasFarcasterReferrer = typeof document !== 'undefined' && 
+          (document.referrer.includes('farcaster.xyz') || 
+           document.referrer.includes('warpcast.com') ||
+           document.referrer.includes('client.warpcast.com'));
+        
+        console.log(`🔍 iframe: ${isInIframe}, farcaster-referrer: ${hasFarcasterReferrer}`);
+        console.log(`🔍 document.referrer: ${typeof document !== 'undefined' ? document.referrer : 'N/A'}`);
+        
+        throw new Error(`Farcaster wallet not available. Context: iframe=${isInIframe}, referrer=${hasFarcasterReferrer ? 'farcaster' : 'other'}`);
+      }
+      
+      console.log('🔄 Step 3: Getting Farcaster wallet provider...');
+      const prov = await sdk.wallet.ethProvider();
+      console.log(`✅ Provider received: ${!!prov}`);
+      console.log(`🔧 Provider type: ${typeof prov}`);
+      
+      if (!prov) {
+        console.error('❌ Could not get Farcaster wallet provider!');
+        console.log('🔍 Checking wallet capabilities...');
+        if (sdk.wallet.capabilities) {
+          console.log(`🔧 Wallet capabilities: ${JSON.stringify(sdk.wallet.capabilities)}`);
+        }
+        throw new Error('Could not get Farcaster wallet provider');
+      }
 
-    const walletProvider = new ethers.BrowserProvider(prov);
-    const signer = await walletProvider.getSigner();
-    const address = await signer.getAddress();
-    const contractInstance = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+      console.log('🔄 Step 4: Creating ethers provider and signer...');
+      const walletProvider = new ethers.BrowserProvider(prov);
+      console.log('✅ BrowserProvider created');
+      
+      const signer = await walletProvider.getSigner();
+      console.log('✅ Signer obtained');
+      
+      const address = await signer.getAddress();
+      console.log(`✅ Address obtained: ${address}`);
+      
+      console.log('🔄 Step 5: Creating contract instance...');
+      const contractInstance = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+      console.log('✅ Contract instance created');
 
-    setManuallyDisconnected(false);
-    setProvider(walletProvider);
-    setContract(contractInstance);
-    setUserAddress(address);
-    setGameState('selecting');
+      console.log('🔄 Step 6: Setting state...');
+      setManuallyDisconnected(false);
+      setProvider(walletProvider);
+      setContract(contractInstance);
+      setUserAddress(address);
+      setGameState('selecting');
+      
+      console.log('✅ === FARCASTER WALLET CONNECTION SUCCESS ===');
+    } catch (error) {
+      console.error('❌ === FARCASTER WALLET CONNECTION FAILED ===');
+      console.error(`❌ Error: ${error.message}`);
+      console.error(`❌ Stack: ${error.stack}`);
+      
+      // More detailed error analysis
+      console.log('🔍 === DETAILED ERROR ANALYSIS ===');
+      console.log(`🔍 Error name: ${error.name}`);
+      console.log(`🔍 Error constructor: ${error.constructor.name}`);
+      
+      throw error;
+    }
   }
 
   async function connectExternalWallet() {
