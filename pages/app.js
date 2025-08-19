@@ -4,6 +4,7 @@ import { ethers } from 'ethers';
 import Head from 'next/head';
 import Link from 'next/link';
 import FarcasterInit from '../components/FarcasterInit';
+import FarcasterAppDialog from '../components/FarcasterAppDialog';
 import ShareButtons from '../components/ShareButtons';
 import { EthWithUsd } from '../lib/ethPrice';
 import { Wallet, Swords, Users, Crown, ExternalLink, Info } from 'lucide-react';
@@ -939,6 +940,7 @@ export default function GameHubApp() {
       </Head>
 
       <FarcasterInit />
+      <FarcasterAppDialog />
 
       <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-blue-900 to-purple-900 text-white">
         <div className="max-w-md mx-auto p-4">
