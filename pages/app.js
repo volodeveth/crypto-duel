@@ -130,7 +130,44 @@ export default function GameHubApp() {
       }
       
       console.log('🔄 Step 3: Getting Farcaster wallet provider...');
-      const prov = await sdk.wallet.ethProvider();
+      console.log('🔧 Available wallet methods:', Object.keys(sdk.wallet || {}));
+      
+      // Try different provider methods based on capabilities
+      let prov = null;
+      try {
+        if (sdk.wallet.getEthereumProvider) {
+          console.log('🔄 Trying getEthereumProvider...');
+          prov = await sdk.wallet.getEthereumProvider();
+        } else if (sdk.wallet.getEvmProvider) {
+          console.log('🔄 Trying getEvmProvider...');
+          prov = await sdk.wallet.getEvmProvider();
+        } else if (sdk.wallet.ethProvider) {
+          console.log('🔄 Trying ethProvider...');
+          prov = await sdk.wallet.ethProvider();
+        } else {
+          console.error('❌ No wallet provider method found!');
+          console.log('🔧 Available methods:', Object.keys(sdk.wallet));
+        }
+      } catch (providerError) {
+        console.error('❌ Provider method error:', providerError);
+        console.log('🔄 Trying alternative provider methods...');
+        
+        // Try alternative methods
+        if (sdk.wallet.getEvmProvider && !prov) {
+          try {
+            console.log('🔄 Fallback: Trying getEvmProvider...');
+            prov = await sdk.wallet.getEvmProvider();
+          } catch {}
+        }
+        
+        if (sdk.wallet.getEthereumProvider && !prov) {
+          try {
+            console.log('🔄 Fallback: Trying getEthereumProvider...');
+            prov = await sdk.wallet.getEthereumProvider();
+          } catch {}
+        }
+      }
+      
       console.log(`✅ Provider received: ${!!prov}`);
       console.log(`🔧 Provider type: ${typeof prov}`);
       
