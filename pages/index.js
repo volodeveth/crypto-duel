@@ -35,7 +35,7 @@ export default function Home() {
       action: {
         type: "launch_miniapp",
         name: "Crypto Duel",
-        url: `${baseUrl}/app`,
+        url: `${baseUrl}`,
         splashImageUrl: `${baseUrl}/splash.png`,
         splashBackgroundColor: "#8B5CF6"
       }
