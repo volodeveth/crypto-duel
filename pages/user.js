@@ -18,7 +18,8 @@ const CONTRACT_ABI = [
   "function totalBattleRoyales() external view returns (uint256)",
   "function waitingPlayers(uint256 waitingId) external view returns (address player, uint256 betAmount, uint8 mode, uint256 joinTime, bool active)",
   "function getWaitingPlayersCount(uint8 mode, uint256 betAmount) external view returns (uint256)",
-  "function waitingByModeAndBet(uint8 mode, uint256 betAmount, uint256 index) external view returns (uint256 waitingId)"
+  "function waitingByModeAndBet(uint8 mode, uint256 betAmount, uint256 index) external view returns (uint256 waitingId)",
+  "function cancelWaiting() external"
 ];
 
 // Multiple RPC endpoints for fallback
@@ -65,6 +66,39 @@ async function safeContractCall(methodName, ...args) {
     }
   }
   throw new Error(`All RPC endpoints failed for ${methodName}`);
+}
+
+// Cancel waiting bet function
+async function cancelBet() {
+  try {
+    if (!window.ethereum) {
+      alert('Please connect your wallet first');
+      return;
+    }
+    
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+    
+    console.log('Cancelling bet...');
+    const tx = await contract.cancelWaiting();
+    
+    console.log('Transaction submitted:', tx.hash);
+    alert(`Cancel transaction submitted: ${tx.hash}`);
+    
+    await tx.wait();
+    console.log('Cancel confirmed!');
+    alert('Bet cancelled successfully! Your ETH has been refunded.');
+    
+    // Clear pendingLocal if it exists
+    localStorage.removeItem('cd_currentWaiting');
+    
+    return tx;
+  } catch (error) {
+    console.error('Cancel failed:', error);
+    alert('Cancel failed: ' + error.message);
+    throw error;
+  }
 }
 
 export default function UserPage() {
@@ -658,6 +692,30 @@ export default function UserPage() {
                         className="flex-wrap"
                       />
                     </div>
+                    
+                    {/* Cancel Bet кнопка */}
+                    <div className="mt-3 pt-3 border-t border-gray-700">
+                      <div className="text-xs text-gray-400 mb-2">Don't want to wait?</div>
+                      <button 
+                        onClick={async () => {
+                          if (confirm('Are you sure you want to cancel your bet? Your ETH will be refunded.')) {
+                            try {
+                              await cancelBet();
+                              // Reload games after cancel
+                              setTimeout(() => {
+                                loadMyDuelsWithAddress(address);
+                                loadMyBattleRoyalesWithAddress(address);
+                              }, 2000);
+                            } catch (error) {
+                              console.error('Cancel failed:', error);
+                            }
+                          }
+                        }}
+                        className="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-semibold transition-all duration-300 hover:scale-105 shadow-lg"
+                      >
+                        🚫 Cancel Bet & Get Refund
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -843,6 +901,32 @@ export default function UserPage() {
                               url="https://cryptoduel.xyz"
                               className="flex-wrap"
                             />
+                          </div>
+                        )}
+
+                        {/* Cancel Bet кнопка для pending Battle Royales */}
+                        {d.isPending && (
+                          <div className="mt-3 pt-3 border-t border-gray-700">
+                            <div className="text-xs text-gray-400 mb-2">Don't want to wait?</div>
+                            <button 
+                              onClick={async () => {
+                                if (confirm(`Are you sure you want to cancel your ${d.mode} battle royale bet? Your ETH will be refunded.`)) {
+                                  try {
+                                    await cancelBet();
+                                    // Reload games after cancel
+                                    setTimeout(() => {
+                                      loadMyDuelsWithAddress(address);
+                                      loadMyBattleRoyalesWithAddress(address);
+                                    }, 2000);
+                                  } catch (error) {
+                                    console.error('Cancel failed:', error);
+                                  }
+                                }
+                              }}
+                              className="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-semibold transition-all duration-300 hover:scale-105 shadow-lg"
+                            >
+                              🚫 Cancel Bet & Get Refund
+                            </button>
                           </div>
                         )}
                       </div>
