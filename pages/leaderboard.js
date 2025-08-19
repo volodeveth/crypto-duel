@@ -17,6 +17,7 @@ const CONTRACT_ABI = [
 export default function Leaderboard() {
   const baseUrl = 'https://cryptoduel.xyz';
   const [leaderboardData, setLeaderboardData] = useState([]);
+  const [farcasterUsernames, setFarcasterUsernames] = useState({});
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('wins'); // wins, games, winnings, winRate
 
@@ -126,10 +127,38 @@ export default function Leaderboard() {
       }
 
       setLeaderboardData(playersStats);
+      
+      // Load Farcaster usernames for all players
+      if (playersStats.length > 0) {
+        await loadFarcasterUsernames(playersStats.map(player => player.address));
+      }
+      
     } catch (error) {
       console.error('❌ Error loading leaderboard:', error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadFarcasterUsernames(addresses) {
+    try {
+      console.log(`🔍 Loading Farcaster usernames for ${addresses.length} addresses`);
+      
+      const response = await fetch('/api/get-farcaster-usernames-batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ addresses })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`✅ Found ${data.total_found} Farcaster usernames out of ${data.total_requested}`);
+        setFarcasterUsernames(data.usernames);
+      } else {
+        console.warn('⚠️ Failed to load Farcaster usernames:', response.status);
+      }
+    } catch (error) {
+      console.error('❌ Error loading Farcaster usernames:', error);
     }
   }
 
@@ -150,6 +179,22 @@ export default function Leaderboard() {
 
   const formatAddress = (address) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const formatAddressWithUsername = (address) => {
+    const shortAddress = formatAddress(address);
+    const farcasterUser = farcasterUsernames[address.toLowerCase()];
+    
+    if (farcasterUser) {
+      return (
+        <div>
+          <div className="font-mono text-sm">{shortAddress}</div>
+          <div className="text-xs text-purple-300">@{farcasterUser.username}</div>
+        </div>
+      );
+    }
+    
+    return <div className="font-mono text-sm">{shortAddress}</div>;
   };
 
   const getRankEmoji = (index) => {
@@ -277,8 +322,8 @@ export default function Leaderboard() {
                           <div className="text-xl">{getRankEmoji(index)}</div>
                           <div className="text-xs text-gray-400">#{index + 1}</div>
                         </div>
-                        <div className="font-mono text-sm text-gray-300">
-                          {formatAddress(player.address)}
+                        <div className="text-gray-300">
+                          {formatAddressWithUsername(player.address)}
                         </div>
                       </div>
                       <div className="text-yellow-400 font-semibold text-right">
@@ -335,9 +380,7 @@ export default function Leaderboard() {
                             <span className="text-lg">{getRankEmoji(index)}</span>
                           </td>
                           <td className="px-4 py-3">
-                            <div className="font-mono text-sm">
-                              {formatAddress(player.address)}
-                            </div>
+                            {formatAddressWithUsername(player.address)}
                           </td>
                           <td className="px-4 py-3 text-center">
                             <div className="text-blue-400 font-semibold">{player.totalGames}</div>
