@@ -6,19 +6,27 @@ export default function FarcasterAppDialog() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    console.log('🔍 FarcasterAppDialog: Component mounted, checking if should show dialog...');
     checkShouldShowDialog();
   }, []);
 
   const checkShouldShowDialog = async () => {
     try {
+      console.log('🔍 FarcasterAppDialog: Checking if should show dialog...');
+      
       // Check if we're in Farcaster context
       const { sdk } = await import('@farcaster/miniapp-sdk');
-      if (!sdk) return;
+      console.log('📦 FarcasterAppDialog: SDK available:', !!sdk);
+      if (!sdk) {
+        console.log('❌ FarcasterAppDialog: No SDK available, exiting');
+        return;
+      }
 
       // Check if user has already confirmed permanently
       const userDecision = localStorage.getItem('cd_farcaster_app_decision');
+      console.log('💾 FarcasterAppDialog: User decision from localStorage:', userDecision);
       if (userDecision === 'confirmed') {
-        console.log('ℹ️ User already confirmed app addition, skipping dialog');
+        console.log('ℹ️ FarcasterAppDialog: User already confirmed app addition, skipping dialog');
         return;
       }
 
@@ -42,24 +50,46 @@ export default function FarcasterAppDialog() {
       // Check if we're in Farcaster context with valid user
       let context = null;
       try {
+        console.log('🔍 FarcasterAppDialog: Checking SDK context...');
+        console.log('📋 FarcasterAppDialog: SDK context type:', typeof sdk.context);
+        
         if (typeof sdk.context === 'function') {
+          console.log('📋 FarcasterAppDialog: Context is function, calling it...');
           context = sdk.context();
         } else if (typeof sdk.context === 'object') {
+          console.log('📋 FarcasterAppDialog: Context is object, using directly...');
           context = sdk.context;
         }
+        
+        console.log('👤 FarcasterAppDialog: Context result:', context);
+        console.log('👤 FarcasterAppDialog: User available:', !!context?.user);
+        console.log('👤 FarcasterAppDialog: User FID:', context?.user?.fid);
+        
       } catch (error) {
-        console.log('ℹ️ No Farcaster context available');
+        console.log('❌ FarcasterAppDialog: Error getting context:', error);
         return;
       }
 
       if (context && context.user && context.user.fid) {
-        console.log('✅ Farcaster user detected, showing app dialog');
+        console.log('✅ FarcasterAppDialog: Farcaster user detected, showing app dialog');
+        console.log('👤 FarcasterAppDialog: User details:', { fid: context.user.fid, username: context.user.username });
         setShowDialog(true);
         // Small delay for smooth animation
         setTimeout(() => setIsVisible(true), 100);
+      } else {
+        console.log('❌ FarcasterAppDialog: No valid Farcaster user found, not showing dialog');
+        console.log('❌ FarcasterAppDialog: Context:', context);
+        
+        // TEMPORARY: For testing, show dialog if URL has ?test_dialog=true
+        if (typeof window !== 'undefined' && window.location.search.includes('test_dialog=true')) {
+          console.log('🧪 FarcasterAppDialog: Test mode enabled, showing dialog anyway');
+          setShowDialog(true);
+          setTimeout(() => setIsVisible(true), 100);
+        }
       }
     } catch (error) {
-      console.log('ℹ️ Not in Farcaster context:', error.message);
+      console.log('❌ FarcasterAppDialog: Error in checkShouldShowDialog:', error.message);
+      console.log('❌ FarcasterAppDialog: Full error:', error);
     }
   };
 
