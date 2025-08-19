@@ -17,7 +17,7 @@ export default function handler(req, res) {
     buttonTitle: "🎮 Duel Now",
     splashImageUrl: `${baseUrl}/splash.png`,
     splashBackgroundColor: "#8B5CF6",
-    description: "Challenge other users and win ETH in fair duels! Uses blockchain randomness for fair results.",
+    description: "ETH gaming platform with 4 modes: Duels (1v1), Battle Royale 5/100/1000 players. Fair blockchain randomness!",
     webhookUrl: `${baseUrl}/api/farcaster-webhook`,
     subtitle: "ETH dueling game",
     screenshotUrls: [
@@ -26,13 +26,13 @@ export default function handler(req, res) {
       `${baseUrl}/screenshot3.jpg`
     ],
     primaryCategory: "games",
-    tags: ["crypto", "game", "duel", "eth", "blockchain"],
+    tags: ["crypto", "game", "duel", "battle-royale", "eth", "blockchain", "gaming"],
     heroImageUrl: `${baseUrl}/hero.png`,
-    tagline: "Challenge and win ETH!",
-    ogTitle: "Crypto Duel - ETH Dueling Game",
-    ogDescription: "Challenge other users and win ETH in fair duels! Uses blockchain randomness for fair results.",
+    tagline: "4 game modes, fair blockchain randomness!",
+    ogTitle: "Crypto Duel - Battle Royale ETH Gaming",
+    ogDescription: "ETH gaming platform with Duels (1v1) and Battle Royale (5/100/1000 players). Fair blockchain randomness!",
     ogImageUrl: `${baseUrl}/image.png`,
-    castShareUrl: "https://warpcast.com/~/compose?text=Check+out+Crypto+Duel+🎮+Challenge+and+win+ETH!&embeds[]=https://cryptoduel.xyz",
+    castShareUrl: "https://warpcast.com/~/compose?text=Check+out+Crypto+Duel+🎮+4+game+modes%3A+Duels+%26+Battle+Royale!+Win+ETH+with+fair+blockchain+randomness!&embeds[]=https://cryptoduel.xyz",
     // Keep nested structure for compatibility
     miniapp: {
       version: "1",
@@ -43,7 +43,7 @@ export default function handler(req, res) {
       buttonTitle: "🎮 Duel Now",
       splashImageUrl: `${baseUrl}/splash.png`,
       splashBackgroundColor: "#8B5CF6",
-      description: "Challenge other users and win ETH in fair duels! Uses blockchain randomness for fair results.",
+      description: "ETH gaming platform with 4 modes: Duels (1v1), Battle Royale 5/100/1000 players. Fair blockchain randomness!",
       subtitle: "ETH dueling game"
     },
     // Keep frame for backward compatibility

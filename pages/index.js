@@ -69,7 +69,7 @@ export default function Home() {
                 Crypto Duel
               </h1>
               <p className="text-xl mb-8 text-gray-300">
-                Challenge players worldwide & win ETH in provably fair duels
+                4 game modes: Duels & Battle Royales with fair blockchain randomness
               </p>
             </div>
             
