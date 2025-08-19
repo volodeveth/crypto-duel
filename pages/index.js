@@ -62,13 +62,14 @@ export default function Home() {
       <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-blue-900 to-purple-900 text-white">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
-            <div className="mb-6">
-              <div className="mb-3">
-                <img src="/icon2.png" alt="Crypto Duel" className="w-16 h-16 mx-auto" />
+            <div className="mb-4">
+              {/* Logo and title in same row */}
+              <div className="flex items-center justify-center gap-3 mb-2">
+                <img src="/icon2.png" alt="Crypto Duel" className="w-12 h-12" />
+                <h1 className="text-3xl font-extrabold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent tracking-wide leading-tight">
+                  Crypto Duel
+                </h1>
               </div>
-              <h1 className="text-3xl font-extrabold mb-2 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent tracking-wide leading-tight pb-1">
-                Crypto Duel
-              </h1>
               <p className="text-sm mb-4 text-gray-300">
                 4 game modes with fair blockchain randomness
               </p>
