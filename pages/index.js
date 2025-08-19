@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Swords, Users, Crown, AlertTriangle } from 'lucide-react';
 import FarcasterInit from '../components/FarcasterInit';
+import FarcasterAppDialog from '../components/FarcasterAppDialog';
 
 export default function Home() {
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -162,6 +163,7 @@ export default function Home() {
       
       {/* Farcaster SDK Initialization */}
       <FarcasterInit />
+      <FarcasterAppDialog />
     </>
   );
 }

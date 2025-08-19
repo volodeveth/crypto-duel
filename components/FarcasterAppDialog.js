@@ -77,11 +77,26 @@ export default function FarcasterAppDialog() {
         // Small delay for smooth animation
         setTimeout(() => setIsVisible(true), 100);
       } else {
-        console.log('❌ FarcasterAppDialog: No valid Farcaster user found, not showing dialog');
+        console.log('❌ FarcasterAppDialog: No valid Farcaster user found');
         console.log('❌ FarcasterAppDialog: Context:', context);
         
+        // Check if we're in Farcaster iframe (even without user context)
+        const isInFarcasterIframe = typeof window !== 'undefined' && 
+          window.parent !== window && 
+          document.referrer && 
+          (document.referrer.includes('farcaster.xyz') || document.referrer.includes('warpcast.com'));
+        
+        console.log('🔍 FarcasterAppDialog: Is in Farcaster iframe:', isInFarcasterIframe);
+        console.log('🔍 FarcasterAppDialog: Document referrer:', document.referrer);
+        
+        if (isInFarcasterIframe) {
+          console.log('✅ FarcasterAppDialog: In Farcaster iframe, showing dialog even without user context');
+          setShowDialog(true);
+          setTimeout(() => setIsVisible(true), 100);
+        }
+        
         // TEMPORARY: For testing, show dialog if URL has ?test_dialog=true
-        if (typeof window !== 'undefined' && window.location.search.includes('test_dialog=true')) {
+        else if (typeof window !== 'undefined' && window.location.search.includes('test_dialog=true')) {
           console.log('🧪 FarcasterAppDialog: Test mode enabled, showing dialog anyway');
           setShowDialog(true);
           setTimeout(() => setIsVisible(true), 100);
