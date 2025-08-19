@@ -148,14 +148,39 @@ export default function GameHubApp() {
               } else {
                 // Fallback to localStorage
                 const storedFarcasterData = localStorage.getItem('farcaster_user_data');
+                console.log('🔍 Checking localStorage for Farcaster data:', storedFarcasterData);
                 if (storedFarcasterData) {
                   const farcasterData = JSON.parse(storedFarcasterData);
+                  console.log('📂 Parsed Farcaster data from localStorage:', farcasterData);
                   if (farcasterData.username) {
                     setFarcasterUsername(farcasterData.username);
                     console.log(`✅ Restored Farcaster username from localStorage: @${farcasterData.username}`);
                   }
                 } else {
                   console.log('ℹ️ No Farcaster username found in SDK context or localStorage');
+                  
+                  // Try to fetch username via our API using wallet address as fallback
+                  if (address) {
+                    console.log('🔍 Attempting to fetch Farcaster username via API for address:', address);
+                    try {
+                      const response = await fetch(`/api/get-farcaster-username?address=${address}`);
+                      if (response.ok) {
+                        const data = await response.json();
+                        if (data.username) {
+                          setFarcasterUsername(data.username);
+                          console.log(`✅ Fetched Farcaster username via API: @${data.username}`);
+                          
+                          // Store for future use
+                          localStorage.setItem('farcaster_user_data', JSON.stringify({
+                            fid: data.fid || 0,
+                            username: data.username
+                          }));
+                        }
+                      }
+                    } catch (apiError) {
+                      console.log('ℹ️ Failed to fetch username via API:', apiError.message);
+                    }
+                  }
                 }
               }
             } catch (error) {
