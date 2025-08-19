@@ -96,12 +96,81 @@ export default function GameHubApp() {
     try {
       console.log('🔄 Attempting to auto-reconnect wallet...');
       
-      // Check if wallet is already connected
+      // First priority: Check Farcaster Wallet (when in Farcaster context)
+      try {
+        const { sdk } = await import('@farcaster/miniapp-sdk');
+        if (sdk && sdk.wallet) {
+          console.log('🎯 Checking Farcaster wallet first...');
+          
+          let farcasterProvider = null;
+          if (sdk.wallet.getEthereumProvider) {
+            farcasterProvider = await sdk.wallet.getEthereumProvider();
+          } else if (sdk.wallet.getEvmProvider) {
+            farcasterProvider = await sdk.wallet.getEvmProvider();
+          }
+          
+          if (farcasterProvider) {
+            console.log('✅ Found Farcaster wallet provider, using it');
+            const ethProvider = new ethers.BrowserProvider(farcasterProvider);
+            const signer = await ethProvider.getSigner();
+            const address = await signer.getAddress();
+            const gameContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+            setProvider(ethProvider);
+            setUser(signer);
+            setContract(gameContract);
+            setUserAddress(address);
+            setManuallyDisconnected(false);
+            
+            // Restore Farcaster username from SDK context or localStorage
+            try {
+              let context = null;
+              if (typeof sdk.context === 'function') {
+                context = sdk.context();
+              } else if (typeof sdk.context === 'object') {
+                context = sdk.context;
+              }
+              
+              if (context && context.user && context.user.username) {
+                setFarcasterUsername(context.user.username);
+                console.log(`✅ Restored Farcaster username from SDK: @${context.user.username}`);
+              } else {
+                // Fallback to localStorage
+                const storedFarcasterData = localStorage.getItem('farcaster_user_data');
+                if (storedFarcasterData) {
+                  const farcasterData = JSON.parse(storedFarcasterData);
+                  if (farcasterData.username) {
+                    setFarcasterUsername(farcasterData.username);
+                    console.log(`✅ Restored Farcaster username from localStorage: @${farcasterData.username}`);
+                  }
+                }
+              }
+            } catch (error) {
+              console.warn('⚠️ Failed to restore Farcaster username:', error);
+            }
+            
+            // After successful reconnection, check for pending bet
+            await checkForPendingBet();
+            
+            // If no pending bet found, go to game selection
+            if (gameState === 'loading') {
+              setGameState('selecting');
+            }
+            
+            console.log('✅ Farcaster wallet auto-reconnection successful');
+            return;
+          }
+        }
+      } catch (error) {
+        console.log('ℹ️ Farcaster wallet not available:', error.message);
+      }
+      
+      // Second priority: Check MetaMask/External wallet
       if (typeof window !== 'undefined' && window.ethereum) {
         const accounts = await window.ethereum.request({ method: 'eth_accounts' });
         
         if (accounts && accounts.length > 0) {
-          console.log('✅ Found connected wallet, restoring session...');
+          console.log('✅ Found connected external wallet (MetaMask), restoring session...');
           
           // Restore wallet connection
           const ethProvider = new ethers.BrowserProvider(window.ethereum);
@@ -115,7 +184,7 @@ export default function GameHubApp() {
           setUserAddress(address);
           setManuallyDisconnected(false);
           
-          // Try to restore Farcaster username from localStorage
+          // Try to restore Farcaster username from localStorage (for mixed usage)
           try {
             const storedFarcasterData = localStorage.getItem('farcaster_user_data');
             if (storedFarcasterData) {
@@ -137,7 +206,7 @@ export default function GameHubApp() {
             setGameState('selecting');
           }
           
-          console.log('✅ Wallet auto-reconnection successful');
+          console.log('✅ External wallet auto-reconnection successful');
           return;
         }
       }
