@@ -3,5 +3,33 @@
     "header": "eyJmaWQiOjkzOTA3MSwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDM5ZUExM2M1NTY2YkU1OGVlOTZjNDNlNDU5NzI2RUQwQmRGNjQ3MTgifQ",
     "payload": "eyJkb21haW4iOiJjcnlwdG9kdWVsLnh5eiJ9",
     "signature": "77/RtyWj+sKd04nnvqFX+EQQEQUkMvd5lM3Yk7N+Xqh+a86RoCng5lcagkVRbBs1jvAY3tMEZNbJTHB09NoLmhw="
+  },
+  "frame": {
+    "name": "Crypto Duel",
+    "version": "1",
+    "iconUrl": "https://cryptoduel.xyz/icon.png",
+    "homeUrl": "https://cryptoduel.xyz",
+    "imageUrl": "https://cryptoduel.xyz/image.png",
+    "buttonTitle": "Start Dueling",
+    "splashImageUrl": "https://cryptoduel.xyz/splash.png",
+    "splashBackgroundColor": "#4338CA",
+    "webhookUrl": "https://cryptoduel.xyz/api/farcaster-webhook",
+    "subtitle": "Blockchain dueling & battle royale game",
+    "description": "Enter the ultimate crypto arena! Compete in 1v1 duels or massive Battle Royale tournaments with real ETH stakes.",
+    "primaryCategory": "games",
+    "screenshotUrls": [
+      "https://cryptoduel.xyz/screenshot1.jpg"
+    ],
+    "heroImageUrl": "https://cryptoduel.xyz/hero.png",
+    "tags": [
+      "crypto",
+      "gaming",
+      "gambling",
+      "eth",
+      "base"
+    ],
+    "tagline": "Duel. Win. Rise to the Top.",
+    "ogTitle": "Crypto Duel – Onchain Arena",
+    "ogDescription": "Challenge players in crypto duels or join massive Battle Royales! Real ETH stakes, fair blockchain results, up to 900x multipliers."
   }
 }
