@@ -65,7 +65,7 @@ export default function Home() {
               <div className="mb-4">
                 <img src="/icon.png" alt="Crypto Duel" className="w-24 h-24 mx-auto" />
               </div>
-              <h1 className="text-5xl font-extrabold mb-4 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent tracking-wide">
+              <h1 className="text-5xl font-extrabold mb-4 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent tracking-wide leading-tight pb-2">
                 Crypto Duel
               </h1>
               <p className="text-xl mb-8 text-gray-300">
