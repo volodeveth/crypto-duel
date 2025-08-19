@@ -71,7 +71,7 @@ export default function GameHubApp() {
   const BASESCAN = 'https://basescan.org';
 
   useEffect(() => {
-    setGameState('disconnected');
+    setGameState('loading');
     
     // Clear old contract data
     try {
@@ -87,9 +87,68 @@ export default function GameHubApp() {
       }
     } catch {}
     
-    // Check for pending waiting bet
-    checkForPendingBet();
+    // Try to auto-reconnect wallet first
+    autoReconnectWallet();
   }, []);
+
+  async function autoReconnectWallet() {
+    try {
+      console.log('🔄 Attempting to auto-reconnect wallet...');
+      
+      // Check if wallet is already connected
+      if (typeof window !== 'undefined' && window.ethereum) {
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        
+        if (accounts && accounts.length > 0) {
+          console.log('✅ Found connected wallet, restoring session...');
+          
+          // Restore wallet connection
+          const ethProvider = new ethers.BrowserProvider(window.ethereum);
+          const signer = await ethProvider.getSigner();
+          const address = await signer.getAddress();
+          const gameContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+          setProvider(ethProvider);
+          setUser(signer);
+          setContract(gameContract);
+          setUserAddress(address);
+          setManuallyDisconnected(false);
+          
+          // Try to restore Farcaster username from localStorage
+          try {
+            const storedFarcasterData = localStorage.getItem('farcaster_user_data');
+            if (storedFarcasterData) {
+              const farcasterData = JSON.parse(storedFarcasterData);
+              if (farcasterData.username) {
+                setFarcasterUsername(farcasterData.username);
+                console.log(`✅ Restored Farcaster username: @${farcasterData.username}`);
+              }
+            }
+          } catch (error) {
+            console.warn('⚠️ Failed to restore Farcaster username:', error);
+          }
+          
+          // After successful reconnection, check for pending bet
+          await checkForPendingBet();
+          
+          // If no pending bet found, go to game selection
+          if (gameState === 'loading') {
+            setGameState('selecting');
+          }
+          
+          console.log('✅ Wallet auto-reconnection successful');
+          return;
+        }
+      }
+      
+      console.log('ℹ️ No connected wallet found, showing disconnect state');
+      setGameState('disconnected');
+      
+    } catch (error) {
+      console.error('❌ Auto-reconnection failed:', error);
+      setGameState('disconnected');
+    }
+  }
   
   async function checkForPendingBet() {
     try {
@@ -865,7 +924,7 @@ export default function GameHubApp() {
       <Head>
         <title>Crypto Duel - Play & Win ETH | Duels & Battle Royale</title>
         <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/icon.png" />
+        <link rel="apple-touch-icon" href="/icon2.png" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="fc:miniapp" content={JSON.stringify({
           version: "1",
@@ -887,7 +946,7 @@ export default function GameHubApp() {
           {/* Header */}
           <div className="text-center mb-6">
             <div className="mb-2">
-              <img src="/icon.png" alt="Crypto Duel" className="w-16 h-16 mx-auto" />
+              <img src="/icon2.png" alt="Crypto Duel" className="w-16 h-16 mx-auto" />
             </div>
             <h1 className="text-2xl font-bold mb-1 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Crypto Duel</h1>
             <div className="text-xs text-gray-400 font-mono">

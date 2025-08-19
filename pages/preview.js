@@ -32,7 +32,7 @@ export default function PreviewApp() {
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white flex items-center justify-center">
         <div className="text-center p-8">
           <div className="mb-4">
-            <img src="/icon.png" alt="Crypto Duel" className="w-24 h-24 mx-auto" />
+            <img src="/icon2.png" alt="Crypto Duel" className="w-24 h-24 mx-auto" />
           </div>
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
             Crypto Duel

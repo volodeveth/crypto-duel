@@ -625,7 +625,7 @@ export default function UserPage() {
       <Head>
         <title>My Games — Crypto Duel</title>
         <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/icon.png" />
+        <link rel="apple-touch-icon" href="/icon2.png" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta property="og:title" content="My Games - Crypto Duel" />
         <meta property="og:description" content="Check your crypto battles history and results" />
@@ -641,7 +641,7 @@ export default function UserPage() {
           {/* Header */}
           <div className="text-center mb-6">
             <div className="mb-2">
-              <img src="/icon.png" alt="Crypto Duel" className="w-14 h-14 mx-auto" />
+              <img src="/icon2.png" alt="Crypto Duel" className="w-14 h-14 mx-auto" />
             </div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">My Games</h1>
             <div className="mt-2">

@@ -87,7 +87,7 @@ export default function DuelDetails() {
         <div className="max-w-xl mx-auto p-4">
           <div className="text-center mb-6">
             <div className="mb-2">
-              <img src="/icon.png" alt="Crypto Duel" className="w-14 h-14 mx-auto" />
+              <img src="/icon2.png" alt="Crypto Duel" className="w-14 h-14 mx-auto" />
             </div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">Duel #{id}</h1>
             <div className="mt-2 flex items-center justify-center gap-3">
@@ -100,7 +100,7 @@ export default function DuelDetails() {
           {loading && (
             <div className="text-center py-10">
               <div className="animate-spin mb-4">
-                <img src="/icon.png" alt="Loading" className="w-12 h-12 mx-auto" />
+                <img src="/icon2.png" alt="Loading" className="w-12 h-12 mx-auto" />
               </div>
               <p>Loading duel...</p>
             </div>

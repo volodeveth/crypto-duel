@@ -209,7 +209,7 @@ export default function Leaderboard() {
       <Head>
         <title>Leaderboard - Crypto Duel</title>
         <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/icon.png" />
+        <link rel="apple-touch-icon" href="/icon2.png" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta property="og:title" content="Leaderboard - Crypto Duel" />
         <meta property="og:description" content="Top players in Crypto Duel Arena - See who's winning the most ETH!" />
@@ -226,7 +226,7 @@ export default function Leaderboard() {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="mb-2">
-              <img src="/icon.png" alt="Crypto Duel" className="w-16 h-16 mx-auto" />
+              <img src="/icon2.png" alt="Crypto Duel" className="w-16 h-16 mx-auto" />
             </div>
             <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent">Leaderboard</h1>
             <p className="text-gray-300 mb-4">Top players in Crypto Duel Arena</p>
@@ -301,7 +301,7 @@ export default function Leaderboard() {
           {loading && (
             <div className="text-center py-12">
               <div className="animate-spin mb-4">
-                <img src="/icon.png" alt="Loading" className="w-16 h-16 mx-auto" />
+                <img src="/icon2.png" alt="Loading" className="w-16 h-16 mx-auto" />
               </div>
               <p className="text-lg">Loading leaderboard...</p>
               <p className="text-sm text-gray-400">This may take a moment</p>
@@ -417,7 +417,7 @@ export default function Leaderboard() {
               {sortedData.length === 0 && !loading && (
                 <div className="text-center py-12">
                   <div className="mb-4">
-                    <img src="/icon.png" alt="Empty leaderboard" className="w-24 h-24 mx-auto opacity-50" />
+                    <img src="/icon2.png" alt="Empty leaderboard" className="w-24 h-24 mx-auto opacity-50" />
                   </div>
                   <p className="text-xl text-gray-300">No players found yet</p>
                   <p className="text-sm text-gray-500">Be the first to play and claim the top spot!</p>

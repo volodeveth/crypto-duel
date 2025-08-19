@@ -25,7 +25,7 @@ export default function TermsAndDisclaimers() {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="mb-4">
-              <img src="/icon.png" alt="Crypto Duel" className="w-16 h-16 mx-auto mb-3" />
+              <img src="/icon2.png" alt="Crypto Duel" className="w-16 h-16 mx-auto mb-3" />
               <Link href="/" className="inline-flex items-center gap-2 text-purple-200 hover:text-purple-100 text-sm mb-4">
                 <ArrowLeft size={16} /> Back to Home
               </Link>

@@ -64,7 +64,7 @@ export default function Home() {
           <div className="text-center">
             <div className="mb-6">
               <div className="mb-3">
-                <img src="/icon.png" alt="Crypto Duel" className="w-16 h-16 mx-auto" />
+                <img src="/icon2.png" alt="Crypto Duel" className="w-16 h-16 mx-auto" />
               </div>
               <h1 className="text-3xl font-extrabold mb-2 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent tracking-wide leading-tight pb-1">
                 Crypto Duel
