@@ -1,4 +1,4 @@
-import db from '@/lib/database';
+import db from '@/lib/kv-database';
 import { sendWelcomeNotification } from '@/lib/notifications';
 
 export const config = { 

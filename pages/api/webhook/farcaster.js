@@ -1,4 +1,4 @@
-import db from '@/lib/database';
+import db from '@/lib/kv-database';
 import { sendWelcomeNotification } from '@/lib/notifications';
 
 export const config = { 
@@ -59,7 +59,7 @@ export default async function handler(req, res) {
         notifications_enabled: true
       };
 
-      const result = db.upsertUser(userData);
+      const result = await db.upsertUser(userData);
       console.log('📝 User upserted:', result);
       
       // Send welcome notification if we have notification settings
@@ -84,7 +84,7 @@ export default async function handler(req, res) {
     } else if (eventType === 'notifications_disabled' || eventType === 'miniapp_removed') {
       console.log('❌ User disabled notifications for FID:', savedFid);
       
-      const result = db.updateUser(savedFid, { 
+      const result = await db.updateUser(savedFid, { 
         notifications_enabled: false 
       });
       console.log('📝 User updated:', result);

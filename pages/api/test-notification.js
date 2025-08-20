@@ -1,4 +1,4 @@
-import db from '@/lib/database';
+import db from '@/lib/kv-database';
 import { sendWelcomeNotification } from '@/lib/notifications';
 
 export default async function handler(req, res) {
@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     console.log('🧪 Testing notification for wallet:', walletAddress);
     
     // Find user by wallet address
-    const user = db.getUserByWallet(walletAddress.toLowerCase());
+    const user = await db.getUserByWallet(walletAddress.toLowerCase());
     
     if (!user) {
       return res.status(404).json({ 

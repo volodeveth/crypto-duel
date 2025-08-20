@@ -1,4 +1,4 @@
-import db from '@/lib/database';
+import db from '@/lib/kv-database';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -18,12 +18,12 @@ export default async function handler(req, res) {
 
     let result;
     if (fid) {
-      result = db.updateUser(Number(fid), { notifications_enabled: false });
+      result = await db.updateUser(Number(fid), { notifications_enabled: false });
     } else {
       // Find user by wallet address first
-      const user = db.getUserByWallet(walletAddress);
+      const user = await db.getUserByWallet(walletAddress);
       if (user) {
-        result = db.updateUser(user.fid, { notifications_enabled: false });
+        result = await db.updateUser(user.fid, { notifications_enabled: false });
       } else {
         return res.status(404).json({ error: 'User not found' });
       }

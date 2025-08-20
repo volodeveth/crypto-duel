@@ -1,4 +1,4 @@
-import db from '@/lib/database';
+import db from '@/lib/kv-database';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
       notifications_enabled: true
     };
 
-    const result = db.upsertUser(userData);
+    const result = await db.upsertUser(userData);
     console.log('✅ User subscribed:', result);
 
     return res.status(200).json({ 
