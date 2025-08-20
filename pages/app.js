@@ -36,12 +36,13 @@ export default function GameHubApp() {
   const [userAddress, setUserAddress] = useState(null);
   const [farcasterUsername, setFarcasterUsername] = useState(null);
   const [walletType, setWalletType] = useState(null); // 'farcaster' or 'external'
-  const [gameState, setGameState] = useState('loading'); // loading, disconnected, selecting, confirming, waiting, result
+  const [gameState, setGameState] = useState('loading'); // loading, disconnected, selecting, confirming, transaction_sent, waiting, result
   const [waitingCount, setWaitingCount] = useState({});
   const [selectedMode, setSelectedMode] = useState(0); // 0=Duel, 1=BR5, 2=BR100, 3=BR1000
   const [selectedBet, setSelectedBet] = useState(null);
   const [userStats, setUserStats] = useState({ totalGames: 0, wins: 0, totalWinnings: 0 });
   const [lastResult, setLastResult] = useState(null);
+  const [gameResult, setGameResult] = useState(null); // For live result checking
   const [manuallyDisconnected, setManuallyDisconnected] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminAnalytics, setAdminAnalytics] = useState({
@@ -212,6 +213,18 @@ export default function GameHubApp() {
         if (accounts && accounts.length > 0) {
           console.log('✅ Found connected external wallet (MetaMask), restoring session...');
           
+          // Check if we're on Base Network before proceeding
+          try {
+            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+            if (chainId !== '0x2105') { // Base Network Chain ID
+              console.log('⚠️ Wallet not on Base Network, will show network warning');
+              setGameState('disconnected');
+              return;
+            }
+          } catch (networkError) {
+            console.warn('⚠️ Could not verify network, proceeding anyway:', networkError);
+          }
+          
           // Restore wallet connection
           const ethProvider = new ethers.BrowserProvider(window.ethereum);
           const signer = await ethProvider.getSigner();
@@ -352,10 +365,21 @@ export default function GameHubApp() {
       
       // Start checking for game results if in waiting state
       if (gameState === 'waiting') {
-        checkGameResult();
+        checkForGameResult();
       }
     }
   }, [contract, userAddress, gameState]);
+
+  // Check for game result every 10 seconds when in waiting state
+  useEffect(() => {
+    if (gameState === 'waiting' && userAddress) {
+      const interval = setInterval(() => {
+        checkForGameResult();
+      }, 10000); // Check every 10 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [gameState, userAddress]);
   
   async function checkGameResult() {
     try {
@@ -592,6 +616,47 @@ export default function GameHubApp() {
     if (!window.ethereum) throw new Error('No wallet found. Please install MetaMask or another wallet.');
     
     await window.ethereum.request({ method: 'eth_requestAccounts' });
+    
+    // Check and switch to Base Network (Chain ID: 8453)
+    try {
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      console.log('🔗 Current chain ID:', chainId);
+      
+      if (chainId !== '0x2105') { // 8453 in hex = 0x2105
+        console.log('🔄 Switching to Base Network...');
+        try {
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0x2105' }],
+          });
+        } catch (switchError) {
+          // If Base Network is not added, add it
+          if (switchError.code === 4902) {
+            console.log('📡 Adding Base Network...');
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: '0x2105',
+                chainName: 'Base',
+                nativeCurrency: {
+                  name: 'Ethereum',
+                  symbol: 'ETH',
+                  decimals: 18,
+                },
+                rpcUrls: ['https://mainnet.base.org'],
+                blockExplorerUrls: ['https://basescan.org'],
+              }],
+            });
+          } else {
+            throw switchError;
+          }
+        }
+      }
+    } catch (networkError) {
+      console.error('❌ Network switch failed:', networkError);
+      throw new Error('Please switch to Base Network to use this app. Network ID should be 8453.');
+    }
+    
     const walletProvider = new ethers.BrowserProvider(window.ethereum);
     const signer = await walletProvider.getSigner();
     const address = await signer.getAddress();
@@ -658,6 +723,119 @@ export default function GameHubApp() {
       setWaitingCount(counts);
     } catch (error) {
       console.error('❌ Error updating waiting counts:', error);
+    }
+  }
+
+  async function checkForGameResult() {
+    if (!userAddress || gameState !== 'waiting') return;
+    
+    console.log('🔍 Checking for game result...');
+    
+    // Check localStorage for current waiting game
+    const currentWaiting = localStorage.getItem('cd_currentWaiting');
+    if (!currentWaiting) return;
+    
+    try {
+      const waitingData = JSON.parse(currentWaiting);
+      const { mode, betAmount } = waitingData;
+      
+      // Use RPC provider for checking results
+      const RPC_ENDPOINTS = [
+        'https://base-mainnet.public.blastapi.io',
+        'https://mainnet.base.org',
+        'https://base.gateway.tenderly.co',
+        'https://base-rpc.publicnode.com'
+      ];
+      
+      let readOnlyContract = null;
+      for (const rpcUrl of RPC_ENDPOINTS) {
+        try {
+          const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
+          readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, rpcProvider);
+          await rpcProvider.getBlockNumber();
+          break;
+        } catch {
+          continue;
+        }
+      }
+      
+      if (!readOnlyContract) return;
+      
+      // Check if we're still in waiting list
+      const waitingCount = await readOnlyContract.getWaitingPlayersCount(mode, betAmount);
+      
+      // If no one is waiting, game might have completed
+      if (Number(waitingCount) === 0) {
+        console.log('🎉 Game appears to have completed! Checking results...');
+        
+        // Check for recent games involving this user
+        if (mode === 0) { // Duel
+          const totalDuels = await readOnlyContract.totalDuels();
+          // Check last few duels for our result
+          for (let i = Math.max(0, Number(totalDuels) - 10); i < Number(totalDuels); i++) {
+            try {
+              const duel = await readOnlyContract.getDuel(i);
+              const player1 = duel[0]?.toLowerCase();
+              const player2 = duel[1]?.toLowerCase();
+              const completed = duel[3];
+              const winner = duel[4]?.toLowerCase();
+              
+              if (completed && (player1 === userAddress.toLowerCase() || player2 === userAddress.toLowerCase())) {
+                const won = winner === userAddress.toLowerCase();
+                const prize = ethers.formatEther(duel[2]) * 1.8;
+                
+                setGameResult({
+                  type: 'duel',
+                  won,
+                  prize: won ? prize : 0,
+                  mode: 'Duel',
+                  duelId: i
+                });
+                
+                setGameState('result');
+                localStorage.removeItem('cd_currentWaiting');
+                return;
+              }
+            } catch (error) {
+              console.warn(`Could not check duel ${i}:`, error.message);
+            }
+          }
+        } else { // Battle Royale
+          const totalBR = await readOnlyContract.totalBattleRoyales();
+          // Check last few Battle Royales
+          for (let i = Math.max(0, Number(totalBR) - 5); i < Number(totalBR); i++) {
+            try {
+              const br = await readOnlyContract.getBattleRoyale(i);
+              const players = br.players.map(p => p.toLowerCase());
+              const completed = br.completed;
+              const winner = br.winner?.toLowerCase();
+              
+              if (completed && players.includes(userAddress.toLowerCase())) {
+                const won = winner === userAddress.toLowerCase();
+                const multiplier = { 1: 4.5, 2: 90, 3: 900 }[mode] || 1;
+                const prize = won ? ethers.formatEther(br.betAmount) * multiplier : 0;
+                
+                setGameResult({
+                  type: 'battle_royale',
+                  won,
+                  prize,
+                  mode: { 1: 'Battle Royale 5', 2: 'Battle Royale 100', 3: 'Battle Royale 1000' }[mode],
+                  battleId: i,
+                  playersCount: players.length
+                });
+                
+                setGameState('result');
+                localStorage.removeItem('cd_currentWaiting');
+                return;
+              }
+            } catch (error) {
+              console.warn(`Could not check battle royale ${i}:`, error.message);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error checking game result:', error);
     }
   }
 
@@ -926,12 +1104,19 @@ export default function GameHubApp() {
     if (!contract || !selectedBet) return;
     
     try {
-      setGameState('waiting');
+      setGameState('transaction_sent');
       console.log('🔄 Sending joinGame transaction...');
       
-      // Manual gas limit for Farcaster Wallet (doesn't support eth_estimateGas)
-      const gasLimit = 300000; // Safe gas limit for joinGame
-      console.log(`⛽ Using manual gas limit: ${gasLimit}`);
+      // Dynamic gas limit based on wallet type and game mode
+      let gasLimit;
+      if (walletType === 'farcaster') {
+        // Farcaster Wallet gas limits (doesn't support eth_estimateGas)
+        gasLimit = selectedMode === 0 ? 250000 : 500000; // Duel: 250k, Battle Royale: 500k
+      } else {
+        // External wallets gas limits for Base Network (estimated: Duel ~157k, BR ~410k)
+        gasLimit = selectedMode === 0 ? 200000 : 500000; // Duel: 200k, Battle Royale: 500k
+      }
+      console.log(`⛽ Using ${walletType} wallet gas limit for mode ${selectedMode}: ${gasLimit}`);
       
       const tx = await contract.joinGame(selectedMode, { 
         value: selectedBet.value,
@@ -948,7 +1133,8 @@ export default function GameHubApp() {
         contractAddress: CONTRACT_ADDRESS
       }));
 
-      console.log('🎮 Joined game, waiting for result...', tx.hash);
+      console.log('✅ Transaction sent successfully!', tx.hash);
+      setGameState('waiting'); // Now move to waiting state
       
       // Handle confirmation differently for Farcaster wallet
       if (walletType === 'farcaster') {
@@ -973,7 +1159,16 @@ export default function GameHubApp() {
       
     } catch (error) {
       console.error('Error joining game:', error);
-      alert('Error joining game: ' + error.message);
+      
+      // Handle specific JSON-RPC errors
+      if (error.code === -32603 || error.message.includes('transaction hash')) {
+        alert('Network error: Transaction was rejected by the network. This can happen due to:\n\n• Network congestion - please try again in a few minutes\n• Insufficient ETH for gas fees - make sure you have enough ETH\n• Game state changed - another player may have joined\n\nPlease try again or refresh the page.');
+      } else if (error.code === 4001) {
+        alert('Transaction cancelled by user');
+      } else {
+        alert('Error joining game: ' + error.message);
+      }
+      
       setGameState('confirming');
     }
   }
@@ -994,9 +1189,14 @@ export default function GameHubApp() {
     try {
       console.log('🔄 Cancelling waiting bet...');
       
-      // Manual gas limit for Farcaster Wallet compatibility
-      const gasLimit = 200000; // Safe gas limit for cancelWaiting
-      console.log(`⛽ Using manual gas limit: ${gasLimit}`);
+      // Dynamic gas limit based on wallet type for cancelWaiting
+      let gasLimit;
+      if (walletType === 'farcaster') {
+        gasLimit = 150000; // Farcaster Wallet gas limit for cancel
+      } else {
+        gasLimit = 60000; // External wallets optimized gas limit for Base Network cancel
+      }
+      console.log(`⛽ Using ${walletType} wallet cancel gas limit: ${gasLimit}`);
       
       const tx = await contract.cancelWaiting({ gasLimit: gasLimit });
       
@@ -1178,9 +1378,22 @@ export default function GameHubApp() {
                     <Wallet size={24} className="text-white" />
                     <div className="text-left">
                       <div className="font-semibold">External Wallet</div>
-                      <div className="text-sm text-orange-200">MetaMask, WalletConnect, etc.</div>
+                      <div className="text-sm text-orange-200">MetaMask, Coinbase Wallet, etc.</div>
                     </div>
                   </button>
+                  
+                  {/* Base Network Information */}
+                  <div className="bg-blue-500/20 border border-blue-400/30 rounded-xl p-4 mt-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                      <span className="text-sm font-medium text-blue-300">Base Network Required</span>
+                    </div>
+                    <p className="text-xs text-gray-300">
+                      🌐 Gas fees: ~$0.01 (100x cheaper than Ethereum)<br/>
+                      ⚡ Fast transactions: ~2 seconds<br/>
+                      🔧 External wallets will auto-switch to Base Network
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1314,6 +1527,30 @@ export default function GameHubApp() {
           )}
 
           {/* Waiting State */}
+          {/* Transaction Sent Confirmation */}
+          {gameState === 'transaction_sent' && selectedBet && (
+            <div className="text-center py-8">
+              <div className="animate-pulse mb-6 flex justify-center">
+                <div className="p-4 bg-green-500/20 rounded-full backdrop-blur-sm border border-green-400/30">
+                  <svg className="w-12 h-12 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </div>
+              <h2 className="text-2xl font-semibold mb-2 text-green-400">
+                ✅ Transaction Sent Successfully!
+              </h2>
+              <p className="text-gray-300 mb-4">
+                Your bet has been submitted to the blockchain.<br/>
+                Moving you to the waiting room...
+              </p>
+              <div className="text-sm text-gray-400">
+                Mode: {gameModes[selectedMode].name} | Bet: {selectedBet.eth} ETH
+              </div>
+            </div>
+          )}
+
+          {/* Waiting for Players */}
           {gameState === 'waiting' && selectedBet && (
             <div className="text-center py-8">
               <div className="animate-pulse-slow mb-6 flex justify-center">
@@ -1356,6 +1593,75 @@ export default function GameHubApp() {
                 >
                   🔄 Refresh & Back to Menu
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* Game Result Screen */}
+          {gameState === 'result' && gameResult && (
+            <div className="text-center py-8">
+              <div className={`animate-bounce mb-6 flex justify-center ${gameResult.won ? 'animate-pulse' : ''}`}>
+                <div className={`p-4 rounded-full backdrop-blur-sm border ${gameResult.won ? 'bg-green-500/20 border-green-400/30' : 'bg-red-500/20 border-red-400/30'}`}>
+                  {gameResult.won ? (
+                    <svg className="w-12 h-12 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <svg className="w-12 h-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+              
+              <h2 className={`text-3xl font-bold mb-4 ${gameResult.won ? 'text-green-400' : 'text-red-400'}`}>
+                {gameResult.won ? '🎉 You Won!' : '😔 You Lost'}
+              </h2>
+              
+              <div className="bg-black/30 rounded-xl p-6 mb-6 border border-white/10">
+                <div className="text-lg text-gray-300 mb-2">Game Mode: {gameResult.mode}</div>
+                {gameResult.won && gameResult.prize > 0 && (
+                  <div className="text-2xl font-bold text-green-400 mb-2">
+                    Prize: <EthWithUsd amount={gameResult.prize} decimals={5} />
+                  </div>
+                )}
+                {gameResult.type === 'battle_royale' && (
+                  <div className="text-sm text-gray-400">
+                    {gameResult.playersCount} players participated
+                  </div>
+                )}
+              </div>
+
+              <div className="text-sm text-gray-300 mb-6">
+                {gameResult.won 
+                  ? "Congratulations! Your prize has been sent to your wallet. 💰" 
+                  : "Better luck next time! Ready for another round? 🎮"}
+              </div>
+
+              <div className="mb-6 text-center">
+                <div className="text-sm text-gray-300 mb-3">Share your result:</div>
+                <ShareButtons 
+                  message={gameResult.won 
+                    ? `Just WON ${gameResult.prize.toFixed(5)} ETH in ${gameResult.mode}! 🏆⚡️ Try yourself at Crypto Duel!`
+                    : `Just played ${gameResult.mode} at Crypto Duel! 🎮⚔️ Join me for the next battle!`
+                  }
+                  className="justify-center"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <button 
+                  onClick={() => {
+                    setGameState('selecting');
+                    setGameResult(null);
+                  }}
+                  className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 px-6 py-3 rounded-lg font-semibold transition-all duration-300 hover:scale-105"
+                >
+                  🎮 Play Again
+                </button>
+                <Link href="/user" className="block w-full bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold transition-colors text-center">
+                  📊 View My Games
+                </Link>
               </div>
             </div>
           )}

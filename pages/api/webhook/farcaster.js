@@ -10,7 +10,7 @@ export const config = {
 };
 
 export default async function handler(req, res) {
-  console.log('🔔 Farcaster webhook received:', req.method);
+  console.log('🔔 PUBLIC Farcaster webhook received:', req.method);
   console.log('🔔 Headers:', JSON.stringify(req.headers, null, 2));
   console.log('🔔 Body:', JSON.stringify(req.body, null, 2));
   
@@ -92,7 +92,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ 
       ok: true, 
-      message: `Processed ${eventType} for FID ${savedFid}` 
+      message: `Processed ${eventType} for FID ${savedFid}`,
+      timestamp: new Date().toISOString()
     });
 
   } catch (error) {

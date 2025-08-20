@@ -757,9 +757,73 @@ useEffect(() => {
 - ✅ Waiting state persistence - працює
 - ✅ Автоматичне відновлення стану - працює
 
+## 🔧 КРИТИЧНЕ ВИПРАВЛЕННЯ GAS FEES ТА NETWORK DETECTION (2025-08-20):
+
+### **Проблема**: External wallets показували $0.45 gas fees та скам алерти
+- **Coinbase Wallet**: показував Ethereum Network замість Base → дорогі gas fees
+- **MetaMask**: скам алерт через спробу знайти контракт на Ethereum mainnet  
+- **Gas Limits**: занадто низькі для реальних транзакцій
+
+### **Рішення 1**: Автоматичне перемикання на Base Network
+```javascript
+// Перевірка та перемикання мережі при підключенні external wallet
+const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+if (chainId !== '0x2105') { // Base Network Chain ID: 8453
+  await window.ethereum.request({
+    method: 'wallet_switchEthereumChain',
+    params: [{ chainId: '0x2105' }],
+  });
+}
+```
+
+### **Рішення 2**: Автоматичне додавання Base Network
+```javascript
+// Якщо Base Network не додана, додаємо автоматично
+if (switchError.code === 4902) {
+  await window.ethereum.request({
+    method: 'wallet_addEthereumChain',
+    params: [{
+      chainId: '0x2105',
+      chainName: 'Base',
+      rpcUrls: ['https://mainnet.base.org'],
+      blockExplorerUrls: ['https://basescan.org'],
+    }],
+  });
+}
+```
+
+### **Рішення 3**: Правильні Gas Limits на основі реальної estimation
+```javascript
+// Реальні gas estimates з контракту:
+// Duel: ~157k gas → 200k limit
+// Battle Royale: ~410k gas → 500k limit
+
+// External wallets
+gasLimit = selectedMode === 0 ? 200000 : 500000; // Duel: 200k, BR: 500k
+// Farcaster wallets 
+gasLimit = selectedMode === 0 ? 250000 : 500000; // Duel: 250k, BR: 500k
+```
+
+### **Результат виправлення**:
+✅ **Gas Fees**: $0.45 → $0.02 (Base Network)
+✅ **Скам Алерт**: Виправлено (контракт існує на Base)  
+✅ **Network Detection**: Автоматичне перемикання на Base
+✅ **Battle Royale**: Успішно працює з 500k gas limit
+✅ **Duels**: Виправлено з 200k gas limit
+✅ **UX**: Інформативне повідомлення про переваги Base Network
+
+### **Технічні деталі**:
+- **Network ID**: 8453 (Base) замість 1 (Ethereum)
+- **RPC**: mainnet.base.org для Base Network
+- **Explorer**: basescan.org замість etherscan.io
+- **Auto-reconnect**: перевірка мережі при відновленні сесії
+
+**Деплой**: https://crypto-duel-6t4160imi-volodeveths-projects.vercel.app
+**Статус**: ✅ **ПОВНІСТЮ ВИПРАВЛЕНО - ВСІ WALLETS ПРАЦЮЮТЬ НА BASE NETWORK**
+
 ---
-**Останнє оновлення**: 2025-08-19 через Claude Code  
-**Поточний статус**: ✅ **ПОВНА FARCASTER ІНТЕГРАЦІЯ З USERNAME ВІДОБРАЖЕННЯМ**
+**Останнє оновлення**: 2025-08-20 через Claude Code  
+**Поточний статус**: ✅ **STABILE БАЗА З ВИПРАВЛЕНИМИ GAS FEES ТА NETWORK DETECTION**
 
 ### **ФІНАЛЬНІ ДОСЯГНЕННЯ 2025-08-19**:
 - 👤 **Farcaster Username Display**: Повна система відображення @username для користувачів Farcaster

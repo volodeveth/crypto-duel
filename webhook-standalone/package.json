@@ -1,0 +1,11 @@
+{
+  "name": "crypto-duel-webhook",
+  "version": "1.0.0",
+  "main": "api/farcaster.js",
+  "dependencies": {
+    "better-sqlite3": "^9.4.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
