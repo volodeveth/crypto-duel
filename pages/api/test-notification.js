@@ -1,4 +1,4 @@
-import db from '@/lib/kv-database';
+import db from '@/lib/postgres-database';
 import { sendWelcomeNotification } from '@/lib/notifications';
 
 export default async function handler(req, res) {
