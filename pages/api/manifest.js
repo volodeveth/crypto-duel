@@ -4,9 +4,9 @@ export default function handler(req, res) {
   // Updated Farcaster manifest structure - using 'miniapp' instead of 'frame'
   const manifest = {
     accountAssociation: {
-      header: "eyJmaWQiOjEyMTUyLCJ0eXBlIjoiY3VzdG9keSIsImtleSI6IjB4MEJGNDVGOTY3RTkwZmZENjA2MzVkMUFDMTk1MDYyYTNBOUZjQzYyQiJ9",
-      payload: "eyJkb21haW4iOiJjcnlwdG9kdWVsLnh5eiJ9Cg==",
-      signature: "MHhmMTUwMWRjZjRhM2U1NWE1ZjViNGQ5M2JlNGIxYjZiOGE0ZjcwYWQ5YTE1OTNmNDk1NzllNTA2YjJkZGZjYTBlMzI4ZmRiNDZmNmVjZmFhZTU4NjYwYzBiZDc4YjgzMzc2MDAzYTkxNzhkZGIyZGIyZmM5ZDYwYjU2YTlmYzdmMDFj"
+      header: "eyJmaWQiOjkzOTA3MSwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDM5ZUExM2M1NTY2YkU1OGVlOTZjNDNlNDU5NzI2RUQwQmRGNjQ3MTgifQ",
+      payload: "eyJkb21haW4iOiJjcnlwdG9kdWVsLnh5eiJ9",
+      signature: "77/RtyWj+sKd04nnvqFX+EQQEQUkMvd5lM3Yk7N+Xqh+a86RoCng5lcagkVRbBs1jvAY3tMEZNbJTHB09NoLmhw="
     },
     // Top-level fields for Farcaster compatibility
     version: "1",
@@ -18,7 +18,7 @@ export default function handler(req, res) {
     splashImageUrl: `${baseUrl}/splash.png`,
     splashBackgroundColor: "#4338CA",
     description: "Enter the ultimate crypto arena! Compete in 1v1 duels or massive Battle Royale tournaments with real ETH stakes.",
-    webhookUrl: `${baseUrl}/api/farcaster-webhook?x-vercel-protection-bypass=89685a1a90e84c0082f0dd4e87c589ec`,
+    webhookUrl: `${baseUrl}/api/farcaster-webhook`,
     subtitle: "Blockchain dueling & battle royale game",
     screenshotUrls: [
       `${baseUrl}/screenshot1.jpg`
@@ -54,7 +54,7 @@ export default function handler(req, res) {
       splashBackgroundColor: "#4338CA",
       description: "Enter the ultimate crypto arena! Compete in 1v1 duels or massive Battle Royale tournaments with real ETH stakes.",
       subtitle: "Blockchain dueling & battle royale game",
-      webhookUrl: `${baseUrl}/api/farcaster-webhook?x-vercel-protection-bypass=89685a1a90e84c0082f0dd4e87c589ec`,
+      webhookUrl: `${baseUrl}/api/farcaster-webhook`,
       screenshotUrls: [
         `${baseUrl}/screenshot1.jpg`
       ],
