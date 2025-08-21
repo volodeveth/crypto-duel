@@ -20,8 +20,8 @@ export default async function handler(req, res) {
       fid: user.fid,
       username: user.username,
       wallet_address: user.wallet_address,
-      notification_url: user.notification_url ? 'Present' : 'Missing',
-      notification_token: user.notification_token ? 'Present' : 'Missing',
+      notification_url: user.notification_url ? `${user.notification_url.substring(0, 50)}...` : 'Missing',
+      notification_token: user.notification_token ? `${user.notification_token.substring(0, 20)}...` : 'Missing',
       notifications_enabled: user.notifications_enabled,
       created_at: user.created_at,
       updated_at: user.updated_at
