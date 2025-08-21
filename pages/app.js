@@ -1136,6 +1136,11 @@ export default function GameHubApp() {
       console.log('✅ Transaction sent successfully!', tx.hash);
       setGameState('waiting'); // Now move to waiting state
       
+      // Send bet placed notification
+      setTimeout(() => {
+        sendBetNotification();
+      }, 2000); // Small delay to ensure state is updated
+      
       // Handle confirmation differently for Farcaster wallet
       if (walletType === 'farcaster') {
         console.log('📱 Farcaster wallet detected - skipping tx.wait() due to eth_getTransactionReceipt limitation');
@@ -1265,6 +1270,42 @@ export default function GameHubApp() {
     localStorage.removeItem('cd_currentWaiting');
     localStorage.removeItem('farcaster_user_data');
     console.log('🧹 Cleared pending waiting bet and Farcaster data on disconnect');
+  }
+
+  // Send bet placed notification
+  async function sendBetNotification() {
+    if (!userAddress || !selectedBet || !selectedMode) return;
+    
+    try {
+      const modeNames = ['DUEL', 'BR5', 'BR100', 'BR1000'];
+      const modeName = modeNames[selectedMode] || 'DUEL';
+      
+      console.log(`🔔 Sending bet notification: ${modeName}, ${selectedBet.eth} ETH, address: ${userAddress}`);
+      
+      const response = await fetch('/api/send-bet-notification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          playerAddress: userAddress,
+          mode: modeName,
+          betAmount: selectedBet.eth,
+          waitingPlayersCount: waitingCount[selectedBet.value] || 0,
+          totalRequired: selectedMode === 0 ? 2 : selectedMode === 1 ? 5 : selectedMode === 2 ? 100 : 1000
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Bet notification sent:', result.message);
+      } else {
+        const error = await response.json();
+        console.log('⚠️ Bet notification failed:', error.error);
+      }
+    } catch (error) {
+      console.error('❌ Failed to send bet notification:', error);
+    }
   }
 
   return (
