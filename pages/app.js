@@ -1111,10 +1111,10 @@ export default function GameHubApp() {
       let gasLimit;
       if (walletType === 'farcaster') {
         // Farcaster Wallet gas limits (doesn't support eth_estimateGas)
-        gasLimit = selectedMode === 0 ? 250000 : 500000; // Duel: 250k, Battle Royale: 500k
+        gasLimit = selectedMode === 0 ? 350000 : 500000; // Duel: 350k, Battle Royale: 500k
       } else {
         // External wallets gas limits for Base Network (estimated: Duel ~157k, BR ~410k)
-        gasLimit = selectedMode === 0 ? 200000 : 500000; // Duel: 200k, Battle Royale: 500k
+        gasLimit = selectedMode === 0 ? 350000 : 500000; // Duel: 350k, Battle Royale: 500k
       }
       console.log(`⛽ Using ${walletType} wallet gas limit for mode ${selectedMode}: ${gasLimit}`);
       
