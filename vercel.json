@@ -2,12 +2,12 @@
   "version": 2,
   "env": {
     "NEXT_PUBLIC_BASE_URL": "https://cryptoduel.xyz",
-    "NEXT_PUBLIC_CONTRACT_ADDRESS": "0x238300D6570Deee3765d72Fa8e2af447612FaE06"
+    "NEXT_PUBLIC_CONTRACT_ADDRESS": "0xad82ce9aA3c98E0b72B90abc8F6aB15F795E12b6"
   },
   "build": {
     "env": {
       "NEXT_PUBLIC_BASE_URL": "https://cryptoduel.xyz",
-      "NEXT_PUBLIC_CONTRACT_ADDRESS": "0x238300D6570Deee3765d72Fa8e2af447612FaE06"
+      "NEXT_PUBLIC_CONTRACT_ADDRESS": "0xad82ce9aA3c98E0b72B90abc8F6aB15F795E12b6"
     }
   },
   "builds": [

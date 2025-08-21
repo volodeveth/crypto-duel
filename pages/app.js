@@ -10,7 +10,7 @@ import { EthWithUsd } from '../lib/ethPrice';
 import { Wallet, Swords, Users, Crown, ExternalLink, Info } from 'lucide-react';
 
 const CONTRACT_ABI = [
-  "function joinGame(uint8 mode) external payable",
+  "function joinGame(uint8) external payable",
   "function getWaitingPlayersCount(uint8 mode, uint256 betAmount) external view returns (uint256)",
   "function cancelWaiting() external",
   "function getAllowedBets() external view returns (uint256[])",
