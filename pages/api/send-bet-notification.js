@@ -24,9 +24,17 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    console.log(`📋 User found: FID ${user.fid}, username: ${user.username}, notifications: ${user.notifications_enabled}`);
+    console.log(`🔑 Notification credentials: URL present: ${!!user.notification_url}, Token present: ${!!user.notification_token}`);
+
     if (!user.notifications_enabled) {
       console.log(`⚠️ Notifications disabled for user ${user.fid}`);
       return res.status(200).json({ message: 'Notifications disabled for user' });
+    }
+
+    if (!user.notification_url || !user.notification_token) {
+      console.log(`⚠️ Missing notification credentials for user ${user.fid}`);
+      return res.status(400).json({ error: 'User missing notification credentials' });
     }
 
     // Send notification
