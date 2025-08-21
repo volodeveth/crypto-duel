@@ -13,7 +13,7 @@
     "buttonTitle": "Start Dueling",
     "splashImageUrl": "https://cryptoduel.xyz/splash.png",
     "splashBackgroundColor": "#4338CA",
-    "webhookUrl": "https://cryptoduel.xyz/api/farcaster-webhook",
+    "webhookUrl": "https://cryptoduel.xyz/api/farcaster-webhook?x-vercel-protection-bypass=89685a1a90e84c0082f0dd4e87c589ec",
     "subtitle": "ETH dueling and battle royale",
     "description": "Enter the ultimate crypto arena! Compete in 1v1 duels or massive Battle Royale tournaments with real ETH stakes.",
     "primaryCategory": "games",

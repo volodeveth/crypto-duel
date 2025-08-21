@@ -18,7 +18,7 @@ export default function handler(req, res) {
     splashImageUrl: `${baseUrl}/splash.png`,
     splashBackgroundColor: "#4338CA",
     description: "Enter the ultimate crypto arena! Compete in 1v1 duels or massive Battle Royale tournaments with real ETH stakes.",
-    webhookUrl: `${baseUrl}/api/farcaster-webhook`,
+    webhookUrl: `${baseUrl}/api/farcaster-webhook?x-vercel-protection-bypass=89685a1a90e84c0082f0dd4e87c589ec`,
     subtitle: "Blockchain dueling & battle royale game",
     screenshotUrls: [
       `${baseUrl}/screenshot1.jpg`
@@ -54,7 +54,7 @@ export default function handler(req, res) {
       splashBackgroundColor: "#4338CA",
       description: "Enter the ultimate crypto arena! Compete in 1v1 duels or massive Battle Royale tournaments with real ETH stakes.",
       subtitle: "Blockchain dueling & battle royale game",
-      webhookUrl: `${baseUrl}/api/farcaster-webhook`,
+      webhookUrl: `${baseUrl}/api/farcaster-webhook?x-vercel-protection-bypass=89685a1a90e84c0082f0dd4e87c589ec`,
       screenshotUrls: [
         `${baseUrl}/screenshot1.jpg`
       ],
