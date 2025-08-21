@@ -5,7 +5,10 @@ const fs = require('fs');
 
 // Read private key from file first, then fallback to env
 let privateKey;
-if (fs.existsSync('./new-private-key.txt')) {
+if (fs.existsSync('./temp-private-key.txt')) {
+  privateKey = fs.readFileSync('./temp-private-key.txt', 'utf8').trim();
+  console.log('Using private key from temp file');
+} else if (fs.existsSync('./new-private-key.txt')) {
   privateKey = fs.readFileSync('./new-private-key.txt', 'utf8').trim();
   console.log('Using private key from file');
 } else {

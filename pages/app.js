@@ -1192,9 +1192,9 @@ export default function GameHubApp() {
       // Dynamic gas limit based on wallet type for cancelWaiting
       let gasLimit;
       if (walletType === 'farcaster') {
-        gasLimit = 150000; // Farcaster Wallet gas limit for cancel
+        gasLimit = 400000; // Farcaster Wallet gas limit for cancel (підвищено для BR)
       } else {
-        gasLimit = 60000; // External wallets optimized gas limit for Base Network cancel
+        gasLimit = 350000; // External wallets gas limit for cancel (підвищено для BR)
       }
       console.log(`⛽ Using ${walletType} wallet cancel gas limit: ${gasLimit}`);
       

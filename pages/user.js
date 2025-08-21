@@ -137,9 +137,9 @@ async function cancelBet() {
     // Dynamic gas limit based on wallet type for cancelWaiting
     let gasLimit;
     if (walletType === 'farcaster') {
-      gasLimit = 200000; // Higher gas limit for Farcaster Wallet
+      gasLimit = 400000; // Higher gas limit for Farcaster Wallet (підвищено для BR)
     } else {
-      gasLimit = 100000; // Optimized gas limit for External wallets (MetaMask, etc.)
+      gasLimit = 350000; // Higher gas limit for External wallets (підвищено для BR)
     }
     console.log(`⛽ Using ${walletType} wallet cancel gas limit: ${gasLimit}`);
     
