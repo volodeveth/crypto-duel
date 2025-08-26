@@ -1119,7 +1119,7 @@ export default function GameHubApp() {
       console.log(`⛽ Using ${walletType} wallet gas limit for mode ${selectedMode}: ${gasLimit}`);
       
       const tx = await contract.joinGame(selectedMode, { 
-        value: selectedBet.value,
+        value: BigInt(selectedBet.value),
         gasLimit: gasLimit
       });
       
