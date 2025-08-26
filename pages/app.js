@@ -1111,10 +1111,10 @@ export default function GameHubApp() {
       let gasLimit;
       if (walletType === 'farcaster') {
         // Farcaster Wallet gas limits (doesn't support eth_estimateGas)
-        gasLimit = selectedMode === 0 ? 350000 : 500000; // Duel: 350k, Battle Royale: 500k
+        gasLimit = selectedMode === 0 ? 500000 : 600000; // Duel: 500k, Battle Royale: 600k
       } else {
         // External wallets gas limits for Base Network (estimated: Duel ~157k, BR ~410k)
-        gasLimit = selectedMode === 0 ? 350000 : 500000; // Duel: 350k, Battle Royale: 500k
+        gasLimit = selectedMode === 0 ? 450000 : 600000; // Duel: 450k, Battle Royale: 600k
       }
       console.log(`⛽ Using ${walletType} wallet gas limit for mode ${selectedMode}: ${gasLimit}`);
       
@@ -1197,9 +1197,9 @@ export default function GameHubApp() {
       // Dynamic gas limit based on wallet type for cancelWaiting
       let gasLimit;
       if (walletType === 'farcaster') {
-        gasLimit = 400000; // Farcaster Wallet gas limit for cancel (підвищено для BR)
+        gasLimit = 500000; // Farcaster Wallet gas limit for cancel (збільшено)
       } else {
-        gasLimit = 350000; // External wallets gas limit for cancel (підвищено для BR)
+        gasLimit = 450000; // External wallets gas limit for cancel (збільшено)
       }
       console.log(`⛽ Using ${walletType} wallet cancel gas limit: ${gasLimit}`);
       
